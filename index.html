@@ -826,13 +826,13 @@
     const codeHint = document.getElementById('code-hint');
     let codeTimer = null;
     btnSendCode.addEventListener('click', async () => {
-      const phone = document.getElementById('reg-phone').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
       const errEl = document.getElementById('reg-error');
       clearError(errEl); codeHint.textContent = '';
-      if (!phoneRe.test(phone)) { showError(errEl, '请输入正确的 11 位手机号'); return; }
+      if (!emailRe.test(email)) { showError(errEl, '请输入正确的邮箱'); return; }
       btnSendCode.disabled = true;
       try {
-        const r = await api('/auth/send-code', { method: 'POST', body: { phone, purpose: 'register' } });
+        const r = await api('/auth/send-code', { method: 'POST', body: { email, purpose: 'register' } });
         let left = 60;
         btnSendCode.textContent = left + 's';
         codeTimer = setInterval(() => {
