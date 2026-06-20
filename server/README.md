@@ -200,16 +200,20 @@ curl -X PUT http://localhost:4000/api/page/math-drill \
 - **Transport/headers**: `helmet` sets secure HTTP headers; CORS is restricted to the required methods/headers with credentials disabled. CORS uses an explicit allowlist (`CORS_ORIGIN`) with no wildcard origin reflection — dev falls back to localhost, and production blocks all origins when unset.
 - **Error handling**: a central handler logs full errors server-side and returns generic, stack-free JSON to clients. Login uses a generic error to avoid account enumeration.
 
-## Switching from Dev SMS to real Tencent Cloud SMS
+## Switching from Dev to real email (SMTP)
 
-1. In your Tencent Cloud SMS console, create an SMS signature and a template
-   whose body accepts two parameters: the code and validity minutes
-   (e.g. `您的验证码为{1}，{2}分钟内有效。`).
-2. Fill in the `TENCENT_*` variables in `.env`:
-   `TENCENT_SECRET_ID`, `TENCENT_SECRET_KEY`, `TENCENT_SMS_SDK_APP_ID`,
-   `TENCENT_SMS_SIGN_NAME`, `TENCENT_SMS_TEMPLATE_ID`, and (optionally)
-   `TENCENT_SMS_REGION`.
-3. Set `SMS_DEV_MODE=false`.
-4. Restart the server. Startup logs should now report `SMS mode: LIVE`.
+1. Pick any SMTP provider. Examples that work: QQ邮箱 / 163邮箱 / 企业邮箱
+   (Tencent/Aliyun enterprise mail), or a transactional email service
+   (e.g. Resend, SendGrid, Amazon SES, Mailgun). For most consumer mailboxes
+   (QQ/163) you must enable SMTP and use an app-specific authorization code as
+   `SMTP_PASS`, not your login password.
+2. Fill in the `SMTP_*` variables in `.env`: `SMTP_HOST`, `SMTP_PORT`
+   (465 for implicit TLS, 587 for STARTTLS), `SMTP_SECURE` (`true` for 465,
+   `false` for 587), `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM`
+   (e.g. `小善学习站 <no-reply@yourdomain.com>`).
+3. Set `EMAIL_DEV_MODE=false`.
+4. Restart the server. Startup logs should now report `Email mode: LIVE (SMTP)`.
 
-If any Tencent variable is missing, the server automatically falls back to DEV mode for safety.
+If any required SMTP variable is missing, the server automatically falls back to DEV mode for safety.
+
+> For higher volume or better deliverability, a dedicated transactional email service (Resend / SendGrid / SES / Mailgun) is recommended over a personal mailbox, which may rate-limit or flag bulk sends.
