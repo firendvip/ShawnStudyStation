@@ -55,7 +55,7 @@ Copy the example env file and edit values as needed:
 cp .env.example .env
 ```
 
-By default `SMS_DEV_MODE=true`, so no real SMS is sent — verification codes are printed to the server console and (in non-production) returned in the `/send-code` response as `devCode`.
+By default `EMAIL_DEV_MODE=true` (and it auto-enables whenever SMTP credentials are missing), so no real email is sent — verification codes are printed to the server console and (in non-production) returned in the `/send-code` response as `devCode`.
 
 ## Run
 
