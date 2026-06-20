@@ -6,7 +6,7 @@
 
 - **静态主站** (`index.html` + `assets/`):门户首页,聚合各学习模块入口。
 - **账号后端** (`server/`):基于 Node.js 的 API 服务,使用 **PostgreSQL** 存储账号与学习数据,
-  通过腾讯云短信实现手机号注册 / 登录,JWT 鉴权,并提供 `/api/health` 健康检查与学习数据存取接口。
+  通过 **邮箱验证码(SMTP)** 实现邮箱注册 / 登录,JWT 鉴权,并提供 `/api/health` 健康检查与学习数据存取接口。
 - **嵌入式应用** (`vendor/`):
   - `vendor/PinPin/`:错字练习应用(Next.js)。
   - `vendor/phonics-flashcards/`:自然拼读卡片应用。
