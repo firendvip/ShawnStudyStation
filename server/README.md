@@ -136,7 +136,7 @@ curl -X POST http://localhost:4000/api/auth/login \
 ```bash
 curl http://localhost:4000/api/auth/me \
   -H 'Authorization: Bearer <jwt>'
-# {"user":{"id":1,"phone":"13800138000"}}
+# {"user":{"id":1,"email":"user@example.com"}}
 ```
 
 ### Per-page data (all require auth)
