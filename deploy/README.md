@@ -83,10 +83,10 @@ cp .env.example .env
 - `DOMAIN` —— 你的域名(不带协议,如 `study.example.com`)。
 - `POSTGRES_PASSWORD` —— 强随机:`openssl rand -hex 32`
 - `JWT_SECRET` —— 强随机:`openssl rand -hex 32`
-- `TENCENT_*`(6 个值)—— 按 `../docs/腾讯云短信开通指引.md` 收集:
-  `TENCENT_SECRET_ID` / `TENCENT_SECRET_KEY` / `TENCENT_SMS_SDK_APP_ID` /
-  `TENCENT_SMS_SIGN_NAME` / `TENCENT_SMS_TEMPLATE_ID` / `TENCENT_SMS_REGION`
-- `SMS_DEV_MODE=false`(生产走真实短信)。
+- `SMTP_*` —— 按 `../docs/邮箱验证码配置指引.md` 收集:
+  `SMTP_HOST` / `SMTP_PORT`(默认 465)/ `SMTP_SECURE`(默认 true)/
+  `SMTP_USER` / `SMTP_PASS`(授权码 / 应用专用密码)/ `SMTP_FROM`(发件人,需与 `SMTP_USER` 同邮箱)。
+- `EMAIL_DEV_MODE=false`(生产走真实邮箱验证码)。
 
 ---
 
