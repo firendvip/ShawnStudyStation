@@ -97,18 +97,19 @@ router.post('/send-code', sendCodeLimiter, async (req, res, next) => {
  */
 router.post('/register', authLimiter, async (req, res, next) => {
   try {
-    const { phone, code, password } = req.body || {};
-    if (!validatePhone(phone) || !validateCode(code) || !validatePassword(password)) {
+    const { email, code, password } = req.body || {};
+    if (!validateEmail(email) || !validateCode(code) || !validatePassword(password)) {
       throw httpError(400, '输入参数无效');
     }
 
-    const codeOk = await codes.verifyAndConsume(phone, 'register', code);
+    const normalizedEmail = normalizeEmail(email);
+    const codeOk = await codes.verifyAndConsume(normalizedEmail, 'register', code);
     if (!codeOk) {
       throw httpError(400, '验证码无效或已过期');
     }
 
-    if (await findUserByPhone(phone)) {
-      throw httpError(409, '该手机号已注册');
+    if (await findUserByEmail(normalizedEmail)) {
+      throw httpError(409, '该邮箱已注册');
     }
 
     const passwordHash = await hashPassword(password);
