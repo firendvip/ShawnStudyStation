@@ -867,13 +867,13 @@
 
     /* Login */
     function doLogin() {
-      const phone = document.getElementById('login-phone').value.trim();
+      const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
       const errEl = document.getElementById('login-error');
       clearError(errEl);
-      if (!phoneRe.test(phone)) { showError(errEl, '请输入正确的手机号'); return; }
+      if (!emailRe.test(email)) { showError(errEl, '请输入正确的邮箱'); return; }
       if (!password) { showError(errEl, '请输入密码'); return; }
-      api('/auth/login', { method: 'POST', body: { phone, password } })
+      api('/auth/login', { method: 'POST', body: { email, password } })
         .then(async r => { setToken(r.token); await onLoggedIn(r.user); closeModal(); })
         .catch(e => showError(errEl, e.message));
     }
