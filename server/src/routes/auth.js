@@ -65,20 +65,21 @@ async function findUserByEmail(email) {
  */
 router.post('/send-code', sendCodeLimiter, async (req, res, next) => {
   try {
-    const { phone, purpose } = req.body || {};
-    if (!validatePhone(phone) || !validatePurpose(purpose)) {
-      throw httpError(400, '手机号或用途无效');
+    const { email, purpose } = req.body || {};
+    if (!validateEmail(email) || !validatePurpose(purpose)) {
+      throw httpError(400, '邮箱或用途无效');
     }
 
-    if ((await codes.secondsSinceLastSend(phone)) < 60) {
+    const normalizedEmail = normalizeEmail(email);
+    if ((await codes.secondsSinceLastSend(normalizedEmail)) < 60) {
       throw httpError(TOO_MANY_REQUESTS, '请求过于频繁，请稍后再试');
     }
-    if ((await codes.sendsInLastHour(phone)) >= MAX_SENDS_PER_HOUR) {
+    if ((await codes.sendsInLastHour(normalizedEmail)) >= MAX_SENDS_PER_HOUR) {
       throw httpError(TOO_MANY_REQUESTS, '请求过于频繁，请稍后再试');
     }
 
-    const code = await codes.createCode(phone, purpose);
-    const result = await sendSmsCode(phone, code);
+    const code = await codes.createCode(normalizedEmail, purpose);
+    const result = await sendEmailCode(normalizedEmail, code);
 
     const payload = { ok: true };
     // Surface the code only in dev mode and never in production.
