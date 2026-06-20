@@ -899,11 +899,11 @@
       renderAccount();
     }
     function renderAccount() {
-      const nickname = userSettings.nickname || ('用户' + String(currentUser.phone).slice(-4));
+      const nickname = userSettings.nickname || currentUser.email.split('@')[0];
       document.getElementById('avatar-initial').textContent =
-        userSettings.nickname ? userSettings.nickname.charAt(0) : String(currentUser.phone).slice(-1);
+        userSettings.nickname ? userSettings.nickname.charAt(0) : currentUser.email.charAt(0).toUpperCase();
       document.getElementById('user-display-name').textContent = nickname;
-      document.getElementById('user-display-email').textContent = maskPhone(currentUser.phone);
+      document.getElementById('user-display-email').textContent = maskEmail(currentUser.email);
       btnLogin.style.display = 'none';
       avatarWrap.classList.add('visible');
     }
