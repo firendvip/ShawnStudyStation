@@ -192,8 +192,8 @@ curl -X PUT http://localhost:4000/api/page/math-drill \
 ## Security Model
 
 - **Passwords**: hashed with bcrypt (cost factor 12). Plaintext is never logged or stored.
-- **SMS codes**: six random digits via `crypto.randomInt`, stored only as bcrypt hashes. Each code expires after 5 minutes and allows at most 5 verification attempts; a code is consumed (single-use) on success.
-- **Rate limiting**: per-IP limits via `express-rate-limit` (20 sends / 15 min, 30 auth attempts / 15 min) plus per-phone limits (1 send / 60s, 5 sends / hour).
+- **Verification codes**: six random digits via `crypto.randomInt`, stored only as bcrypt hashes. Each code expires after 5 minutes and allows at most 5 verification attempts; a code is consumed (single-use) on success.
+- **Rate limiting**: per-IP limits via `express-rate-limit` (20 sends / 15 min, 30 auth attempts / 15 min) plus per-email limits (1 send / 60s, 5 sends / hour).
 - **Sessions**: stateless JWT (HS256, 7-day expiry) passed as `Authorization: Bearer`. In production a real `JWT_SECRET` is mandatory.
 - **SQL**: every query is parameterised (`$1, $2 ...` placeholders) via `pg`. Table names come only from a hardcoded internal whitelist — never from user input. Registration creates the user and its settings row inside a single transaction.
 - **Input validation**: phone, password, code, purpose, and page identifiers are validated at the boundary; stored data must be a plain object under ~200 KB.
