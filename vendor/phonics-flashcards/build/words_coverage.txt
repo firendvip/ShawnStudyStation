@@ -1,0 +1,6 @@
+=== 单词发音覆盖 ===
+总词 425 · 有真人音 405 (95%) · 缺(回退TTS) 20
+本次新下载 0 · 命中缓存 405
+
+--- 缺音(回退 TTS) ---
+  hot dog, igloo, iguana, kite, mouse, net, vet, lime, June, sea, Tuesday, bride, Friday, ice cream, cell phone, orange, draw, board, elevator, famous

@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小善学习站 — 让学习变得简单</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --color-paper:         #fcfaf4;
+      --color-surface:       #ffffff;
+      --color-ink:           #362c24;
+      --color-ink-soft:      #71675d;
+      --color-ink-dim:       #a09890;
+      --color-accent:        #359658;
+      --color-accent-strong: #007c3a;
+      --color-accent-soft:   #dcf7e2;
+      --color-line:          #e5e1da;
+      --color-line-strong:   #d2cdc5;
+      --color-overlay:       rgba(54,44,36,0.38);
+      --radius-sm:   0.5rem;
+      --radius-md:   0.875rem;
+      --radius-lg:   1.25rem;
+      --shadow-nav:  0 4px 24px rgba(54,44,36,0.08);
+      --shadow-card: 0 1px 2px rgba(54,44,36,.05), 0 8px 24px rgba(54,44,36,.06);
+      --shadow-modal:0 8px 48px rgba(54,44,36,0.18);
+      --ease-out: cubic-bezier(0.16,1,0.3,1);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+                   "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ════════ HEADER ════════ */
+    header {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 64px;
+      background: var(--color-paper);
+      border-bottom: 1px solid var(--color-line);
+      z-index: 200;
+      flex-shrink: 0;
+    }
+
+    .logo {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--color-ink);
+      text-decoration: none;
+      letter-spacing: -0.3px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .logo span { color: var(--color-accent); }
+
+    /* ════════ NAV ════════ */
+    .nav-center {
+      display: flex;
+      align-items: center;
+      gap: 0.125rem;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .nav-item { position: relative; }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.45rem 0.875rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--color-ink-soft);
+      text-decoration: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color 0.14s, background 0.14s;
+      white-space: nowrap;
+      line-height: 1;
+      font-family: inherit;
+    }
+
+    .nav-link:hover,
+    .nav-item.open .nav-link {
+      color: var(--color-ink);
+      background: rgba(53,150,88,0.07);
+    }
+
+    .nav-link.active {
+      color: var(--color-accent-strong);
+      font-weight: 600;
+    }
+
+    .chevron {
+      width: 10px;
+      height: 10px;
+      transition: transform 0.18s var(--ease-out);
+      flex-shrink: 0;
+      color: var(--color-ink-dim);
+    }
+    .nav-item.open .chevron { transform: rotate(180deg); }
+
+    .nav-center:has(.nav-item.open) .nav-item:not(.open) .nav-link {
+      color: var(--color-ink-dim);
+    }
+
+    /* ── Dropdown panel — left-aligned to its menu item ── */
+    .dropdown {
+      position: absolute;
+      top: calc(100% + 0.6rem);
+      left: 0;
+      transform: scale(0.95);
+      transform-origin: 0 0;
+      background: var(--color-surface);
+      border: 1px solid var(--color-line);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-nav);
+      padding: 0.375rem;
+      min-width: 148px;
+      z-index: 300;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition:
+        opacity 0.18s cubic-bezier(0.4,0,0.2,1),
+        transform 0.18s cubic-bezier(0.4,0,0.2,1),
+        visibility 0s 0.18s;
+    }
+
+    .nav-item.open .dropdown {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: scale(1);
+      transition:
+        opacity 0.18s cubic-bezier(0.4,0,0.2,1),
+        transform 0.18s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .dropdown-item {
+      display: block;
+      padding: 0.55rem 0.85rem;
+      border-radius: calc(var(--radius-sm) - 2px);
+      font-size: 0.875rem;
+      color: var(--color-ink-soft);
+      text-decoration: none;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.1s ease, color 0.1s ease, opacity 0.1s ease;
+      white-space: nowrap;
+    }
+
+    .dropdown:has(.dropdown-item:hover) .dropdown-item:not(:hover) {
+      opacity: 0.45;
+    }
+
+    .dropdown-item:hover {
+      background: var(--color-accent-soft);
+      color: var(--color-accent-strong);
+    }
+
+    /* ════════ HEADER RIGHT ════════ */
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .date-label {
+      font-size: 0.82rem;
+      color: var(--color-accent);
+      font-weight: 500;
+    }
+
+    .btn-login {
+      padding: 0.38rem 1rem;
+      border: 1.5px solid var(--color-accent);
+      background: transparent;
+      color: var(--color-accent);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.14s, color 0.14s;
+    }
+    .btn-login:hover { background: var(--color-accent-soft); }
+
+    /* ── Avatar ── */
+    .avatar-wrap { position: relative; display: none; }
+    .avatar-wrap.visible { display: block; }
+
+    .avatar-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+      transition: box-shadow 0.14s;
+    }
+    .avatar-btn:hover { box-shadow: 0 0 0 3px var(--color-accent-soft); }
+
+    .avatar-dropdown {
+      position: absolute;
+      top: calc(100% + 0.6rem);
+      right: 0;
+      background: var(--color-surface);
+      border: 1px solid var(--color-line);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-nav);
+      padding: 0.375rem;
+      min-width: 160px;
+      z-index: 300;
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.95);
+      transform-origin: 100% 0;
+      transition: opacity 0.18s cubic-bezier(0.4,0,0.2,1),
+                  transform 0.18s cubic-bezier(0.4,0,0.2,1),
+                  visibility 0s 0.18s;
+    }
+    .avatar-wrap.open .avatar-dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1);
+      transition: opacity 0.18s cubic-bezier(0.4,0,0.2,1),
+                  transform 0.18s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .avatar-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.55rem 0.85rem;
+      border-radius: calc(var(--radius-sm) - 2px);
+      font-size: 0.875rem;
+      color: var(--color-ink-soft);
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      transition: background 0.1s, color 0.1s;
+    }
+    .avatar-menu-item:hover { background: var(--color-accent-soft); color: var(--color-accent-strong); }
+    .avatar-menu-item.danger { color: #c0392b; }
+    .avatar-menu-item.danger:hover { background: #fdecea; color: #a93226; }
+
+    .avatar-menu-divider { height: 1px; background: var(--color-line); margin: 0.3rem 0.5rem; }
+
+    .avatar-user-info {
+      padding: 0.6rem 0.85rem 0.5rem;
+      border-bottom: 1px solid var(--color-line);
+      margin-bottom: 0.3rem;
+    }
+    .avatar-user-name { font-size: 0.875rem; font-weight: 600; color: var(--color-ink); }
+    .avatar-user-email { font-size: 0.75rem; color: var(--color-ink-dim); margin-top: 0.1rem; }
+
+    /* ════════ LOGIN MODAL ════════ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--color-overlay);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.22s, visibility 0s 0.22s;
+    }
+    .modal-overlay.open { opacity: 1; visibility: visible; transition: opacity 0.22s; }
+
+    .modal {
+      position: relative;
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-modal);
+      padding: 2rem;
+      width: 100%;
+      max-width: 360px;
+      transform: scale(0.95) translateY(8px);
+      transition: transform 0.22s var(--ease-out);
+    }
+    .modal-overlay.open .modal { transform: scale(1) translateY(0); }
+
+    .modal-title { font-size: 1.2rem; font-weight: 700; color: var(--color-ink); margin-bottom: 0.375rem; }
+    .modal-sub { font-size: 0.82rem; color: var(--color-ink-soft); margin-bottom: 1.5rem; }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--color-ink-soft);
+      margin-bottom: 0.35rem;
+    }
+    .form-input {
+      width: 100%;
+      padding: 0.6rem 0.875rem;
+      border: 1.5px solid var(--color-line-strong);
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      color: var(--color-ink);
+      background: var(--color-surface);
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.14s;
+    }
+    .form-input:focus { border-color: var(--color-accent); }
+
+    .modal-error { font-size: 0.8rem; color: #c0392b; margin-bottom: 0.75rem; display: none; }
+    .modal-error.visible { display: block; }
+
+    .btn-submit {
+      width: 100%;
+      padding: 0.7rem;
+      background: var(--color-accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      margin-top: 0.25rem;
+      transition: background 0.14s;
+    }
+    .btn-submit:hover { background: var(--color-accent-strong); }
+
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 30px;
+      height: 30px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: var(--color-ink-dim);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-close:hover { background: var(--color-line); }
+
+    .auth-switch { font-size: 0.82rem; color: var(--color-ink-soft); text-align: center; margin-top: 1rem; }
+    .auth-switch a { color: var(--color-accent-strong); text-decoration: none; font-weight: 500; }
+    .auth-switch a:hover { text-decoration: underline; }
+    .code-row { display: flex; gap: 0.5rem; }
+    .code-row .form-input { flex: 1; }
+    .btn-code {
+      flex-shrink: 0;
+      padding: 0 0.9rem;
+      border: 1.5px solid var(--color-accent);
+      background: transparent;
+      color: var(--color-accent);
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      transition: background 0.14s, color 0.14s;
+    }
+    .btn-code:hover:not(:disabled) { background: var(--color-accent-soft); }
+    .btn-code:disabled { border-color: var(--color-line-strong); color: var(--color-ink-dim); cursor: default; }
+    .code-hint { font-size: 0.76rem; color: var(--color-accent-strong); margin-top: 0.4rem; min-height: 1em; }
+    .settings-saved { font-size: 0.8rem; color: var(--color-accent-strong); text-align: center; margin-bottom: 0.5rem; display: none; }
+    .settings-saved.visible { display: block; }
+
+    /* ════════ MAIN / VIEWS ════════ */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .view { display: none; flex: 1; }
+    .view.active { display: flex; flex-direction: column; }
+
+    /* Centered text views */
+    .view-home, .view-about {
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 4rem 2rem;
+    }
+
+    .welcome-title {
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--color-ink);
+      text-align: center;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+    .welcome-title span { color: var(--color-accent); }
+
+    .welcome-sub {
+      font-size: 1rem;
+      color: var(--color-ink-soft);
+      text-align: center;
+      max-width: 380px;
+      line-height: 1.7;
+    }
+
+    /* About view */
+    .about-headline {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--color-ink);
+      text-align: center;
+      letter-spacing: -0.3px;
+    }
+    .about-qr {
+      width: 248px;
+      height: 248px;
+      object-fit: contain;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-line);
+      background: var(--color-surface);
+      padding: 0.75rem;
+      box-shadow: var(--shadow-card);
+      display: block;
+    }
+    .about-hint {
+      font-size: 0.85rem;
+      color: var(--color-ink-soft);
+      text-align: center;
+    }
+
+    /* Embedded app views */
+    .view-embed { padding: 0; }
+    .embed-frame {
+      width: 100%;
+      flex: 1;
+      min-height: calc(100vh - 123px);
+      border: none;
+      display: block;
+      background: var(--color-paper);
+    }
+
+    /* ════════ FOOTER ════════ */
+    footer {
+      border-top: 1px solid var(--color-line);
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--color-ink-soft);
+      flex-shrink: 0;
+    }
+    .footer-logo { font-weight: 700; }
+    .footer-logo span { color: var(--color-accent); }
+    .footer-links { display: flex; gap: 1.25rem; }
+    .footer-links a { color: var(--color-ink-soft); text-decoration: none; transition: color 0.14s; }
+    .footer-links a:hover { color: var(--color-accent); }
+  </style>
+</head>
+<body>
+
+  <!-- ── HEADER ── -->
+  <header>
+    <a class="logo" href="#" data-view="home">小善<span>学习站</span></a>
+
+    <nav class="nav-center" aria-label="主导航">
+
+      <div class="nav-item">
+        <a class="nav-link active" href="#" data-nav="首页" data-view="home">首页</a>
+      </div>
+
+      <div class="nav-item" data-has-dropdown>
+        <button class="nav-link" aria-expanded="false" aria-haspopup="true" data-nav="语文">
+          语文
+          <svg class="chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
+        </button>
+        <div class="dropdown" role="menu">
+          <a class="dropdown-item" href="#" role="menuitem" data-view="cuozi">错字练习</a>
+        </div>
+      </div>
+
+      <div class="nav-item" data-has-dropdown>
+        <button class="nav-link" aria-expanded="false" aria-haspopup="true" data-nav="数学">
+          数学
+          <svg class="chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
+        </button>
+        <div class="dropdown" role="menu">
+          <a class="dropdown-item" href="#" role="menuitem">100以内心算</a>
+        </div>
+      </div>
+
+      <div class="nav-item" data-has-dropdown>
+        <button class="nav-link" aria-expanded="false" aria-haspopup="true" data-nav="英语">
+          英语
+          <svg class="chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
+        </button>
+        <div class="dropdown" role="menu">
+          <a class="dropdown-item" href="#" role="menuitem" data-view="phonics">自然拼读</a>
+          <a class="dropdown-item" href="#" role="menuitem">单词闪卡</a>
+          <a class="dropdown-item" href="#" role="menuitem">单词小测</a>
+          <a class="dropdown-item" href="#" role="menuitem">高考作文</a>
+        </div>
+      </div>
+
+      <div class="nav-item" data-has-dropdown>
+        <button class="nav-link" aria-expanded="false" aria-haspopup="true" data-nav="工具">
+          工具
+          <svg class="chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
+        </button>
+        <div class="dropdown" role="menu">
+          <a class="dropdown-item" href="#" role="menuitem">言使</a>
+          <a class="dropdown-item" href="#" role="menuitem">闪卡</a>
+        </div>
+      </div>
+
+      <div class="nav-item">
+        <a class="nav-link" href="#" data-nav="关于" data-view="about">关于</a>
+      </div>
+
+    </nav>
+
+    <div class="header-right">
+      <span class="date-label" id="date-label"></span>
+
+      <button class="btn-login" id="btn-login">登录</button>
+
+      <div class="avatar-wrap" id="avatar-wrap">
+        <button class="avatar-btn" id="avatar-btn" aria-label="账户菜单" aria-expanded="false">
+          <span id="avatar-initial">U</span>
+        </button>
+        <div class="avatar-dropdown" role="menu" id="avatar-dropdown">
+          <div class="avatar-user-info">
+            <div class="avatar-user-name" id="user-display-name">用户</div>
+            <div class="avatar-user-email" id="user-display-email"></div>
+          </div>
+          <button class="avatar-menu-item" id="btn-open-settings">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            个人设置
+          </button>
+          <button class="avatar-menu-item" onclick="alert('修改密码')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            修改密码
+          </button>
+          <div class="avatar-menu-divider"></div>
+          <button class="avatar-menu-item danger" id="btn-logout">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            退出登录
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── AUTH MODAL (login / register) ── -->
+  <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal">
+      <button class="modal-close" id="modal-close" aria-label="关闭">✕</button>
+
+      <div class="auth-pane" id="pane-login">
+        <h2 class="modal-title" id="modal-title">登录小善学习站</h2>
+        <p class="modal-sub">未登录也能使用全部功能；登录后可云端保存你的数据</p>
+        <div class="form-group">
+          <label class="form-label" for="login-phone">手机号</label>
+          <input class="form-input" id="login-phone" type="tel" inputmode="numeric" maxlength="11" placeholder="请输入手机号" autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="login-password">密码</label>
+          <input class="form-input" id="login-password" type="password" placeholder="请输入密码" autocomplete="current-password" />
+        </div>
+        <p class="modal-error" id="login-error"></p>
+        <button class="btn-submit" id="btn-do-login">登录</button>
+        <p class="auth-switch">还没有账号？<a href="#" id="to-register">立即注册</a></p>
+      </div>
+
+      <div class="auth-pane" id="pane-register" style="display:none">
+        <h2 class="modal-title">注册小善学习站</h2>
+        <p class="modal-sub">使用手机号注册，验证后设置密码</p>
+        <div class="form-group">
+          <label class="form-label" for="reg-phone">手机号</label>
+          <input class="form-input" id="reg-phone" type="tel" inputmode="numeric" maxlength="11" placeholder="请输入手机号" autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-code">验证码</label>
+          <div class="code-row">
+            <input class="form-input" id="reg-code" type="text" inputmode="numeric" maxlength="6" placeholder="6 位验证码" autocomplete="one-time-code" />
+            <button class="btn-code" id="btn-send-code" type="button">获取验证码</button>
+          </div>
+          <p class="code-hint" id="code-hint"></p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-password">设置密码</label>
+          <input class="form-input" id="reg-password" type="password" placeholder="8–64 位密码" autocomplete="new-password" />
+        </div>
+        <p class="modal-error" id="reg-error"></p>
+        <button class="btn-submit" id="btn-do-register">注册并登录</button>
+        <p class="auth-switch">已有账号？<a href="#" id="to-login">去登录</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ACCOUNT SETTINGS MODAL ── -->
+  <div class="modal-overlay" id="settings-overlay" role="dialog" aria-modal="true">
+    <div class="modal">
+      <button class="modal-close" id="settings-close" aria-label="关闭">✕</button>
+      <h2 class="modal-title">个人设置</h2>
+      <p class="modal-sub">这些设置会保存到你的账号</p>
+      <div class="form-group">
+        <label class="form-label" for="set-nickname">昵称</label>
+        <input class="form-input" id="set-nickname" type="text" maxlength="20" placeholder="给自己起个名字" />
+      </div>
+      <p class="modal-error" id="settings-error"></p>
+      <p class="settings-saved" id="settings-saved">已保存 ✓</p>
+      <button class="btn-submit" id="btn-save-settings">保存</button>
+    </div>
+  </div>
+
+  <!-- ── MAIN ── -->
+  <main>
+    <!-- Home view -->
+    <section class="view view-home active" id="view-home">
+      <h1 class="welcome-title">欢迎来到<span>小善学习站</span></h1>
+      <p class="welcome-sub">😃 在这里，让错题害羞，让难题投降 👌🎉</p>
+    </section>
+
+    <!-- About view -->
+    <section class="view view-about" id="view-about">
+      <p class="about-headline">功能建议 / bug 反馈</p>
+      <img class="about-qr" src="assets/feedback-qr.png" alt="功能建议与 bug 反馈二维码" />
+      <p class="about-hint">扫码反馈，我们会认真倾听 💚</p>
+    </section>
+
+    <!-- 错字练习 (PinPin) embedded app -->
+    <section class="view view-embed" id="view-cuozi">
+      <iframe class="embed-frame" id="frame-cuozi" data-app="PINPIN" title="错字练习" loading="lazy"></iframe>
+    </section>
+
+    <!-- 自然拼读 (phonics flashcards) embedded app -->
+    <section class="view view-embed" id="view-phonics">
+      <iframe class="embed-frame" id="frame-phonics" data-app="PHONICS" title="自然拼读 · 小善自拼闪卡" loading="lazy"></iframe>
+    </section>
+  </main>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <span class="footer-logo">小善<span>学习站</span></span>
+    <span>© 2026 小善学习站 · 让学习更轻松</span>
+    <div class="footer-links">
+      <a href="#">联系我们</a>
+      <a href="#">隐私政策</a>
+    </div>
+  </footer>
+
+  <script>
+    /* ── Environment config (production-configurable URLs) ── */
+    const IS_FILE = location.protocol === 'file:';
+    const CONFIG = {
+      API:     IS_FILE ? 'http://localhost:4000/api' : '/api',
+      PINPIN:  IS_FILE ? 'http://localhost:3000'     : '/pinpin/',
+      PHONICS: IS_FILE ? 'vendor/phonics-flashcards/小善自拼闪卡_v10.html'
+                       : '/apps/phonics/小善自拼闪卡_v10.html'
+    };
+    const API = CONFIG.API;
+
+    /* ── Date label ── */
+    const d = new Date();
+    const days = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+    document.getElementById('date-label').textContent =
+      `${d.getMonth()+1}月${d.getDate()}日 ${days[d.getDay()]}`;
+
+    /* ── Nav dropdown — hover ── */
+    let openItem = null, openTimer = null, closeTimer = null;
+
+    function openDropdown(item) {
+      if (openItem && openItem !== item) closeDropdown(openItem, true);
+      clearTimeout(closeTimer);
+      openItem = item;
+      item.classList.add('open');
+      const btn = item.querySelector('[aria-expanded]');
+      if (btn) btn.setAttribute('aria-expanded', 'true');
+    }
+    function closeDropdown(item, immediate) {
+      clearTimeout(openTimer);
+      const doClose = () => {
+        item.classList.remove('open');
+        const btn = item.querySelector('[aria-expanded]');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+        if (openItem === item) openItem = null;
+      };
+      if (immediate) doClose();
+      else closeTimer = setTimeout(doClose, 120);
+    }
+
+    document.querySelectorAll('.nav-item[data-has-dropdown]').forEach(item => {
+      item.addEventListener('mouseenter', () => {
+        clearTimeout(closeTimer);
+        openTimer = setTimeout(() => openDropdown(item), 280);
+      });
+      item.addEventListener('mouseleave', () => {
+        clearTimeout(openTimer);
+        closeDropdown(item, false);
+      });
+    });
+
+    document.addEventListener('click', e => {
+      if (openItem && !openItem.contains(e.target)) closeDropdown(openItem, true);
+    });
+
+    /* ── View switching ── */
+    function switchView(viewName) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      const target = document.getElementById('view-' + viewName);
+      if (target) {
+        target.classList.add('active');
+        const frame = target.querySelector('iframe[data-app]');
+        if (frame && !frame.getAttribute('src')) {
+          frame.setAttribute('src', CONFIG[frame.getAttribute('data-app')]);
+        }
+      }
+    }
+
+    /* Top-level plain nav links + logo */
+    document.querySelectorAll('[data-view]').forEach(el => {
+      if (el.classList.contains('dropdown-item')) return;
+      el.addEventListener('click', e => {
+        e.preventDefault();
+        document.querySelectorAll('.nav-link').forEach(x => x.classList.remove('active'));
+        if (el.classList.contains('nav-link')) el.classList.add('active');
+        const view = el.getAttribute('data-view');
+        if (view) switchView(view);
+      });
+    });
+
+    /* Dropdown items that open an embedded app */
+    document.querySelectorAll('.dropdown-item[data-view]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const view = a.getAttribute('data-view');
+        switchView(view);
+        document.querySelectorAll('.nav-link').forEach(x => x.classList.remove('active'));
+        const parentLink = a.closest('.nav-item').querySelector('.nav-link');
+        if (parentLink) parentLink.classList.add('active');
+        if (openItem) closeDropdown(openItem, true);
+      });
+    });
+
+    /* ════════ AUTH ════════ */
+    const TOKEN_KEY = 'xss_token';
+
+    const overlay    = document.getElementById('modal-overlay');
+    const btnLogin   = document.getElementById('btn-login');
+    const btnClose   = document.getElementById('modal-close');
+    const avatarWrap = document.getElementById('avatar-wrap');
+    const avatarBtn  = document.getElementById('avatar-btn');
+    const paneLogin    = document.getElementById('pane-login');
+    const paneRegister = document.getElementById('pane-register');
+
+    const getToken = () => localStorage.getItem(TOKEN_KEY);
+    const setToken = t => localStorage.setItem(TOKEN_KEY, t);
+    const clearToken = () => localStorage.removeItem(TOKEN_KEY);
+
+    async function api(path, { method = 'GET', body, auth = false } = {}) {
+      const headers = { 'Content-Type': 'application/json' };
+      if (auth) { const t = getToken(); if (t) headers['Authorization'] = 'Bearer ' + t; }
+      let res;
+      try {
+        res = await fetch(API + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+      } catch (e) { throw new Error('无法连接服务器，请确认后端已启动'); }
+      let data = {};
+      try { data = await res.json(); } catch (_) {}
+      if (!res.ok) throw new Error(data.error || ('请求失败 (' + res.status + ')'));
+      return data;
+    }
+
+    const showError = (el, msg) => { el.textContent = msg; el.classList.add('visible'); };
+    const clearError = el => { el.textContent = ''; el.classList.remove('visible'); };
+    const phoneRe = /^1[3-9]\d{9}$/;
+
+    function switchPane(mode) {
+      const isLogin = mode === 'login';
+      paneLogin.style.display = isLogin ? '' : 'none';
+      paneRegister.style.display = isLogin ? 'none' : '';
+    }
+    function openModal(mode) { switchPane(mode || 'login'); overlay.classList.add('open'); }
+    function closeModal() {
+      overlay.classList.remove('open');
+      clearError(document.getElementById('login-error'));
+      clearError(document.getElementById('reg-error'));
+    }
+
+    btnLogin.addEventListener('click', () => openModal('login'));
+    btnClose.addEventListener('click', closeModal);
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+    document.getElementById('to-register').addEventListener('click', e => { e.preventDefault(); switchPane('register'); });
+    document.getElementById('to-login').addEventListener('click', e => { e.preventDefault(); switchPane('login'); });
+
+    /* Send verification code */
+    const btnSendCode = document.getElementById('btn-send-code');
+    const codeHint = document.getElementById('code-hint');
+    let codeTimer = null;
+    btnSendCode.addEventListener('click', async () => {
+      const phone = document.getElementById('reg-phone').value.trim();
+      const errEl = document.getElementById('reg-error');
+      clearError(errEl); codeHint.textContent = '';
+      if (!phoneRe.test(phone)) { showError(errEl, '请输入正确的 11 位手机号'); return; }
+      btnSendCode.disabled = true;
+      try {
+        const r = await api('/auth/send-code', { method: 'POST', body: { phone, purpose: 'register' } });
+        let left = 60;
+        btnSendCode.textContent = left + 's';
+        codeTimer = setInterval(() => {
+          left--;
+          if (left <= 0) { clearInterval(codeTimer); btnSendCode.disabled = false; btnSendCode.textContent = '重新获取'; }
+          else btnSendCode.textContent = left + 's';
+        }, 1000);
+        codeHint.textContent = r.devCode ? ('演示模式验证码：' + r.devCode) : '验证码已发送，请查收短信';
+      } catch (e) {
+        btnSendCode.disabled = false; btnSendCode.textContent = '获取验证码';
+        showError(errEl, e.message);
+      }
+    });
+
+    /* Register */
+    document.getElementById('btn-do-register').addEventListener('click', async () => {
+      const phone = document.getElementById('reg-phone').value.trim();
+      const code = document.getElementById('reg-code').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const errEl = document.getElementById('reg-error');
+      clearError(errEl);
+      if (!phoneRe.test(phone)) { showError(errEl, '请输入正确的手机号'); return; }
+      if (!/^\d{6}$/.test(code)) { showError(errEl, '请输入 6 位验证码'); return; }
+      if (password.length < 8 || password.length > 64) { showError(errEl, '密码长度需为 8–64 位'); return; }
+      try {
+        const r = await api('/auth/register', { method: 'POST', body: { phone, code, password } });
+        setToken(r.token);
+        await onLoggedIn(r.user);
+        closeModal();
+      } catch (e) { showError(errEl, e.message); }
+    });
+
+    /* Login */
+    function doLogin() {
+      const phone = document.getElementById('login-phone').value.trim();
+      const password = document.getElementById('login-password').value;
+      const errEl = document.getElementById('login-error');
+      clearError(errEl);
+      if (!phoneRe.test(phone)) { showError(errEl, '请输入正确的手机号'); return; }
+      if (!password) { showError(errEl, '请输入密码'); return; }
+      api('/auth/login', { method: 'POST', body: { phone, password } })
+        .then(async r => { setToken(r.token); await onLoggedIn(r.user); closeModal(); })
+        .catch(e => showError(errEl, e.message));
+    }
+    document.getElementById('btn-do-login').addEventListener('click', doLogin);
+    document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+    /* Logged-in state */
+    let currentUser = null;
+    let userSettings = {};
+    const maskPhone = p => { p = String(p); return p.length === 11 ? p.slice(0,3) + '****' + p.slice(7) : p; };
+
+    async function onLoggedIn(user) {
+      currentUser = user;
+      try { const s = await api('/settings', { auth: true }); userSettings = s.data || {}; } catch (_) { userSettings = {}; }
+      renderAccount();
+    }
+    function renderAccount() {
+      const nickname = userSettings.nickname || ('用户' + String(currentUser.phone).slice(-4));
+      document.getElementById('avatar-initial').textContent =
+        userSettings.nickname ? userSettings.nickname.charAt(0) : String(currentUser.phone).slice(-1);
+      document.getElementById('user-display-name').textContent = nickname;
+      document.getElementById('user-display-email').textContent = maskPhone(currentUser.phone);
+      btnLogin.style.display = 'none';
+      avatarWrap.classList.add('visible');
+    }
+
+    /* Restore session on load */
+    (async () => {
+      if (!getToken()) return;
+      try { const r = await api('/auth/me', { auth: true }); await onLoggedIn(r.user); }
+      catch (_) { clearToken(); }
+    })();
+
+    /* Avatar dropdown */
+    avatarBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const isOpen = avatarWrap.classList.toggle('open');
+      avatarBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+    document.addEventListener('click', e => {
+      if (!avatarWrap.contains(e.target)) { avatarWrap.classList.remove('open'); avatarBtn.setAttribute('aria-expanded','false'); }
+    });
+
+    /* Logout */
+    document.getElementById('btn-logout').addEventListener('click', () => {
+      clearToken();
+      currentUser = null; userSettings = {};
+      avatarWrap.classList.remove('visible', 'open');
+      btnLogin.style.display = '';
+    });
+
+    /* Account settings panel */
+    const settingsOverlay = document.getElementById('settings-overlay');
+    function openSettings() {
+      if (!currentUser) return;
+      document.getElementById('set-nickname').value = userSettings.nickname || '';
+      clearError(document.getElementById('settings-error'));
+      document.getElementById('settings-saved').classList.remove('visible');
+      settingsOverlay.classList.add('open');
+    }
+    function closeSettings() { settingsOverlay.classList.remove('open'); }
+    document.getElementById('settings-close').addEventListener('click', closeSettings);
+    settingsOverlay.addEventListener('click', e => { if (e.target === settingsOverlay) closeSettings(); });
+    document.getElementById('btn-open-settings').addEventListener('click', () => { avatarWrap.classList.remove('open'); openSettings(); });
+    document.getElementById('btn-save-settings').addEventListener('click', async () => {
+      const nickname = document.getElementById('set-nickname').value.trim();
+      const errEl = document.getElementById('settings-error');
+      clearError(errEl);
+      const next = Object.assign({}, userSettings, { nickname });
+      try {
+        await api('/settings', { method: 'PUT', auth: true, body: { data: next } });
+        userSettings = next;
+        renderAccount();
+        document.getElementById('settings-saved').classList.add('visible');
+      } catch (e) { showError(errEl, e.message); }
+    });
+
+    /* Global ESC closes any open modal */
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeSettings(); } });
+  </script>
+</body>
+</html>

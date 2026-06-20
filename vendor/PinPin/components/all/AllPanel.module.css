@@ -1,0 +1,103 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+  min-height: 2.2rem;
+}
+
+.count {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-accent-strong);
+  white-space: nowrap;
+}
+
+.headerActions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.editBtn {
+  padding: var(--space-xs) var(--space-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-accent-strong);
+  background: var(--color-accent-soft);
+  border: none;
+  border-radius: var(--radius-sm);
+}
+
+.editBtn:hover {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.addBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  margin-bottom: var(--space-md);
+  background: var(--color-accent-soft);
+  border-radius: var(--radius-md);
+}
+
+.dateRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.dateLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+}
+
+.dateInput {
+  padding: var(--space-xs) var(--space-sm);
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: 1.5px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+}
+
+.addRow {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.addInput {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: 1.5px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+}
+
+.addInput:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.addBtn {
+  padding: var(--space-sm) var(--space-lg);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-sm);
+}
+
+.addBtn:hover {
+  background: var(--color-accent-strong);
+}

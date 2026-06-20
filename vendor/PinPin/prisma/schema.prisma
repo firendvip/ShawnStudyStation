@@ -1,0 +1,92 @@
+// PinPin 数据模型(含可复用账号系统)
+// 账号相关:User / Session / LoginCode —— 与具体产品无关,可整体迁移到其他项目。
+// 业务数据:Entry / Setting / PdfReport —— 全部按 userId 隔离。
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// 账号。phone 为空表示「访客」(免登录,数据只在本设备 cookie 下);
+/// 登录后 phone 被赋值,成为正式账号,可跨端同步。
+model User {
+  id        String   @id @default(cuid())
+  phone     String?  @unique
+  nickname  String?
+  createdAt DateTime @default(now())
+
+  sessions Session[]
+  entries  Entry[]
+  settings Setting[]
+  reports  PdfReport[]
+}
+
+/// 登录会话(cookie 中保存随机 token,库里只存其哈希)
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// 短信验证码(只存哈希,带有效期与是否已用)
+model LoginCode {
+  id        String   @id @default(cuid())
+  phone     String
+  codeHash  String
+  expiresAt DateTime
+  consumed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+}
+
+/// 一条错字记录
+model Entry {
+  id         String   @id @default(cuid())
+  userId     String
+  text       String // 孩子写错的字 / 词
+  pinyin     String // 带声调拼音
+  recordDate String // 录入日期 YYYY-MM-DD(本地)
+  createdAt  DateTime @default(now()) // 后台时间戳(也用于先录先写排序)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, recordDate])
+}
+
+/// 用户级键值设置
+model Setting {
+  userId String
+  key    String
+  value  String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, key])
+}
+
+/// 已生成的 PDF 报告
+model PdfReport {
+  id         String   @id @default(cuid())
+  userId     String
+  cycleStart String
+  cycleEnd   String
+  filename   String
+  entryCount Int
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cycleStart, cycleEnd])
+  @@index([userId])
+}

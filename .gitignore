@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+**/node_modules/
+
+# next build
+vendor/PinPin/.next/
+
+# env & secrets — never commit
+.env
+deploy/certs/*.pem
+
+# sqlite / local data
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+server/data/
+
+# logs
+*.log
+
+# OS
+.DS_Store
+
+# large phonics media (audio is inlined in the HTML; video gracefully falls back to TTS)
+vendor/phonics-flashcards/video/
+vendor/phonics-flashcards/video_trim/

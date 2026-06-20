@@ -1,0 +1,241 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--color-accent-soft);
+  border-radius: var(--radius-md);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-md) var(--space-lg);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 9rem;
+  flex: 1;
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+}
+
+.input {
+  padding: var(--space-xs) var(--space-sm);
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: 1.5px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 0.9rem;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.generate {
+  margin-left: auto;
+  padding: var(--space-sm) var(--space-lg);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-sm);
+}
+
+.generate:hover:not(:disabled) {
+  background: var(--color-accent-strong);
+}
+
+.generate:disabled {
+  background: var(--color-line-strong);
+  color: var(--color-ink-soft);
+  cursor: not-allowed;
+}
+
+.note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-ink-soft);
+}
+
+.error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-danger);
+}
+
+/* ===== 实时预览 ===== */
+.preview {
+  background: #fff;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-md);
+}
+
+.previewTitle {
+  margin: 0 0 4px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-ink);
+}
+
+.previewSub {
+  margin: 0 0 var(--space-lg);
+  font-size: 0.85rem;
+  text-align: center;
+  color: var(--color-index, var(--color-ink-soft));
+}
+
+.previewEmpty {
+  margin: 0;
+  text-align: center;
+  color: var(--color-ink-soft);
+}
+
+.previewDay {
+  margin-bottom: var(--space-lg);
+}
+
+.previewDayHeader {
+  margin: 0 0 var(--space-sm);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-accent-strong);
+}
+
+.previewGrid {
+  display: grid;
+  column-gap: var(--space-sm);
+}
+
+.previewCell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+}
+
+.previewIndex {
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  font-size: 0.6rem;
+  color: var(--color-index, #b8b3aa);
+}
+
+.previewPinyin {
+  font-weight: 600;
+  color: var(--color-ink);
+  text-align: center;
+  word-break: break-word;
+}
+
+.previewBox {
+  width: 100%;
+  height: 2.4rem;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 4px;
+}
+
+/* ===== 报告列表 ===== */
+.reports {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.reportsTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+}
+
+.empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.report {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+}
+
+.reportRange {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.download {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-accent-strong);
+}
+
+.download:hover {
+  text-decoration: underline;
+}
+
+.printBtn {
+  padding: var(--space-xs) var(--space-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-sm);
+}
+
+.printBtn:hover {
+  background: var(--color-accent-strong);
+}
+
+@media (max-width: 540px) {
+  .generate {
+    margin-left: 0;
+    width: 100%;
+  }
+}

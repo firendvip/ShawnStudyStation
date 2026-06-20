@@ -1,0 +1,192 @@
+=== 音频覆盖率报告 ===
+卡片总数 175 · 匹配成功 175 · 未匹配 0 · 转码失败 0
+
+L1: 26/26 匹配  (视频目录: /Users/Admin/Desktop/百度下载的/牛津自然拼读/1/Oxford Phonics World_1_Video)
+L2: 30/30 匹配  (视频目录: /Users/Admin/Desktop/百度下载的/牛津自然拼读/2/Oxford Phonics World_2_SB_Video)
+L3: 32/32 匹配  (视频目录: /Users/Admin/Desktop/百度下载的/牛津自然拼读/3/Oxford_Phonics_World_3_Video)
+L4: 41/41 匹配  (视频目录: /Users/Admin/Desktop/百度下载的/牛津自然拼读/4/Oxford Phonics World_4_SB_Video)
+L5: 46/46 匹配  (视频目录: /Users/Admin/Desktop/百度下载的/牛津自然拼读/5/Oxford_Phonics_World_5_SB_Video/Oxford Phonics World_5_SB_Video)
+
+去静音后 MP3 时长(s): min 23.5 · 中位 83.0 · max 124.3 · 平均 86.3
+
+--- 匹配明细 (cardId  词形  MP3秒  <-  源文件) ---
+  c0	Aa	59.9s	<- A.mp4
+  c1	Bb	93.0s	<- B.mp4
+  c2	Cc	90.7s	<- C.mp4
+  c3	Dd	107.8s	<- D.mp4
+  c4	Ee	113.3s	<- E.mp4
+  c5	Ff	109.7s	<- F.mp4
+  c6	Gg	120.4s	<- G.mp4
+  c7	Hh	114.8s	<- H.mp4
+  c8	Ii	105.3s	<- I.mp4
+  c9	Jj	119.6s	<- J.mp4
+  c10	Kk	113.7s	<- K.mp4
+  c11	Ll	116.5s	<- L.mp4
+  c12	Mm	124.1s	<- M.mp4
+  c13	Nn	111.4s	<- N.mp4
+  c14	Oo	115.8s	<- O.mp4
+  c15	Pp	119.5s	<- P.mp4
+  c16	Qq	109.6s	<- Q.mp4
+  c17	Rr	117.4s	<- R.mp4
+  c18	Ss	120.3s	<- S.mp4
+  c19	Tt	114.4s	<- T.mp4
+  c20	Uu	109.6s	<- U.mp4
+  c21	Vv	122.8s	<- V.mp4
+  c22	Ww	117.5s	<- W.mp4
+  c23	Xx	113.2s	<- X.mp4
+  c24	Yy	124.3s	<- Y.mp4
+  c25	Zz	119.7s	<- Z.mp4
+  c26	a	91.9s	<- u01_a.mp4
+  c27	am	88.5s	<- u01_am.mp4
+  c28	an	86.3s	<- u01_an.mp4
+  c29	ad	67.9s	<- u02_ad.mp4
+  c30	ag	68.2s	<- u02_ag.mp4
+  c31	ap	87.2s	<- u02_ap.mp4
+  c32	at	77.7s	<- u02_at.mp4
+  c33	e	81.7s	<- u03_e.mp4
+  c34	et	72.8s	<- u03_et.mp4
+  c35	en	72.4s	<- u03_en.mp4
+  c36	ed	72.6s	<- u03_ed.mp4
+  c37	i	81.1s	<- u04_i.mp4
+  c38	ip	86.3s	<- u04_ip.mp4
+  c39	ib	71.3s	<- u04_ib.mp4
+  c40	id	70.4s	<- u04_id.mp4
+  c41	in	96.8s	<- u05_in.mp4
+  c42	ig	80.2s	<- u05_ig.mp4
+  c43	it	80.6s	<- u05_it.mp4
+  c44	ix	84.2s	<- u05_ix.mp4
+  c45	o	85.2s	<- u06_o.mp4
+  c46	ot	83.0s	<- u06_ot.mp4
+  c47	op	72.2s	<- u06_op.mp4
+  c48	u	92.5s	<- u07_u.mp4
+  c49	ug	79.6s	<- u07_ug.mp4
+  c50	ud	73.8s	<- u07_ud.mp4
+  c51	up	68.0s	<- u07_up.mp4
+  c52	ut	70.3s	<- u08_ut.mp4
+  c53	ub	71.8s	<- u08_ub.mp4
+  c54	um	73.7s	<- u08_um.mp4
+  c55	un	73.4s	<- u08_un.mp4
+  c56	a_e	93.2s	<- Unit_01_a_e.mp4
+  c57	ame	90.6s	<- Unit_01_ame.mp4
+  c58	ake	86.5s	<- Unit_01_ake.mp4
+  c59	ate	85.7s	<- Unit_01_ate.mp4
+  c60	ave	84.6s	<- Unit_01_ave.mp4
+  c61	i_e	86.6s	<- Unit_02_i_e.mp4
+  c62	ime	83.6s	<- Unit_02_ime.mp4
+  c63	ike	80.0s	<- Unit_02_ike.mp4
+  c64	ive	86.5s	<- Unit_02_ive.mp4
+  c65	ine	87.0s	<- Unit_02_ine.mp4
+  c66	o_e	96.4s	<- Unit_03_o_e.mp4
+  c67	u_e	100.3s	<- Unit_03_u_e.mp4
+  c68	u_e	89.0s	<- Unit_03_ube.mp4  [OVERRIDE]
+  c69	ai	96.6s	<- Unit_04_ai.mp4
+  c70	ay	84.5s	<- Unit_04_ay.mp4
+  c71	ai	96.6s	<- Unit_04_ai.mp4
+  c72	ay	84.5s	<- Unit_04_ay.mp4
+  c73	ee	93.6s	<- Unit_05_ee.mp4
+  c74	ea	94.5s	<- Unit_05_ea.mp4
+  c75	y	80.7s	<- Unit_05_y.mp4
+  c76	ey	76.0s	<- Unit_05_ey.mp4
+  c77	igh	87.8s	<- Unit_06_igh.mp4
+  c78	ie	90.4s	<- Unit_06_ie.mp4
+  c79	y	86.7s	<- Unit_06_spy.mp4  [OVERRIDE]
+  c80	oa	88.8s	<- Unit_07_oa.mp4
+  c81	ow	100.3s	<- Unit_07_ow.mp4
+  c82	oa	88.8s	<- Unit_07_oa.mp4
+  c83	ow	100.3s	<- Unit_07_ow.mp4
+  c84	ue	100.0s	<- Unit_08_ue.mp4
+  c85	ui	76.5s	<- Unit_08_ui.mp4
+  c86	ew	75.9s	<- Unit_08_ew.mp4
+  c87	oo	92.5s	<- Unit_08_oo.mp4
+  c88	bl	77.3s	<- U_01_bl.mp4
+  c89	cl	76.8s	<- U_01_cl.mp4
+  c90	br	82.2s	<- U_01_br.mp4
+  c91	cr	82.8s	<- U_01_cr.mp4
+  c92	fl	81.1s	<- U_01_fl.mp4
+  c93	gl	81.5s	<- U_01_gl.mp4
+  c94	fr	78.0s	<- U_02_fr.mp4
+  c95	gr	80.1s	<- U_02_gr.mp4
+  c96	pl	79.5s	<- U_02_pl.mp4
+  c97	sl	82.2s	<- U_02_sl.mp4
+  c98	dr	73.8s	<- U_02_dr.mp4
+  c99	tr	73.3s	<- U_02_tr.mp4
+  c100	sm	82.9s	<- U_03_sm.mp4
+  c101	sn	82.4s	<- U_03_sn.mp4
+  c102	sp	23.5s	<- U_03_sp.mp4
+  c103	sw	85.2s	<- U_03_sw.mp4
+  c104	st	79.5s	<- U_03_st.mp4
+  c105	sh	85.2s	<- U_04_sh.mp4
+  c106	ch	79.7s	<- U_04_ch.mp4
+  c107	tch	80.8s	<- U_04_tch.mp4
+  c108	ph	82.0s	<- U_04_ph.mp4
+  c109	wh	80.2s	<- U_04_wh.mp4
+  c110	th (浊)	84.1s	<- U_05_th2.mp4  [OVERRIDE]
+  c111	th (清)	82.4s	<- U_05_th.mp4  [OVERRIDE]
+  c112	ck	80.4s	<- U_05_ck.mp4
+  c113	qu	81.9s	<- U_05_qu.mp4
+  c114	ng	73.4s	<- U_06_ng.mp4
+  c115	nk	70.7s	<- U_06_nk.mp4
+  c116	nd	80.3s	<- U_06_nd.mp4
+  c117	nt	78.3s	<- U_06_nt.mp4
+  c118	lt	80.0s	<- U_06_lt.mp4
+  c119	mp	79.6s	<- U_06_mp.mp4
+  c120	sk	82.0s	<- U_07_sk.mp4
+  c121	sc	84.0s	<- U_07_sc.mp4
+  c122	spr	85.5s	<- U_07_spr.mp4
+  c123	str	85.6s	<- U_07_str.mp4
+  c124	spl	76.8s	<- U_07_spl.mp4
+  c125	squ	75.3s	<- U_07_squ.mp4
+  c126	c (软)	90.0s	<- U_08_c.mp4
+  c127	g (软)	89.4s	<- U_08_g.mp4
+  c128	s (浊)	83.1s	<- U_08_s.mp4
+  c129	ar	87.1s	<- U_01_ar.mp4
+  c130	ir	76.5s	<- U_01_ir.mp4
+  c131	ur	76.3s	<- U_01_ur.mp4
+  c132	er	85.9s	<- U_01_er.mp4
+  c133	or	86.5s	<- U_01_or.mp4
+  c134	ou	75.8s	<- U_02_ou.mp4
+  c135	ow	75.0s	<- U_02_ow.mp4
+  c136	oi	80.7s	<- U_02_oi.mp4
+  c137	oy	77.7s	<- U_02_oy.mp4
+  c138	oo	72.7s	<- U_02_oo.mp4
+  c139	u	73.6s	<- U_02_u.mp4
+  c140	au	85.5s	<- U_03_au.mp4
+  c141	aw	85.2s	<- U_03_aw.mp4
+  c142	all	73.7s	<- U_03_all.mp4
+  c143	wa	72.5s	<- U_03_wa.mp4
+  c144	or	77.2s	<- U_03_or.mp4
+  c145	oar	77.8s	<- U_03_oar.mp4
+  c146	are	85.3s	<- U_04_are.mp4
+  c147	air	84.8s	<- U_04_air.mp4
+  c148	ea	74.2s	<- U_04_ea.mp4
+  c149	ear	76.5s	<- U_04_ear.mp4
+  c150	ear	75.8s	<- U_04_ear2.mp4  [OVERRIDE]
+  c151	eer	78.0s	<- U_04_eer.mp4
+  c152	a	94.2s	<- U_05_a.mp4
+  c153	e	75.4s	<- U_05_e.mp4
+  c154	i	79.7s	<- U_05_i.mp4
+  c155	o	91.0s	<- U_05_o.mp4
+  c156	u	92.7s	<- U_05_u.mp4
+  c157	a	98.5s	<- U_06_a.mp4
+  c158	e	76.8s	<- U_06_e.mp4
+  c159	i	76.5s	<- U_06_i.mp4
+  c160	o	89.2s	<- U_06_o.mp4
+  c161	u	76.7s	<- U_06_u.mp4
+  c162	o	77.0s	<- U_06_o2.mp4  [OVERRIDE]
+  c163	kn	83.8s	<- U_07_kn.mp4
+  c164	wr	85.6s	<- U_07_wr.mp4
+  c165	mb	93.8s	<- U_07_mb.mp4
+  c166	e	89.7s	<- U_07_e.mp4
+  c167	rh	83.8s	<- U_07_rh.mp4
+  c168	st	82.5s	<- U_07_st.mp4
+  c169	ture	79.7s	<- U_08_ture.mp4
+  c170	sure	80.0s	<- U_08_sure.mp4
+  c171	tion	80.4s	<- U_08_tion.mp4
+  c172	sion	78.4s	<- U_08_sion.mp4
+  c173	ous	76.8s	<- U_08_ous.mp4
+  c174	ful	75.8s	<- U_08_ful.mp4
+
+--- 未被使用的视频(供核对) ---
+  L5: U_07_glove.mp4
+
+提示：c110(th浊)/c111(th清) 的视频对应需试听核对，必要时在 OVERRIDES 中对调 th/th2。

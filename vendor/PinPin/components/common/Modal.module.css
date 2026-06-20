@@ -1,0 +1,182 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+  background: oklch(30% 0.02 60 / 0.4);
+}
+
+.modal {
+  width: 100%;
+  max-width: 24rem;
+  max-height: 86vh;
+  overflow-y: auto;
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.title {
+  margin: 0 0 var(--space-md);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.sectionTitle {
+  margin: var(--space-lg) 0 var(--space-sm);
+  padding-bottom: var(--space-xs);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-accent-strong);
+  border-bottom: 2px solid var(--color-accent-soft);
+}
+
+.sectionHint {
+  margin: 0 0 var(--space-md);
+  font-size: 0.8rem;
+  color: var(--color-ink-soft);
+}
+
+.input {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: 1.5px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.error {
+  margin: var(--space-xs) 0 0;
+  font-size: 0.85rem;
+  color: var(--color-danger);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.cancel,
+.primary {
+  padding: var(--space-sm) var(--space-lg);
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-sm);
+}
+
+.cancel {
+  color: var(--color-ink-soft);
+  background: var(--color-paper);
+  border: 1px solid var(--color-line-strong);
+}
+
+.primary {
+  color: #fff;
+  background: var(--color-accent);
+}
+
+.primary:hover {
+  background: var(--color-accent-strong);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.radio {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: flex-start;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-paper);
+  border: 1.5px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.radioActive {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.radioText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.radioTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.radioDesc {
+  font-size: 0.8rem;
+  color: var(--color-ink-soft);
+}
+
+.hint {
+  margin: var(--space-xs) 0 0;
+  font-size: 0.8rem;
+  color: var(--color-ink-soft);
+}
+
+.switch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 0.9rem;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.switch input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--color-accent);
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.line {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-ink);
+}

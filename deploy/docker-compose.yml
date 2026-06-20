@@ -1,0 +1,133 @@
+# ===========================================================================
+# 小善学习站 — 生产容器编排 (Tencent Cloud CVM)
+#
+# 四个服务,单一内部桥接网络:
+#   postgres  账号后端的数据库(仅内网)
+#   backend   Node + Express 账号后端(仅内网,/api 经 Nginx 反代)
+#   pinpin    错字练习 Next.js 应用(仅内网,/pinpin/ 经 Nginx 反代)
+#   web       Nginx,唯一对外暴露 80/443,TLS 终止 + 反向代理 + 静态托管
+#
+# 配置来自同目录的 .env(compose 自动读取)。先 `cp .env.example .env` 并填写。
+# 构建上下文相对于本文件所在的 deploy/ 目录(故用 ../ 指向项目其它部分)。
+# ===========================================================================
+
+services:
+  # -------------------------------------------------------------------------
+  # PostgreSQL —— 后端账号数据。不对宿主机暴露端口,仅内网可达。
+  # -------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: xss-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - xss-net
+    healthcheck:
+      # 用配置中的用户检测,确保不仅 server 起来、目标库也可连接
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # -------------------------------------------------------------------------
+  # 账号后端 —— 构建自 ../server。启动时先迁移再运行,仅内网。
+  # -------------------------------------------------------------------------
+  backend:
+    build:
+      context: ../server
+      dockerfile: Dockerfile
+    container_name: xss-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # 通过服务名 postgres 在内网连接;凭据来自 .env
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      # 容器间为明文内网连接,关闭 SSL
+      PGSSL: "false"
+      JWT_SECRET: ${JWT_SECRET}
+      NODE_ENV: production
+      SMS_DEV_MODE: ${SMS_DEV_MODE:-false}
+      PORT: "4000"
+      # 仅允许来自正式域名(https)的跨域请求
+      CORS_ORIGIN: https://${DOMAIN}
+      # 腾讯云短信(真实发送所需的 6 个值)
+      TENCENT_SECRET_ID: ${TENCENT_SECRET_ID}
+      TENCENT_SECRET_KEY: ${TENCENT_SECRET_KEY}
+      TENCENT_SMS_SDK_APP_ID: ${TENCENT_SMS_SDK_APP_ID}
+      TENCENT_SMS_SIGN_NAME: ${TENCENT_SMS_SIGN_NAME}
+      TENCENT_SMS_TEMPLATE_ID: ${TENCENT_SMS_TEMPLATE_ID}
+      TENCENT_SMS_REGION: ${TENCENT_SMS_REGION:-ap-guangzhou}
+    networks:
+      - xss-net
+    # 无 ports: 仅经 Nginx 通过 backend:4000 访问
+
+  # -------------------------------------------------------------------------
+  # PinPin (错字练习) —— 构建自 ../vendor/PinPin,挂载在 /pinpin。
+  # SQLite 数据库持久化到命名卷 pinpin-data。仅内网。
+  # -------------------------------------------------------------------------
+  pinpin:
+    build:
+      context: ../vendor/PinPin
+      dockerfile: Dockerfile
+      args:
+        # 构建时烤入子路径,使产物在 /pinpin 下工作
+        BASE_PATH: /pinpin
+    container_name: xss-pinpin
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      BASE_PATH: /pinpin
+      # SQLite 文件落在挂载卷上,确保升级镜像后数据不丢
+      DATABASE_URL: file:/data/pinpin.db
+    volumes:
+      - pinpin-data:/data
+    networks:
+      - xss-net
+    # 无 ports: 仅经 Nginx 通过 pinpin:3000 访问
+
+  # -------------------------------------------------------------------------
+  # Nginx —— 唯一对外服务。TLS 终止 + 反向代理 + 静态资源托管。
+  # -------------------------------------------------------------------------
+  web:
+    image: nginx:1.27-alpine
+    container_name: xss-web
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - pinpin
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Nginx 站点配置(只读)
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      # 主站静态文件(只读)
+      - ../index.html:/usr/share/nginx/html/index.html:ro
+      - ../assets:/usr/share/nginx/html/assets:ro
+      # 自然拼读静态应用挂载到 /apps/phonics(含中文文件名)
+      - ../vendor/phonics-flashcards:/usr/share/nginx/html/apps/phonics:ro
+      # TLS 证书:把 fullchain.pem / privkey.pem 放进 ./certs(见 certs/README.md)
+      - ./certs:/etc/nginx/certs:ro
+      # Let's Encrypt webroot 验证目录(certbot --webroot -w ./certbot/www 时使用;
+      # 不用 webroot 时留空目录也无妨)。与 nginx 中 /.well-known/acme-challenge 对应。
+      - ./certbot/www:/var/www/certbot:ro
+    networks:
+      - xss-net
+
+# 单一内部桥接网络,四个服务靠服务名互相寻址
+networks:
+  xss-net:
+    driver: bridge
+
+# 命名卷:数据库与 SQLite 在容器/镜像更新后仍保留
+volumes:
+  pgdata:
+  pinpin-data:
