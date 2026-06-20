@@ -7,7 +7,7 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 
-const { config, isSmsConfigured } = require('./config');
+const { config, isEmailConfigured } = require('./config');
 const { ensureSchema } = require('./db'); // PostgreSQL pool + schema bootstrap.
 const authRoutes = require('./routes/auth');
 const dataRoutes = require('./routes/data');
