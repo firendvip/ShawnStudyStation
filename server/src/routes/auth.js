@@ -158,23 +158,24 @@ router.post('/register', authLimiter, async (req, res, next) => {
 });
 
 /**
- * POST /login — authenticate with phone + password.
+ * POST /login — authenticate with email + password.
  */
 router.post('/login', authLimiter, async (req, res, next) => {
   try {
-    const { phone, password } = req.body || {};
-    if (!validatePhone(phone) || !validatePassword(password)) {
+    const { email, password } = req.body || {};
+    if (!validateEmail(email) || !validatePassword(password)) {
       throw httpError(400, '输入参数无效');
     }
 
-    const record = await findUserByPhone(phone);
+    const normalizedEmail = normalizeEmail(email);
+    const record = await findUserByEmail(normalizedEmail);
     // Generic message avoids leaking whether the account exists.
     const passwordOk = record && (await verifyPassword(password, record.password_hash));
     if (!record || !passwordOk) {
-      throw httpError(401, '手机号或密码不正确');
+      throw httpError(401, '邮箱或密码不正确');
     }
 
-    const user = { id: record.id, phone: record.phone };
+    const user = { id: record.id, email: record.email };
     const token = signToken(user);
     return res.json({ token, user });
   } catch (err) {
