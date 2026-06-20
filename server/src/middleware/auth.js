@@ -8,7 +8,7 @@ const BEARER_PREFIX = 'Bearer ';
 
 /**
  * Extract and verify a bearer token from the Authorization header.
- * @returns {{id: number, phone: string} | null}
+ * @returns {{id: number, email: string} | null}
  */
 function extractUser(req) {
   const header = req.headers.authorization;
