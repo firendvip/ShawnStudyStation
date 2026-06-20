@@ -107,11 +107,11 @@ curl http://localhost:4000/api/health
 ```bash
 curl -X POST http://localhost:4000/api/auth/send-code \
   -H 'Content-Type: application/json' \
-  -d '{"phone":"13800138000","purpose":"register"}'
+  -d '{"email":"user@example.com","purpose":"register"}'
 # {"ok":true,"devCode":"123456"}   (devCode only in dev mode)
 ```
 
-Per-phone limits: at most one send per 60 seconds and 5 per hour.
+Per-email limits: at most one send per 60 seconds and 5 per hour.
 
 #### Register
 
