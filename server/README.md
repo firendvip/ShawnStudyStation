@@ -76,13 +76,13 @@ The server listens on `PORT` (default **4000**) and logs whether email is in DEV
 | `JWT_SECRET` | prod only | random (dev) | HS256 signing secret. **Required in production** or the server refuses to boot. In dev a random ephemeral secret is generated (sessions reset on restart). |
 | `DATABASE_URL` | yes | — | PostgreSQL connection string (`postgres://user:pass@host:port/dbname`). Required in all environments; the server refuses to boot without it. |
 | `PGSSL` | no | `false` | When `true`, connect with SSL (`rejectUnauthorized: false`) — needed by many managed Postgres providers. |
-| `SMS_DEV_MODE` | no | `true` | When `true`, codes are logged instead of sent via SMS |
-| `TENCENT_SECRET_ID` | live SMS | — | Tencent Cloud API secret id |
-| `TENCENT_SECRET_KEY` | live SMS | — | Tencent Cloud API secret key |
-| `TENCENT_SMS_SDK_APP_ID` | live SMS | — | SMS application SDK App ID |
-| `TENCENT_SMS_SIGN_NAME` | live SMS | — | Approved SMS signature |
-| `TENCENT_SMS_TEMPLATE_ID` | live SMS | — | Approved SMS template id (expects 2 params: code, minutes) |
-| `TENCENT_SMS_REGION` | no | `ap-guangzhou` | Tencent Cloud region |
+| `EMAIL_DEV_MODE` | no | `true` when SMTP creds missing | When `true`, codes are logged instead of emailed; auto-enabled if SMTP creds absent |
+| `SMTP_HOST` | live email | — | SMTP server hostname |
+| `SMTP_PORT` | no | `465` | SMTP port (465 implicit TLS, or 587 for STARTTLS) |
+| `SMTP_SECURE` | no | `true` | `true` for implicit TLS on 465; set `false` for STARTTLS on 587 |
+| `SMTP_USER` | live email | — | SMTP username |
+| `SMTP_PASS` | live email | — | SMTP password / app-specific password |
+| `SMTP_FROM` | no | `小善学习站 <no-reply@example.com>` | From header for verification emails |
 
 ## API
 
