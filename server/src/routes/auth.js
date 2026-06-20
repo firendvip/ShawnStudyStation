@@ -122,10 +122,10 @@ router.post('/register', authLimiter, async (req, res, next) => {
     try {
       await client.query('BEGIN');
       const insertResult = await client.query(
-        `INSERT INTO users (phone, password_hash, created_at, updated_at)
+        `INSERT INTO users (email, password_hash, created_at, updated_at)
          VALUES ($1, $2, $3, $3)
          RETURNING id`,
-        [phone, passwordHash, now]
+        [normalizedEmail, passwordHash, now]
       );
       userId = insertResult.rows[0].id;
       await client.query(
