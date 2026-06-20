@@ -1,7 +1,7 @@
 {
   "name": "shawn-study-station-server",
   "version": "1.0.0",
-  "description": "Secure Node.js backend for 小善学习站 — phone-only SMS auth, JWT sessions, per-page PostgreSQL data storage.",
+  "description": "Secure Node.js backend for 小善学习站 — email + SMTP verification auth, JWT sessions, per-page PostgreSQL data storage.",
   "type": "commonjs",
   "main": "src/index.js",
   "scripts": {
