@@ -59,12 +59,23 @@ sudo docker compose version
 
 ## 3. 上传 / 克隆项目到服务器
 
-```bash
-# 方式 A:git 克隆(若已托管到仓库)
-git clone <你的仓库地址> ShawnStudyStation
+本仓库为 **私有仓库**,需在服务器上配置 **只读部署密钥(Deploy Key)** 后再克隆:
 
-# 方式 B:从本地用 scp 整目录上传
-# scp -r "ShawnStudyStation" ubuntu@<CVM公网IP>:~/
+```bash
+# 1. 生成部署用 SSH 密钥(无密码;若已存在可复用或换文件名)
+ssh-keygen -t ed25519 -C "cvm-deploy" -f ~/.ssh/id_ed25519 -N ""
+
+# 2. 查看并复制公钥
+cat ~/.ssh/id_ed25519.pub
+
+# 3. 打开 https://github.com/firendvip/xiaoshan-study-station/settings/keys ,
+#    点「Add deploy key」,粘贴上面的公钥,**不要勾选 Allow write access**(只读即可),保存。
+
+# 4. 首次连接确认 GitHub 指纹(出现提示时输入 yes)
+ssh -T git@github.com
+
+# 5. 克隆仓库
+git clone git@github.com:firendvip/xiaoshan-study-station.git
 ```
 
 确保上传后目录结构包含:`index.html`、`assets/`、`server/`、`vendor/PinPin/`、`vendor/phonics-flashcards/`、`deploy/`。
