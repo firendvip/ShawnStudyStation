@@ -196,7 +196,7 @@ curl -X PUT http://localhost:4000/api/page/math-drill \
 - **Rate limiting**: per-IP limits via `express-rate-limit` (20 sends / 15 min, 30 auth attempts / 15 min) plus per-email limits (1 send / 60s, 5 sends / hour).
 - **Sessions**: stateless JWT (HS256, 7-day expiry) passed as `Authorization: Bearer`. In production a real `JWT_SECRET` is mandatory.
 - **SQL**: every query is parameterised (`$1, $2 ...` placeholders) via `pg`. Table names come only from a hardcoded internal whitelist — never from user input. Registration creates the user and its settings row inside a single transaction.
-- **Input validation**: phone, password, code, purpose, and page identifiers are validated at the boundary; stored data must be a plain object under ~200 KB.
+- **Input validation**: email (normalised to lowercase), password, code, purpose, and page identifiers are validated at the boundary; stored data must be a plain object under ~200 KB.
 - **Transport/headers**: `helmet` sets secure HTTP headers; CORS is restricted to the required methods/headers with credentials disabled. CORS uses an explicit allowlist (`CORS_ORIGIN`) with no wildcard origin reflection — dev falls back to localhost, and production blocks all origins when unset.
 - **Error handling**: a central handler logs full errors server-side and returns generic, stack-free JSON to clients. Login uses a generic error to avoid account enumeration.
 
