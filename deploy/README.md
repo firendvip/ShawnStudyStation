@@ -167,5 +167,5 @@ docker compose up -d --build
 
 - **不要**把 `deploy/.env` 和 `deploy/certs/*.pem` 提交到 git(已在 `.gitignore` 忽略)。
 - 定期备份数据库(见运维章节)。
-- 短信为**付费**服务,注意账户余额与频控配置,避免被刷。
+- 邮箱验证码:个人邮箱有每日发信上限,注意频控配置避免被刷;用户量大时改用事务邮件服务(见 `../docs/邮箱验证码配置指引.md`)。
 - `JWT_SECRET` / `POSTGRES_PASSWORD` 务必使用强随机值;如疑似泄露应立即轮换。
