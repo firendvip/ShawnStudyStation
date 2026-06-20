@@ -30,7 +30,7 @@ const AUTH_MAX = 30;
 const MAX_SENDS_PER_HOUR = 5;
 const TOO_MANY_REQUESTS = 429;
 
-// IP-level limiters layered on top of per-phone limits enforced in codes.js.
+// IP-level limiters layered on top of per-email limits enforced in codes.js.
 const sendCodeLimiter = rateLimit({
   windowMs: RATE_WINDOW_MS,
   max: SEND_CODE_MAX,
