@@ -48,14 +48,14 @@ const authLimiter = rateLimit({
 });
 
 /**
- * Look up a user by phone. Returns the row or null.
- * @param {string} phone
- * @returns {Promise<{id: number, phone: string, password_hash: string} | null>}
+ * Look up a user by email. Returns the row or null.
+ * @param {string} email
+ * @returns {Promise<{id: number, email: string, password_hash: string} | null>}
  */
-async function findUserByPhone(phone) {
+async function findUserByEmail(email) {
   const { rows } = await query(
-    'SELECT id, phone, password_hash FROM users WHERE phone = $1',
-    [phone]
+    'SELECT id, email, password_hash FROM users WHERE email = $1',
+    [email]
   );
   return rows[0] || null;
 }
