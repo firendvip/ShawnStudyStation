@@ -187,7 +187,7 @@ router.post('/login', authLimiter, async (req, res, next) => {
  * GET /me — return the authenticated user's identity.
  */
 router.get('/me', requireAuth, (req, res) => {
-  res.json({ user: { id: req.user.id, phone: req.user.phone } });
+  res.json({ user: { id: req.user.id, email: req.user.email } });
 });
 
 module.exports = router;
