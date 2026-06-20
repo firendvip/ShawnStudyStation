@@ -127,8 +127,8 @@ curl -X POST http://localhost:4000/api/auth/register \
 ```bash
 curl -X POST http://localhost:4000/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"phone":"13800138000","password":"supersecret"}'
-# {"token":"<jwt>","user":{"id":1,"phone":"13800138000"}}
+  -d '{"email":"user@example.com","password":"supersecret"}'
+# {"token":"<jwt>","user":{"id":1,"email":"user@example.com"}}
 ```
 
 #### Current user
