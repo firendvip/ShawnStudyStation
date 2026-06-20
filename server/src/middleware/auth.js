@@ -19,7 +19,7 @@ function extractUser(req) {
 
   try {
     const decoded = verifyToken(token);
-    return { id: decoded.id, phone: decoded.phone };
+    return { id: decoded.id, email: decoded.email };
   } catch (_err) {
     return null;
   }
