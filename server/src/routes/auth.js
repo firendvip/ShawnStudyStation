@@ -1,6 +1,6 @@
 'use strict';
 
-// Authentication routes: SMS code delivery, registration, login, and identity.
+// Authentication routes: email code delivery, registration, login, and identity.
 // Mounted at /api/auth.
 
 const express = require('express');
@@ -9,13 +9,14 @@ const rateLimit = require('express-rate-limit');
 const { query, getClient } = require('../db');
 const { config } = require('../config');
 const codes = require('../lib/codes');
-const { sendSmsCode } = require('../lib/sms');
+const { sendEmailCode } = require('../lib/email');
 const { hashPassword, verifyPassword } = require('../lib/password');
 const { signToken } = require('../lib/token');
 const { requireAuth } = require('../middleware/auth');
 const { httpError } = require('../middleware/errorHandler');
 const {
-  validatePhone,
+  validateEmail,
+  normalizeEmail,
   validatePassword,
   validateCode,
   validatePurpose,
