@@ -9,11 +9,11 @@ const JWT_ALGORITHM = 'HS256';
 
 /**
  * Sign a session token for an authenticated user.
- * @param {{id: number, phone: string}} payload
+ * @param {{id: number, email: string}} payload
  * @returns {string} signed JWT
  */
 function signToken(payload) {
-  const claims = { id: payload.id, phone: payload.phone };
+  const claims = { id: payload.id, email: payload.email };
   return jwt.sign(claims, config.jwtSecret, {
     algorithm: JWT_ALGORITHM,
     expiresIn: config.jwtExpiresIn,
