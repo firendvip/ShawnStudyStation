@@ -64,7 +64,7 @@ npm start      # production-style start
 npm run dev    # same entry point, for local development
 ```
 
-The server listens on `PORT` (default **4000**) and logs whether SMS is in DEV or LIVE mode on startup. It applies the schema (idempotent) before accepting connections.
+The server listens on `PORT` (default **4000**) and logs whether email is in DEV or LIVE mode on startup. It applies the schema (idempotent) before accepting connections.
 
 ## Environment Variables
 
