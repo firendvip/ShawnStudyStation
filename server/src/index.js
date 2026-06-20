@@ -55,9 +55,9 @@ app.use(errorHandler);
 ensureSchema()
   .then(() => {
     app.listen(config.port, () => {
-      const smsMode = config.smsDevMode || !isSmsConfigured() ? 'DEV (codes logged to console)' : 'LIVE (Tencent Cloud)';
+      const emailMode = config.emailDevMode || !isEmailConfigured() ? 'DEV (codes logged to console)' : 'LIVE (SMTP)';
       // eslint-disable-next-line no-console
-      console.log(`[server] 小善学习站 backend listening on port ${config.port} — SMS mode: ${smsMode}`);
+      console.log(`[server] 小善学习站 backend listening on port ${config.port} — Email mode: ${emailMode}`);
     });
   })
   .catch((err) => {
