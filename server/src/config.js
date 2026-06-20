@@ -55,14 +55,32 @@ function resolveJwtSecret() {
   return crypto.randomBytes(JWT_SECRET_BYTES).toString('hex');
 }
 
-const tencent = Object.freeze({
-  secretId: process.env.TENCENT_SECRET_ID || '',
-  secretKey: process.env.TENCENT_SECRET_KEY || '',
-  sdkAppId: process.env.TENCENT_SMS_SDK_APP_ID || '',
-  signName: process.env.TENCENT_SMS_SIGN_NAME || '',
-  templateId: process.env.TENCENT_SMS_TEMPLATE_ID || '',
-  region: process.env.TENCENT_SMS_REGION || 'ap-guangzhou',
+const DEFAULT_SMTP_FROM = '小善学习站 <no-reply@example.com>';
+
+const smtp = Object.freeze({
+  host: process.env.SMTP_HOST || '',
+  port: Number(process.env.SMTP_PORT) || DEFAULT_SMTP_PORT,
+  // Secure (implicit TLS) by default; set SMTP_SECURE=false for STARTTLS on 587.
+  secure: String(process.env.SMTP_SECURE).toLowerCase() !== 'false',
+  user: process.env.SMTP_USER || '',
+  pass: process.env.SMTP_PASS || '',
 });
+
+// Whether the minimal SMTP credentials are present.
+const emailCredsPresent = Boolean(smtp.host && smtp.user && smtp.pass);
+
+/**
+ * Resolve EMAIL_DEV_MODE. When explicitly set, honour it. When unset, default
+ * to dev mode (log codes) whenever SMTP credentials are missing — so the app is
+ * safe out of the box and never silently fails to deliver.
+ */
+function resolveEmailDevMode() {
+  const raw = process.env.EMAIL_DEV_MODE;
+  if (raw !== undefined && raw !== '') {
+    return String(raw).toLowerCase() === 'true';
+  }
+  return !emailCredsPresent;
+}
 
 /**
  * Resolve allowed CORS origins.
