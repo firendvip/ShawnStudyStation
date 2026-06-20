@@ -849,16 +849,16 @@
 
     /* Register */
     document.getElementById('btn-do-register').addEventListener('click', async () => {
-      const phone = document.getElementById('reg-phone').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
       const code = document.getElementById('reg-code').value.trim();
       const password = document.getElementById('reg-password').value;
       const errEl = document.getElementById('reg-error');
       clearError(errEl);
-      if (!phoneRe.test(phone)) { showError(errEl, '请输入正确的手机号'); return; }
+      if (!emailRe.test(email)) { showError(errEl, '请输入正确的邮箱'); return; }
       if (!/^\d{6}$/.test(code)) { showError(errEl, '请输入 6 位验证码'); return; }
       if (password.length < 8 || password.length > 64) { showError(errEl, '密码长度需为 8–64 位'); return; }
       try {
-        const r = await api('/auth/register', { method: 'POST', body: { phone, code, password } });
+        const r = await api('/auth/register', { method: 'POST', body: { email, code, password } });
         setToken(r.token);
         await onLoggedIn(r.user);
         closeModal();
