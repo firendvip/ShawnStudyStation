@@ -107,17 +107,18 @@ const config = Object.freeze({
   // Enable SSL for managed Postgres providers that require it. rejectUnauthorized
   // is relaxed because many providers use certs not in the default CA bundle.
   pgSsl: String(process.env.PGSSL).toLowerCase() === 'true',
-  smsDevMode: String(process.env.SMS_DEV_MODE).toLowerCase() === 'true',
   corsOrigins: resolveCorsOrigins(),
-  tencent,
+  smtp,
+  smtpFrom: process.env.SMTP_FROM || DEFAULT_SMTP_FROM,
+  emailDevMode: resolveEmailDevMode(),
 });
 
 /**
- * True only when every Tencent Cloud SMS credential is present.
+ * True only when the minimal SMTP delivery settings are present.
  */
-function isSmsConfigured() {
-  const { secretId, secretKey, sdkAppId, signName, templateId, region } = config.tencent;
-  return Boolean(secretId && secretKey && sdkAppId && signName && templateId && region);
+function isEmailConfigured() {
+  const { host, port, user, pass } = config.smtp;
+  return Boolean(host && port && user && pass && config.smtpFrom);
 }
 
-module.exports = { config, isSmsConfigured };
+module.exports = { config, isEmailConfigured };
