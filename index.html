@@ -883,7 +883,15 @@
     /* Logged-in state */
     let currentUser = null;
     let userSettings = {};
-    const maskPhone = p => { p = String(p); return p.length === 11 ? p.slice(0,3) + '****' + p.slice(7) : p; };
+    const maskEmail = e => {
+      e = String(e);
+      const at = e.indexOf('@');
+      if (at < 1) return e;
+      const local = e.slice(0, at);
+      const domain = e.slice(at);
+      const visible = local.slice(0, Math.min(2, local.length));
+      return visible + '***' + domain;
+    };
 
     async function onLoggedIn(user) {
       currentUser = user;
