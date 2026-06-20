@@ -2,7 +2,7 @@
 
 Secure Node.js (Express + PostgreSQL) backend for the 小善学习站 study site.
 
-Authentication is **phone-number-only** with SMS verification codes (Tencent Cloud SMS), JWT bearer sessions, and per-page user data persisted in PostgreSQL. The website works fully anonymously; logged-in users get their data saved, separated by page into different tables.
+Authentication is **email-based** with SMTP verification codes (via nodemailer), JWT bearer sessions, and per-page user data persisted in PostgreSQL. The website works fully anonymously; logged-in users get their data saved, separated by page into different tables.
 
 ## Requirements
 
