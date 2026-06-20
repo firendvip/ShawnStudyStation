@@ -137,19 +137,19 @@ router.post('/register', authLimiter, async (req, res, next) => {
       await client.query('COMMIT');
     } catch (txErr) {
       await client.query('ROLLBACK');
-      // A concurrent register for the same phone can win the race between our
-      // existence check and INSERT, tripping the UNIQUE(phone) constraint.
+      // A concurrent register for the same email can win the race between our
+      // existence check and INSERT, tripping the UNIQUE(email) constraint.
       // Translate that (Postgres error code 23505) into the same clean 409 the
       // pre-check returns, instead of leaking a raw 500.
       if (txErr && txErr.code === '23505') {
-        throw httpError(409, '该手机号已注册');
+        throw httpError(409, '该邮箱已注册');
       }
       throw txErr;
     } finally {
       client.release();
     }
 
-    const user = { id: Number(userId), phone };
+    const user = { id: Number(userId), email: normalizedEmail };
     const token = signToken(user);
     return res.json({ token, user });
   } catch (err) {
