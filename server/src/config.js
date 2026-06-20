@@ -8,6 +8,7 @@ require('dotenv').config();
 
 const DEFAULT_PORT = 4000;
 const JWT_SECRET_BYTES = 32;
+const DEFAULT_SMTP_PORT = 465;
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 const isProduction = nodeEnv === 'production';
