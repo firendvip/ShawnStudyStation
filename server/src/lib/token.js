@@ -24,7 +24,7 @@ function signToken(payload) {
  * Verify a session token and return its decoded claims.
  * Throws if the token is invalid or expired.
  * @param {string} token
- * @returns {{id: number, phone: string, iat: number, exp: number}}
+ * @returns {{id: number, email: string, iat: number, exp: number}}
  */
 function verifyToken(token) {
   return jwt.verify(token, config.jwtSecret, { algorithms: [JWT_ALGORITHM] });
