@@ -8,15 +8,15 @@
 
 CREATE TABLE IF NOT EXISTS users (
   id BIGSERIAL PRIMARY KEY,
-  phone TEXT UNIQUE NOT NULL,
+  email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   created_at BIGINT NOT NULL,
   updated_at BIGINT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS sms_codes (
+CREATE TABLE IF NOT EXISTS email_codes (
   id BIGSERIAL PRIMARY KEY,
-  phone TEXT NOT NULL,
+  email TEXT NOT NULL,
   code_hash TEXT NOT NULL,
   purpose TEXT NOT NULL,
   expires_at BIGINT NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS sms_codes (
   created_at BIGINT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_sms_phone ON sms_codes(phone, created_at);
+CREATE INDEX IF NOT EXISTS idx_email_codes_email ON email_codes(email, created_at);
 
 CREATE TABLE IF NOT EXISTS global_settings (
   user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
