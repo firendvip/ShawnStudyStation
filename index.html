@@ -729,6 +729,18 @@
     });
 
     /* ── View switching ── */
+    function pausePhonics() {
+      const f = document.getElementById('frame-phonics');
+      if (!f || !f.getAttribute('src')) return;
+      try {
+        const doc = f.contentDocument || (f.contentWindow && f.contentWindow.document);
+        if (!doc) throw new Error('no doc');
+        doc.querySelectorAll('audio, video').forEach(m => { try { m.pause(); } catch (e) {} });
+      } catch (e) {
+        f.removeAttribute('src'); // blocked → blank to guarantee silence; reloads on return
+      }
+    }
+
     function switchView(viewName) {
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
       const target = document.getElementById('view-' + viewName);
@@ -739,6 +751,7 @@
           frame.setAttribute('src', CONFIG[frame.getAttribute('data-app')]);
         }
       }
+      if (viewName !== 'phonics') pausePhonics();
     }
 
     /* Top-level plain nav links + logo */
