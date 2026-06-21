@@ -8,10 +8,7 @@ const WINDOW_MS = 60_000
 
 /** 列出记录:?scope=all 全部,否则今天。 */
 export async function GET(request: Request) {
-  const user = await getCurrentUser()
-  if (!user) {
-    return fail('未登录', 401)
-  }
+  const user = await getOrCreateUser()
   try {
     const scope = new URL(request.url).searchParams.get('scope')
     return ok(scope === 'all' ? await listAll(user.id) : await listToday(user.id))
