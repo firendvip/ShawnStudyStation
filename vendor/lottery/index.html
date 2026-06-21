@@ -255,8 +255,15 @@
             width: 100%;
             padding: 10px;
             margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            background: var(--color-surface);
+            border: 1.5px solid var(--color-line-strong);
+            border-radius: var(--radius-sm);
+            color: var(--color-ink);
+        }
+
+        .prize-input:focus, .title-input:focus, .player-input:focus {
+            border-color: var(--color-accent);
+            outline: none;
         }
         
         .image-upload {
