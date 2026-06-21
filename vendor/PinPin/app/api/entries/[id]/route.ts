@@ -11,10 +11,7 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const user = await getCurrentUser()
-  if (!user) {
-    return fail('未登录', 401)
-  }
+  const user = await getOrCreateUser()
   if (!rateLimit(`entries-patch:${getClientIp(request)}`, 120, WINDOW_MS)) {
     return fail('操作过于频繁,请稍后再试', 429)
   }
