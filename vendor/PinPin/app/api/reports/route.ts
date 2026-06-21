@@ -16,10 +16,7 @@ export async function GET() {
 
 /** 手动生成:按书写日期区间 + 排版选项生成 PDF。 */
 export async function POST(request: Request) {
-  const user = await getCurrentUser()
-  if (!user) {
-    return fail('未登录', 401)
-  }
+  const user = await getOrCreateUser()
   let body: unknown
   try {
     body = await request.json()
