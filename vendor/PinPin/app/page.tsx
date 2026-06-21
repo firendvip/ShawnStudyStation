@@ -69,14 +69,28 @@ export default function HomePage() {
 
   const today = todayLocalDate()
 
-  const loadToday = useCallback(async () => setTodayEntries(await fetchToday()), [])
+  const loadToday = useCallback(async () => {
+    try {
+      setTodayEntries(await fetchToday())
+    } catch {
+      setTodayEntries([])
+    }
+  }, [])
   // 今日拼拼 = 第一次书写(前一天录入,今天首写)
   const loadTodayPractice = useCallback(async () => {
-    setTodayPractice(await fetchPracticeForDate(undefined, 'first'))
+    try {
+      setTodayPractice(await fetchPracticeForDate(undefined, 'first'))
+    } catch {
+      setTodayPractice([])
+    }
   }, [])
   // 周拼拼 = 第二次书写(按周÷7 分摊到今天的复写)
   const loadWeekPractice = useCallback(async () => {
-    setWeekPractice(await fetchPracticeForDate(undefined, 'second'))
+    try {
+      setWeekPractice(await fetchPracticeForDate(undefined, 'second'))
+    } catch {
+      setWeekPractice([])
+    }
   }, [])
 
   // 启动时检查登录态
