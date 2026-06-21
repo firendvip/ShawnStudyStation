@@ -1,13 +1,10 @@
 import { getSettings, saveSettings } from '@/lib/settings'
 import { settingsSchema } from '@/lib/validation'
 import { ok, fail } from '@/lib/http'
-import { getCurrentUser } from '@/lib/auth'
+import { getOrCreateUser } from '@/lib/auth'
 
 export async function GET() {
-  const user = await getCurrentUser()
-  if (!user) {
-    return fail('未登录', 401)
-  }
+  const user = await getOrCreateUser()
   try {
     return ok(await getSettings(user.id))
   } catch (error) {
