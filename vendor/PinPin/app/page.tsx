@@ -281,12 +281,6 @@ export default function HomePage() {
           onSave={handleSaveSettings}
         />
       )}
-      {showLogin && (
-        <LoginModal
-          onClose={() => setShowLogin(false)}
-          onSuccess={() => window.location.reload()}
-        />
-      )}
     </div>
   )
 }
