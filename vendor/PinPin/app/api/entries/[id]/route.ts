@@ -2,7 +2,7 @@ import { deleteEntry, updateEntry } from '@/lib/entries'
 import { updateEntrySchema } from '@/lib/validation'
 import { ok, fail, getClientIp } from '@/lib/http'
 import { rateLimit } from '@/lib/rateLimit'
-import { getCurrentUser } from '@/lib/auth'
+import { getOrCreateUser } from '@/lib/auth'
 
 const WINDOW_MS = 60_000
 
