@@ -381,8 +381,9 @@ function cardEl(rec,kind){
  const pb=el.querySelector('.pausebtn');
  /* 暂停/播放：有当前媒体则暂停-继续；若已停止(如看完视频返回)则重新播放本卡，避免按钮失效 */
  pb.addEventListener('click',e=>{e.stopPropagation();
-   const mine=Cur.video&&Cur.video.dataset&&Cur.video.dataset.cid===rec.id;
-   if(mine||Cur.audio||('speechSynthesis'in window&&speechSynthesis.speaking)){ pauseToggle(pb); }
+   const mineV=Cur.video&&Cur.video.dataset&&Cur.video.dataset.cid===rec.id;
+   const narrating=cardAudioEl&&cardAudioEl.src&&!cardAudioEl.ended;
+   if(mineV||narrating||Cur.audio||('speechSynthesis'in window&&speechSynthesis.speaking)){ setActivePB(pb); pauseToggle(pb); }
    else { setActivePB(pb); playCard(rec); syncPI(); setTimeout(syncPI,60); } });
  function flip(){ stopPlayback(); el.classList.toggle('flipped');
    if(el.classList.contains('flipped')){ setActivePB(pb); playCard(rec); syncPI(); setTimeout(syncPI,60); }
