@@ -321,6 +321,7 @@ function openVideo(rec,pb){
  document.body.appendChild(m); if(v.paused)v.play().catch(()=>{}); }
 function pauseToggle(btn){
  if(Cur.video){ if(Cur.video.paused){Cur.video.play();setPI(btn,false);}else{Cur.video.pause();setPI(btn,true);} }
+ else if(cardAudioEl&&cardAudioEl.src&&!cardAudioEl.ended){ if(cardAudioEl.paused){cardAudioEl.play().catch(()=>{});setPI(btn,false);}else{cardAudioEl.pause();setPI(btn,true);} }
  else if(Cur.audio){ if(Cur.audio.paused){Cur.audio.play();setPI(btn,false);}else{Cur.audio.pause();setPI(btn,true);} }
  else if('speechSynthesis'in window){ if(speechSynthesis.paused){speechSynthesis.resume();setPI(btn,false);}
    else if(speechSynthesis.speaking){speechSynthesis.pause();setPI(btn,true);} } }
