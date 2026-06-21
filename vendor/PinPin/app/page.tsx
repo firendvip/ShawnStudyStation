@@ -93,24 +93,30 @@ export default function HomePage() {
     }
   }, [])
 
-  // 启动时检查登录态
+  // 启动时获取访客身份(免登录:后端会自动创建访客并种 cookie)
   useEffect(() => {
     ;(async () => {
       try {
         setUser(await fetchMe())
+      } catch {
+        // 拿不到用户也不阻塞页面渲染
       } finally {
         setAuthLoading(false)
       }
     })()
   }, [])
 
-  // 登录后加载该用户的数据
+  // 取到用户后加载其数据(各步骤独立兜底,任一失败不影响其余)
   useEffect(() => {
     if (!user) {
       return
     }
     ;(async () => {
-      setSettings(await fetchSettings())
+      try {
+        setSettings(await fetchSettings())
+      } catch {
+        // 设置加载失败时保持默认,不阻塞下方拼拼数据
+      }
       await Promise.all([loadToday(), loadTodayPractice(), loadWeekPractice()])
     })().catch(() => {})
   }, [user, loadToday, loadTodayPractice, loadWeekPractice])
