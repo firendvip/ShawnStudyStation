@@ -9,7 +9,6 @@ import {
   fetchSettings,
   saveSettings,
   fetchMe,
-  logout,
   type AddResult,
 } from '@/lib/api'
 import { formatCNFull, todayLocalDate } from '@/lib/date'
