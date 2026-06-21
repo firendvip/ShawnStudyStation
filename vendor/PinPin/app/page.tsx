@@ -66,7 +66,6 @@ export default function HomePage() {
   const [revealed, setRevealed] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [showLogin, setShowLogin] = useState(false)
 
   const today = todayLocalDate()
 
