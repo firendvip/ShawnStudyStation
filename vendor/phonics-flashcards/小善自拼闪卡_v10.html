@@ -258,13 +258,18 @@ function playItems(items,done){ Cur.token++; const my=Cur.token;
 function wordItems(w,times){ const out=[]; for(let i=0;i<(times||1);i++){
    out.push(WORDAUDIO[w] ? {audio:WORDAUDIO[w],alt:w,rate:0.85} : {tts:w,rate:0.85}); } return out; }
 function sayWord(w){ playItems(wordItems(w,1)); }
+/* 视频缺失/加载失败时的回退：用浏览器 TTS 朗读该卡英文单词，保证有发音。 */
+function speakCardFallback(rec){ if(!rec||!('speechSynthesis'in window))return;
+ const word=(rec.words&&rec.words[0]&&rec.words[0].w)||rec.cue; if(!word)return;
+ try{ const u=new SpeechSynthesisUtterance(word); u.lang='en-US'; u.rate=0.9;
+   speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){} }
 /* 翻面：后台播放该卡 MP4 的声音（不显画面），仅一次。用预加载缓存做到秒播放。 */
 function playCard(rec){ stopPlayback();
  const v=getVideoEl(rec.id);
- if(!v){ if(rec.cue)playItems([{tts:rec.cue,rate:0.85}]); return; }
+ if(!v){ if(rec.cue)playItems([{tts:rec.cue,rate:0.85}]); else speakCardFallback(rec); return; }
  Cur.token++; Cur.video=v; if(v.parentNode!==mediaHost)mediaHost.appendChild(v); v.controls=false; v.classList.remove('vfront');
  try{v.currentTime=0;}catch(e){} v.playbackRate=playRate;
- v.play().catch(()=>{}); }
+ v.play().catch(()=>{ speakCardFallback(rec); }); }
 /* ===== 视频按钮：把（正在后台播的）该卡视频调到前台弹窗显示；互斥、翻卡自动关 ===== */
 function openVideo(rec){
  let v=Cur.video;
