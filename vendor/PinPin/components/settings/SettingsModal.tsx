@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { MAX_FONT_SIZE, MIN_FONT_SIZE, type AppSettings } from '@/lib/types'
+import { buildDefaultSettings, MAX_FONT_SIZE, MIN_FONT_SIZE, type AppSettings } from '@/lib/types'
 import styles from './SettingsModal.module.css'
 
 type Props = {
