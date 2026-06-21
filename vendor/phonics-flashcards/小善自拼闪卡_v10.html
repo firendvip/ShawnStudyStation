@@ -263,13 +263,24 @@ function speakCardFallback(rec){ if(!rec||!('speechSynthesis'in window))return;
  const word=(rec.words&&rec.words[0]&&rec.words[0].w)||rec.cue; if(!word)return;
  try{ const u=new SpeechSynthesisUtterance(word); u.lang='en-US'; u.rate=0.9;
    speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){} }
-/* 翻面：后台播放该卡 MP4 的声音（不显画面），仅一次。用预加载缓存做到秒播放。 */
+/* 取该卡用于发音的英文单词（优先 words[0].w，回退 cue）。 */
+function cardWord(rec){ return (rec&&rec.words&&rec.words[0]&&rec.words[0].w)||(rec&&rec.cue)||''; }
+/* 发音始终独立于 MP4：优先内嵌真人录音(WORDAUDIO)，否则浏览器 TTS。保证任何环境都有声音。 */
+function pronounceCard(rec){
+ try{
+   const w=cardWord(rec); if(!w)return;
+   if(WORDAUDIO[w]){ playItems([{audio:WORDAUDIO[w],alt:w,rate:0.85}]); return; }
+   if('speechSynthesis'in window){ playItems([{tts:w,rate:0.9}]); return; }
+ }catch(e){ try{ speakCardFallback(rec); }catch(_){} }
+}
+/* 翻面：始终发声（录音/TTS）；MP4 仅用于画面，加载成功才静默后台预热，发音不依赖它。 */
 function playCard(rec){ stopPlayback();
- const v=getVideoEl(rec.id);
- if(!v){ if(rec.cue)playItems([{tts:rec.cue,rate:0.85}]); else speakCardFallback(rec); return; }
- Cur.token++; Cur.video=v; if(v.parentNode!==mediaHost)mediaHost.appendChild(v); v.controls=false; v.classList.remove('vfront');
- try{v.currentTime=0;}catch(e){} v.playbackRate=playRate;
- v.play().catch(()=>{ speakCardFallback(rec); }); }
+ pronounceCard(rec);
+ try{
+   const v=getVideoEl(rec.id);
+   if(v){ Cur.video=v; if(v.parentNode!==mediaHost)mediaHost.appendChild(v); v.controls=false; v.classList.remove('vfront');
+     try{v.currentTime=0;}catch(e){} v.playbackRate=playRate; }
+ }catch(e){} }
 /* ===== 视频按钮：把（正在后台播的）该卡视频调到前台弹窗显示；互斥、翻卡自动关 ===== */
 function openVideo(rec){
  let v=Cur.video;
