@@ -78,6 +78,20 @@ export const DEFAULT_PRINT_SETTINGS = {
   printEvenDistribute: true,
 } as const
 
+/**
+ * 组合出一份完整的默认设置。
+ * 周期起始日没有固定默认值(默认为今天),因此保留当前值。
+ */
+export function buildDefaultSettings(cycleStartDate: string): AppSettings {
+  return {
+    cycleStartDate,
+    pinyinFontSize: DEFAULT_PINYIN_FONT_SIZE,
+    answerFontSize: DEFAULT_ANSWER_FONT_SIZE,
+    dateEntryEnabled: false,
+    ...DEFAULT_PRINT_SETTINGS,
+  }
+}
+
 /** 网格 / 打印排版选项(PDF 用) */
 export interface GridOptions {
   columns: number
