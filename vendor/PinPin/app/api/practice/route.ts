@@ -16,10 +16,7 @@ import type { EntryItem } from '@/lib/types'
  * - ?date(或不传=今天)+?pass=first|second|both(默认 both):单日。
  */
 export async function GET(request: Request) {
-  const user = await getCurrentUser()
-  if (!user) {
-    return fail('未登录', 401)
-  }
+  const user = await getOrCreateUser()
 
   const url = new URL(request.url)
   const from = url.searchParams.get('from')
