@@ -722,6 +722,17 @@
         clearTimeout(openTimer);
         closeDropdown(item, false);
       });
+      // Click the trigger to toggle (open if closed, collapse if open)
+      const trigger = item.querySelector('.nav-link');
+      if (trigger) {
+        trigger.addEventListener('click', e => {
+          e.preventDefault();
+          clearTimeout(openTimer);
+          clearTimeout(closeTimer);
+          if (item.classList.contains('open')) closeDropdown(item, true);
+          else openDropdown(item);
+        });
+      }
     });
 
     document.addEventListener('click', e => {
