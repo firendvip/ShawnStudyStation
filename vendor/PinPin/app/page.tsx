@@ -192,18 +192,6 @@ export default function HomePage() {
           >
             <GearIcon />
           </button>
-          {user.isGuest ? (
-            <button type="button" className={styles.logout} onClick={() => setShowLogin(true)}>
-              登录 / 同步
-            </button>
-          ) : (
-            <>
-              <span className={styles.account}>{user.phone}</span>
-              <button type="button" className={styles.logout} onClick={handleLogout}>
-                退出
-              </button>
-            </>
-          )}
         </div>
       </header>
 
