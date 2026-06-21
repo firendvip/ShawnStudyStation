@@ -7,7 +7,7 @@ import {
 import { dateSchema } from '@/lib/validation'
 import { todayLocalDate } from '@/lib/date'
 import { ok, fail } from '@/lib/http'
-import { getCurrentUser } from '@/lib/auth'
+import { getOrCreateUser } from '@/lib/auth'
 import type { EntryItem } from '@/lib/types'
 
 /**
