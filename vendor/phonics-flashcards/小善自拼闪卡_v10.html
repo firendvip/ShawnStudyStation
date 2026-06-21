@@ -384,7 +384,7 @@ function cardEl(rec,kind){
    else { setActivePB(pb); playCard(rec); syncPI(); setTimeout(syncPI,60); } });
  function flip(){ stopPlayback(); el.classList.toggle('flipped');
    if(el.classList.contains('flipped')){ setActivePB(pb); playCard(rec); syncPI(); setTimeout(syncPI,60); }
-   else { setPI(pb,false); } }
+   else { if(activePB===pb)setActivePB(null); setPI(pb,true); } }
  el.addEventListener('click',flip);
  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip();}});
  return el;
