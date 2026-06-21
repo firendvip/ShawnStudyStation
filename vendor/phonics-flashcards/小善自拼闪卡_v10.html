@@ -284,6 +284,7 @@ function playCardAudio(rec){
    if(!rec||!rec.id) return false;
    const url="audio/card/"+rec.id+".mp3";
    if(!cardAudioEl){ cardAudioEl=new Audio(); cardAudioEl.preload="auto"; }
+   try{ bindAudioIcon(cardAudioEl); }catch(_){}
    cardAudioEl.onerror=function(){ try{ pronounceCardFallback(rec); }catch(_){} };
    try{ cardAudioEl.currentTime=0; }catch(e){}
    cardAudioEl.src=url;
