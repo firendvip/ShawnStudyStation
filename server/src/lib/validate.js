@@ -8,7 +8,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const EMAIL_MAX = 254;
 const CODE_RE = /^\d{6}$/;
 const PAGE_RE = /^[a-z0-9_-]{1,32}$/;
-const PASSWORD_MIN = 8;
+const PASSWORD_MIN = 4;
 const PASSWORD_MAX = 64;
 const PURPOSE_WHITELIST = Object.freeze(['register', 'login', 'reset']);
 
