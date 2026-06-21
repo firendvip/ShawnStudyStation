@@ -194,6 +194,7 @@ function preloadCard(cid){ if(videoCache[cid])return; getVideoEl(cid); }
 /* ===== state ===== */
 let mode='card', sub=null, unitIdx=0;
 let showCN=false, showAllWords=false, dictRandom=true, pauseMs=5000, playRate=1, useTrimVideo=true;
+var cardAudioEl=null;
 let theme='classic';
 const revealedWords=new Set();
 const SPEEDS=[0.25,0.5,0.75,1,1.5,2,3,4];
