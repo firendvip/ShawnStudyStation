@@ -208,6 +208,9 @@ export function SettingsModal({ settings, onClose, onSave }: Props) {
         </div>
 
         <div className={styles.actions}>
+          <button type="button" className={styles.restore} onClick={handleRestoreDefaults}>
+            恢复默认设置
+          </button>
           <button type="button" className={styles.cancel} onClick={onClose}>
             取消
           </button>
