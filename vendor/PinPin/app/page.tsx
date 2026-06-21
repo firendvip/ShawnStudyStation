@@ -66,8 +66,6 @@ export default function HomePage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
 
-  const today = todayLocalDate()
-
   const loadToday = useCallback(async () => {
     try {
       setTodayEntries(await fetchToday())
