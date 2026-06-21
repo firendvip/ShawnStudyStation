@@ -20,10 +20,7 @@ export async function GET(request: Request) {
 
 /** 录入字词(同日去重)。 */
 export async function POST(request: Request) {
-  const user = await getCurrentUser()
-  if (!user) {
-    return fail('未登录', 401)
-  }
+  const user = await getOrCreateUser()
   if (!rateLimit(`entries-post:${getClientIp(request)}`, 120, WINDOW_MS)) {
     return fail('操作过于频繁,请稍后再试', 429)
   }
