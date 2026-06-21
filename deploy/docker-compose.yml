@@ -114,6 +114,8 @@ services:
       - ../assets:/usr/share/nginx/html/assets:ro
       # 自然拼读静态应用挂载到 /apps/phonics(含中文文件名)
       - ../vendor/phonics-flashcards:/usr/share/nginx/html/apps/phonics:ro
+      # 转盘静态应用挂载到 /apps/lottery(自包含 HTML)
+      - ../vendor/lottery:/usr/share/nginx/html/apps/lottery:ro
       # TLS 证书:把 fullchain.pem / privkey.pem 放进 ./certs(见 certs/README.md)
       - ./certs:/etc/nginx/certs:ro
       # Let's Encrypt webroot 验证目录(certbot --webroot -w ./certbot/www 时使用;
