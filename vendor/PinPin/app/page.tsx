@@ -177,36 +177,29 @@ export default function HomePage() {
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <h1 className={styles.brand}>
-          小善<span className={styles.brandAccent}>拼拼</span>
-        </h1>
-        <div className={styles.headerRight}>
-          <span className={styles.date}>{formatCNFull(today)}</span>
-          <button
-            type="button"
-            className={styles.gear}
-            onClick={() => setShowSettings(true)}
-            aria-label="设置"
-            title="设置"
-          >
-            <GearIcon />
-          </button>
-        </div>
-      </header>
-
-      <nav className={styles.tabs} aria-label="页面切换">
-        {TABS.map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            className={tab === key ? styles.tabActive : styles.tab}
-            onClick={() => switchTab(key)}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
+      <div className={styles.tabRow}>
+        <nav className={styles.tabs} aria-label="页面切换">
+          {TABS.map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              className={tab === key ? styles.tabActive : styles.tab}
+              onClick={() => switchTab(key)}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+        <button
+          type="button"
+          className={styles.gear}
+          onClick={() => setShowSettings(true)}
+          aria-label="设置"
+          title="设置"
+        >
+          <GearIcon />
+        </button>
+      </div>
 
       <main className={styles.card}>
         {tab === 'record' && (
