@@ -33,9 +33,9 @@
 
 .tabs {
   display: flex;
+  flex: 1;
   gap: var(--space-xs);
   padding: var(--space-xs);
-  margin-bottom: var(--space-lg);
   background: var(--color-accent-soft);
   border-radius: var(--radius-lg);
 }
@@ -54,9 +54,13 @@
     color var(--duration-fast) var(--ease-out);
 }
 
+.tab:hover {
+  color: var(--color-ink);
+}
+
 .tabActive {
-  background: var(--color-surface);
-  color: var(--color-accent-strong);
+  background: var(--color-accent);
+  color: #fff;
   box-shadow: var(--shadow-card);
 }
 
