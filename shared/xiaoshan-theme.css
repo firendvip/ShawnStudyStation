@@ -1,0 +1,228 @@
+/* ===========================================================================
+ * 小善学习站 — Canonical Design System (xiaoshan-theme.css)
+ * ---------------------------------------------------------------------------
+ * Single source of truth for the 小善 (Xiaoshan) visual language.
+ * Any sub-page / embedded app should either <link> this file or copy these
+ * tokens verbatim so the whole site reads as one product.
+ *
+ * Tokens mirror the main `index.html` exactly. See STYLE_GUIDE.md for usage.
+ * ========================================================================= */
+
+/* ── Design tokens ──────────────────────────────────────────────────────── */
+:root {
+  /* Surfaces & ink */
+  --color-paper:         #fcfaf4; /* page background (warm off-white) */
+  --color-surface:       #ffffff; /* cards, modals, inputs */
+  --color-ink:           #362c24; /* primary text */
+  --color-ink-soft:      #71675d; /* secondary text, labels */
+  --color-ink-dim:       #a09890; /* tertiary / placeholder text */
+
+  /* Brand accent (green) */
+  --color-accent:        #359658; /* primary brand green */
+  --color-accent-strong: #007c3a; /* hover / active / emphasis */
+  --color-accent-soft:   #dcf7e2; /* tinted hover backgrounds */
+
+  /* Lines */
+  --color-line:          #e5e1da; /* hairline dividers, soft borders */
+  --color-line-strong:   #d2cdc5; /* input borders, stronger separators */
+
+  /* Feedback */
+  --color-danger:        #c0392b; /* destructive text/border */
+  --color-danger-soft:   #fdecea; /* destructive hover background */
+
+  /* Overlay */
+  --color-overlay:       rgba(54, 44, 36, 0.38); /* modal scrim */
+
+  /* Radius */
+  --radius-sm:   0.5rem;   /* buttons, inputs */
+  --radius-md:   0.875rem; /* dropdowns, small cards */
+  --radius-lg:   1.25rem;  /* modals, large cards */
+
+  /* Elevation */
+  --shadow-nav:  0 4px 24px rgba(54, 44, 36, 0.08);
+  --shadow-card: 0 1px 2px rgba(54, 44, 36, .05), 0 8px 24px rgba(54, 44, 36, .06);
+  --shadow-modal:0 8px 48px rgba(54, 44, 36, 0.18);
+
+  /* Motion — fast, eased, never showy */
+  --duration-fast:   0.14s;
+  --duration-normal: 0.22s;
+  --ease-out:        cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+               "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
+}
+
+/* ── Reset (opt-in; harmless if already present) ────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* ── Page base ──────────────────────────────────────────────────────────── */
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  min-height: 100vh;
+}
+
+/* ── Headings ───────────────────────────────────────────────────────────── */
+h1, .xs-h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--color-ink);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+h2, .xs-h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  letter-spacing: -0.2px;
+}
+h3, .xs-h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+/* ── Links ──────────────────────────────────────────────────────────────── */
+a, .xs-link {
+  color: var(--color-accent-strong);
+  text-decoration: none;
+  transition: color var(--duration-fast);
+}
+a:hover, .xs-link:hover { color: var(--color-accent); text-decoration: underline; }
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+
+/* Primary — filled accent */
+.xs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.1rem;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1;
+  color: #fff;
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+.xs-btn:hover  { background: var(--color-accent-strong); }
+.xs-btn:active { background: var(--color-accent-strong); transform: translateY(0.5px); }
+.xs-btn:disabled,
+.xs-btn[disabled] {
+  background: var(--color-line-strong);
+  color: var(--color-ink-soft);
+  cursor: not-allowed;
+}
+
+/* Outline — transparent with accent border */
+.xs-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.1rem;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--color-accent);
+  background: transparent;
+  border: 1.5px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.xs-btn-outline:hover  { background: var(--color-accent-soft); }
+.xs-btn-outline:active { background: var(--color-accent-soft); }
+.xs-btn-outline:disabled,
+.xs-btn-outline[disabled] {
+  border-color: var(--color-line-strong);
+  color: var(--color-ink-dim);
+  cursor: not-allowed;
+}
+
+/* Danger — restrained warm red (destructive actions) */
+.xs-btn-danger {
+  color: var(--color-danger);
+  background: transparent;
+  border: 1.5px solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 1.1rem;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.xs-btn-danger:hover { background: var(--color-danger-soft); }
+
+/* ── Inputs ─────────────────────────────────────────────────────────────── */
+.xs-input {
+  width: 100%;
+  padding: 0.6rem 0.875rem;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color var(--duration-fast);
+}
+.xs-input::placeholder { color: var(--color-ink-dim); }
+.xs-input:focus { border-color: var(--color-accent); }
+
+.xs-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-ink-soft);
+  margin-bottom: 0.35rem;
+}
+
+/* ── Card ───────────────────────────────────────────────────────────────── */
+.xs-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 1.5rem;
+}
+
+/* ── Segmented control ──────────────────────────────────────────────────── */
+.xs-segmented {
+  display: inline-flex;
+  gap: 0.125rem;
+  padding: 0.25rem;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+}
+.xs-segmented button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-ink-soft);
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.xs-segmented button:hover { color: var(--color-ink); }
+.xs-segmented button[aria-selected="true"],
+.xs-segmented button.active {
+  background: var(--color-surface);
+  color: var(--color-accent-strong);
+  box-shadow: var(--shadow-card);
+}
