@@ -11,7 +11,6 @@ import {
   fetchMe,
   type AddResult,
 } from '@/lib/api'
-import { todayLocalDate } from '@/lib/date'
 import type { AppSettings, AuthUser, EntryItem, PracticeDay } from '@/lib/types'
 import { RecordPanel } from '@/components/record/RecordPanel'
 import { TodayList } from '@/components/record/TodayList'
