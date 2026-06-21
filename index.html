@@ -62,6 +62,19 @@
       cursor: pointer;
     }
     .logo span { color: var(--color-accent); }
+    .brand-wrap { display: inline-flex; align-items: baseline; flex-shrink: 0; }
+    .logo-page {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--color-ink-soft);
+      letter-spacing: 0;
+    }
+    .logo-page:not(:empty)::before {
+      content: "·";
+      margin: 0 0.5rem;
+      color: var(--color-ink-dim);
+      font-weight: 400;
+    }
 
     /* ════════ NAV ════════ */
     .nav-center {
