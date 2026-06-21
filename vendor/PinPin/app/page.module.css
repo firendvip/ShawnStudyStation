@@ -80,19 +80,6 @@
   min-height: 2.2rem;
 }
 
-.headerRight {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.date {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--color-accent);
-  white-space: nowrap;
-}
-
 .count {
   font-size: 0.95rem;
   font-weight: 700;
