@@ -381,8 +381,10 @@ function cardEl(rec,kind){
  pb.addEventListener('click',e=>{e.stopPropagation();
    const mine=Cur.video&&Cur.video.dataset&&Cur.video.dataset.cid===rec.id;
    if(mine||Cur.audio||('speechSynthesis'in window&&speechSynthesis.speaking)){ pauseToggle(pb); }
-   else { playCard(rec); setPI(pb,false); } });
- function flip(){ stopPlayback(); el.classList.toggle('flipped'); if(el.classList.contains('flipped')){setPI(pb,false);playCard(rec);}}
+   else { setActivePB(pb); playCard(rec); syncPI(); setTimeout(syncPI,60); } });
+ function flip(){ stopPlayback(); el.classList.toggle('flipped');
+   if(el.classList.contains('flipped')){ setActivePB(pb); playCard(rec); syncPI(); setTimeout(syncPI,60); }
+   else { setPI(pb,false); } }
  el.addEventListener('click',flip);
  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip();}});
  return el;
