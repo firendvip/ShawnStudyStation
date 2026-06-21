@@ -239,6 +239,7 @@ function closeVideo(){ const m=document.getElementById('vmodal'); if(!m)return;
  m.remove(); }
 function stopVideo(){ if(Cur.video){ try{Cur.video.pause();}catch(e){} Cur.video=null; } closeVideo(); }
 function stopPlayback(){ Cur.token++; if(Cur.audio){try{Cur.audio.pause();}catch(e){}Cur.audio=null;}
+ try{ if(cardAudioEl){ cardAudioEl.pause(); cardAudioEl.currentTime=0; } }catch(e){}
  try{speechSynthesis.cancel();}catch(e){} stopVideo(); }
 function speakOne(text,rate,my,next){ if(!('speechSynthesis'in window)||!text){ next(); return; }
  const u=utter(text,rate); u.onend=()=>{ if(my===Cur.token)next(); }; u.onerror=()=>{ if(my===Cur.token)next(); };
