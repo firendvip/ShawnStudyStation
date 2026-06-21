@@ -329,6 +329,30 @@ const PLAY='<svg viewBox="0 0 16 16" width="26" height="26" fill="currentColor">
 const IC_PAUSE='<svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor"><rect x="4.4" y="3.2" width="2.9" height="9.6" rx="1"/><rect x="8.7" y="3.2" width="2.9" height="9.6" rx="1"/></svg>';
 const IC_PLAY='<svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor"><path d="M5.5 3.2 L13 8 L5.5 12.8 Z"/></svg>';
 function setPI(btn,paused){ if(btn)btn.innerHTML=paused?IC_PLAY:IC_PAUSE; }
+/* 当前“归属”的暂停/播放按钮：共享媒体(cardAudioEl/视频)的 play/pause/ended 事件统一驱动它，
+   使图标永远反映真实播放状态——播放中显示⏸，停/暂停/播完恢复▶，绝不卡在⏸。 */
+let activePB=null;
+function setActivePB(btn){ activePB=btn||null; }
+/* 是否有任一媒体正在出声（音频/视频未暂停，或 TTS 正在说） */
+function anyPlaying(){
+ try{ if(cardAudioEl&&!cardAudioEl.paused&&!cardAudioEl.ended)return true; }catch(e){}
+ try{ if(Cur.audio&&!Cur.audio.paused)return true; }catch(e){}
+ try{ if(Cur.video&&!Cur.video.paused&&!Cur.video.ended)return true; }catch(e){}
+ try{ if('speechSynthesis'in window&&speechSynthesis.speaking&&!speechSynthesis.paused)return true; }catch(e){}
+ return false;
+}
+/* 根据真实状态刷新当前按钮图标 */
+function syncPI(){ if(activePB)setPI(activePB,!anyPlaying()); }
+/* 给共享的 cardAudioEl 绑定一次事件，驱动图标（幂等，避免重复绑定） */
+function bindAudioIcon(a){ if(!a||a._piBound)return; a._piBound=true;
+ ['play','playing'].forEach(ev=>a.addEventListener(ev,()=>{ if(activePB)setPI(activePB,false); }));
+ ['pause','ended','error'].forEach(ev=>a.addEventListener(ev,()=>{ syncPI(); }));
+}
+/* 给共享的视频元素绑定一次事件，驱动图标（幂等） */
+function bindVideoIcon(v){ if(!v||v._piBound)return; v._piBound=true;
+ ['play','playing'].forEach(ev=>v.addEventListener(ev,()=>{ if(activePB)setPI(activePB,false); }));
+ ['pause','ended','error'].forEach(ev=>v.addEventListener(ev,()=>{ syncPI(); }));
+}
 function setCorner(corner,id){ if(inReview(id)){corner.textContent='\u2212';corner.classList.add('on');}else{corner.textContent='+';corner.classList.remove('on');} }
 /* 例词：每行一个英文单词；显示中文时同一行英文+中文 */
 function wordLines(rec){ return rec.words.map(w=>'<div class="exline">'+w.w+(showCN&&w.cn?' <span class="cn">'+w.cn+'</span>':'')+'</div>').join(''); }
