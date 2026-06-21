@@ -21,6 +21,8 @@ const nextConfig: NextConfig = {
   // 子路径部署:为空时不启用,保持本地开发原样
   basePath: basePath || undefined,
   assetPrefix: basePath || undefined,
+  // 规范化为带尾斜杠的 /pinpin/，避免与 Nginx 之间 308↔301 重定向回环
+  trailingSlash: true,
   // pdfkit 需要读取自带字体数据文件,作为外部包从 node_modules 原样加载,避免被打包后丢失
   serverExternalPackages: ['pdfkit'],
   async headers() {
