@@ -1,14 +1,11 @@
 import { listReports, buildReportForRange } from '@/lib/reports'
 import { reportSchema } from '@/lib/validation'
 import { ok, fail } from '@/lib/http'
-import { getCurrentUser } from '@/lib/auth'
+import { getOrCreateUser } from '@/lib/auth'
 
 /** 列出已生成的 PDF。 */
 export async function GET() {
-  const user = await getCurrentUser()
-  if (!user) {
-    return fail('未登录', 401)
-  }
+  const user = await getOrCreateUser()
   try {
     return ok({ reports: await listReports(user.id) })
   } catch (error) {
