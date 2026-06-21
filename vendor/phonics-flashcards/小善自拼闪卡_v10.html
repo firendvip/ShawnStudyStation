@@ -186,6 +186,7 @@ function getVideoEl(cid){ const url=chosenVideoUrl(cid); if(!url)return null;
  let v=videoCache[cid];
  if(!v||v.dataset.url!==url){ if(v&&v.parentNode)v.parentNode.removeChild(v);
    v=document.createElement('video'); v.preload='auto'; v.playsInline=true; v.src=url; v.dataset.url=url; v.dataset.cid=cid;
+   v.addEventListener('error',()=>{ const rec=CARDS[cid]; if(rec)speakCardFallback(rec); });
    mediaHost.appendChild(v); videoCache[cid]=v; }
  return v; }
 function preloadCard(cid){ if(videoCache[cid])return; getVideoEl(cid); }
