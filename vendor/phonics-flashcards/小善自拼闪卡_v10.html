@@ -304,9 +304,10 @@ function playCard(rec){ stopPlayback();
  }catch(e){} }
 /* ===== 视频按钮：把（正在后台播的）该卡视频调到前台弹窗显示；互斥、翻卡自动关 ===== */
 function openVideo(rec){
- let v=Cur.video;
- if(!v || v.dataset.cid!==rec.id){ stopPlayback(); v=getVideoEl(rec.id); if(!v)return;
-   Cur.token++; Cur.video=v; try{v.currentTime=0;}catch(e){} v.playbackRate=playRate; }
+ /* 先停掉一切（含翻面旁白 cardAudioEl / 单词音 / TTS），保证看视频时不与旁白叠声 */
+ stopAllAudio();
+ let v=getVideoEl(rec.id); if(!v)return;
+ Cur.token++; Cur.video=v; try{v.currentTime=0;}catch(e){} v.playbackRate=playRate;
  const m=document.createElement('div'); m.id='vmodal'; m.className='vmodal';
  const box=document.createElement('div'); box.className='vbox';
  const close=document.createElement('button'); close.className='vclose'; close.type='button'; close.setAttribute('aria-label','关闭'); close.textContent='×';
