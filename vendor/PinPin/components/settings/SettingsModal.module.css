@@ -121,12 +121,24 @@
 }
 
 .cancel,
-.primary {
+.primary,
+.restore {
   padding: var(--space-sm) var(--space-xl);
   font-size: 0.95rem;
   font-weight: 600;
   border: none;
   border-radius: var(--radius-sm);
+}
+
+.restore {
+  margin-right: auto;
+  color: var(--color-danger);
+  background: var(--color-paper);
+  border: 1px solid var(--color-line-strong);
+}
+
+.restore:hover {
+  background: var(--color-accent-soft);
 }
 
 .cancel {
