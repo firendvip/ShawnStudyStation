@@ -13,4 +13,4 @@ export {
   destroySessionByToken,
   type AuthUser,
 } from './service'
-export { getCurrentUser, setSessionCookie, clearSessionCookie } from './server'
+export { getCurrentUser, getOrCreateUser, setSessionCookie, clearSessionCookie } from './server'
