@@ -1,5 +1,5 @@
 import { getReportFile } from '@/lib/reports'
-import { getCurrentUser } from '@/lib/auth'
+import { getOrCreateUser } from '@/lib/auth'
 
 /** 下载/查看某个周期 PDF(仅限本人)。 */
 export async function GET(
