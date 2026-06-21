@@ -20,7 +20,6 @@ import { AllPanel } from '@/components/all/AllPanel'
 import { PrintPanel } from '@/components/print/PrintPanel'
 import { PasswordModal } from '@/components/common/PasswordModal'
 import { SettingsModal } from '@/components/settings/SettingsModal'
-import { LoginModal } from '@/components/auth/LoginModal'
 import styles from './page.module.css'
 
 type Tab = 'record' | 'today' | 'week' | 'all' | 'print'
