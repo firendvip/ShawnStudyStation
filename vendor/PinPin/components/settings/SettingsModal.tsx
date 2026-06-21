@@ -17,6 +17,15 @@ export function SettingsModal({ settings, onClose, onSave }: Props) {
   const set = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }))
 
+  const handleRestoreDefaults = () => {
+    if (!window.confirm('确定要恢复默认设置吗?当前设置将被覆盖。')) {
+      return
+    }
+    const defaults = buildDefaultSettings(form.cycleStartDate)
+    setForm(defaults)
+    onSave(defaults)
+  }
+
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
