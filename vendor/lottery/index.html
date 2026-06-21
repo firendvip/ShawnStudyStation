@@ -148,25 +148,25 @@
         }
         
         .cell.selected {
-            box-shadow: 
-                0 0 0 4px #ffd166,
-                0 0 0 6px #ff9e6d,
+            box-shadow:
+                0 0 0 4px var(--color-accent),
+                0 0 0 6px var(--color-accent-soft),
                 0 4px 15px rgba(0, 0, 0, 0.3);
             z-index: 5;
             animation: pulse 1.5s infinite alternate;
         }
-        
+
         @keyframes pulse {
             0% {
-                box-shadow: 
-                    0 0 0 3px #ffd166,
-                    0 0 0 5px #ff9e6d,
+                box-shadow:
+                    0 0 0 3px var(--color-accent),
+                    0 0 0 5px var(--color-accent-soft),
                     0 4px 15px rgba(0, 0, 0, 0.3);
             }
             100% {
-                box-shadow: 
-                    0 0 0 5px #ffd166,
-                    0 0 0 8px #ff9e6d,
+                box-shadow:
+                    0 0 0 5px var(--color-accent),
+                    0 0 0 8px var(--color-accent-soft),
                     0 4px 20px rgba(0, 0, 0, 0.4);
             }
         }
