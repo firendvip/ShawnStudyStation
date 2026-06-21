@@ -16,6 +16,7 @@ ENV BASE_PATH=${BASE_PATH}
 
 # 服务端 PDF 报告需要中文字体(pdfkit)。安装 Noto CJK 字体。
 # 默认 PDF_FONT_PATH 指向该字体;如代码使用其他路径,可在 compose 覆盖。
+RUN sed -i 's#dl-cdn.alpinelinux.org#mirrors.tencentyun.com#g' /etc/apk/repositories
 RUN apk add --no-cache font-noto-cjk
 ENV PDF_FONT_PATH=/usr/share/fonts/noto/NotoSansCJK-Regular.ttc
 
