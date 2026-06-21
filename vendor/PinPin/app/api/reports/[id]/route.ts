@@ -6,10 +6,7 @@ export async function GET(
   _request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const user = await getCurrentUser()
-  if (!user) {
-    return new Response('未登录', { status: 401 })
-  }
+  const user = await getOrCreateUser()
   const { id } = await context.params
   const file = await getReportFile(user.id, id)
   if (!file) {
