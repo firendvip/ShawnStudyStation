@@ -397,7 +397,7 @@ function renderCardGrid(host,cards,kind){
    wrap.appendChild(cardEl(c,kind));
    const pi=document.createElement('button'); pi.className='playicon'; pi.type='button'; pi.title='看视频'; pi.innerHTML=PLAY;
    if(!CARD_VIDEO[c.id]) pi.disabled=true;
-   pi.addEventListener('click',()=>openVideo(c)); wrap.appendChild(pi);
+   pi.addEventListener('click',()=>openVideo(c,wrap.querySelector('.pausebtn'))); wrap.appendChild(pi);
    grid.appendChild(wrap); });
  host.appendChild(grid);
  requestAnimationFrame(()=>grid.querySelectorAll('.card').forEach(c=>{
