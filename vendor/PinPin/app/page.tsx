@@ -161,11 +161,6 @@ export default function HomePage() {
     await refreshPractice()
   }
 
-  const handleLogout = async () => {
-    await logout()
-    window.location.reload()
-  }
-
   const revealButton = (
     <button
       type="button"
