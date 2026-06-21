@@ -237,10 +237,13 @@ const Cur={token:0,audio:null,video:null};
 function closeVideo(){ const m=document.getElementById('vmodal'); if(!m)return;
  const v=m.querySelector('video'); if(v){ try{v.pause();}catch(e){} v.controls=false; v.classList.remove('vfront'); mediaHost.appendChild(v); }
  m.remove(); }
-function stopVideo(){ if(Cur.video){ try{Cur.video.pause();}catch(e){} Cur.video=null; } closeVideo(); }
-function stopPlayback(){ Cur.token++; if(Cur.audio){try{Cur.audio.pause();}catch(e){}Cur.audio=null;}
+function stopVideo(){ if(Cur.video){ try{Cur.video.pause();}catch(e){} try{Cur.video.currentTime=0;}catch(e){} Cur.video=null; } closeVideo(); }
+/* 统一停止：保证全场最多只有一个音源（卡片旁白音频 / 单词音频 / TTS / 卡片视频）。
+   任何播放动作开始前都先调它，杜绝双声。stopPlayback 即 stopAllAudio。 */
+function stopAllAudio(){ Cur.token++; if(Cur.audio){try{Cur.audio.pause();}catch(e){}Cur.audio=null;}
  try{ if(cardAudioEl){ cardAudioEl.pause(); cardAudioEl.currentTime=0; } }catch(e){}
- try{speechSynthesis.cancel();}catch(e){} stopVideo(); }
+ try{ if('speechSynthesis'in window)speechSynthesis.cancel(); }catch(e){} stopVideo(); }
+function stopPlayback(){ stopAllAudio(); }
 function speakOne(text,rate,my,next){ if(!('speechSynthesis'in window)||!text){ next(); return; }
  const u=utter(text,rate); u.onend=()=>{ if(my===Cur.token)next(); }; u.onerror=()=>{ if(my===Cur.token)next(); };
  try{speechSynthesis.speak(u);}catch(e){ if(my===Cur.token)next(); } }
