@@ -116,6 +116,8 @@ services:
       - ../vendor/phonics-flashcards:/usr/share/nginx/html/apps/phonics:ro
       # 转盘静态应用挂载到 /apps/lottery(自包含 HTML)
       - ../vendor/lottery:/usr/share/nginx/html/apps/lottery:ro
+      # 小学心算(口答)静态应用挂载到 /apps/koudaa(自包含 HTML)
+      - ../vendor/koudaa:/usr/share/nginx/html/apps/koudaa:ro
       # TLS 证书:把 fullchain.pem / privkey.pem 放进 ./certs(见 certs/README.md)
       - ./certs:/etc/nginx/certs:ro
       # Let's Encrypt webroot 验证目录(certbot --webroot -w ./certbot/www 时使用;
