@@ -117,25 +117,29 @@
             padding: 24px;
             font-size: 3.4rem; /* 增大字体 */
             text-align: center;
-            border: 3px solid #e0e6ff;
-            border-radius: 18px;
+            border: 2px solid #d2cdc5;
+            border-radius: .875rem;
             outline: none;
             transition: all 0.3s;
             font-weight: bold;
-            background-color: #f8faff;
-            color: #5e72e4;
-            caret-color: #5e72e4;
-            box-shadow: 
+            background-color: #ffffff;
+            color: #359658;
+            caret-color: #359658;
+            box-shadow:
                 inset 0 2px 5px rgba(0,0,0,0.03),
-                0 4px 15px rgba(94, 114, 228, 0.1);
+                0 4px 15px rgba(53,150,88,0.08);
         }
-        
+
+        .answer-input::placeholder {
+            color: #a09890;
+        }
+
         .answer-input:focus {
-            border-color: #5e72e4;
+            border-color: #359658;
             background-color: white;
-            box-shadow: 
+            box-shadow:
                 inset 0 2px 5px rgba(0,0,0,0.03),
-                0 0 20px rgba(94, 114, 228, 0.2);
+                0 0 20px rgba(53,150,88,0.2);
         }
         
         /* 隐藏数字输入框的箭头 */
