@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小善口答</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
+        }
+
+        body {
+            background: #fcfaf4;
+            color: #362c24;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            box-shadow: 
+                0 12px 30px rgba(0, 0, 0, 0.08),
+                0 4px 20px rgba(0, 0, 0, 0.03);
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(230, 230, 250, 0.7);
+        }
+        
+        header {
+            background: linear-gradient(90deg, #5e72e4, #825ee4);
+            color: white;
+            text-align: center;
+            padding: 24px 20px;
+            position: relative;
+        }
+        
+        .title-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 14px; /* 统一间隔 */
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .title-container:hover {
+            transform: scale(1.03);
+        }
+        
+        .title-char {
+            font-family: 'Microsoft YaHei', sans-serif;
+            font-size: 2.8rem; /* 整体增大字体 */
+            font-weight: bold;
+            background: linear-gradient(90deg, #ffffff, #f0f4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+            position: relative;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 0 2px;
+            transition: transform 0.3s ease;
+        }
+        
+        .title-char:hover {
+            transform: translateY(-3px);
+            text-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .help-btn {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .help-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+        
+        .main-content {
+            padding: 30px 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .input-container {
+            width: 100%;
+            margin: 40px 0 35px;
+            position: relative;
+        }
+        
+        .answer-input {
+            width: 100%;
+            padding: 24px;
+            font-size: 3.4rem; /* 增大字体 */
+            text-align: center;
+            border: 3px solid #e0e6ff;
+            border-radius: 18px;
+            outline: none;
+            transition: all 0.3s;
+            font-weight: bold;
+            background-color: #f8faff;
+            color: #5e72e4;
+            caret-color: #5e72e4;
+            box-shadow: 
+                inset 0 2px 5px rgba(0,0,0,0.03),
+                0 4px 15px rgba(94, 114, 228, 0.1);
+        }
+        
+        .answer-input:focus {
+            border-color: #5e72e4;
+            background-color: white;
+            box-shadow: 
+                inset 0 2px 5px rgba(0,0,0,0.03),
+                0 0 20px rgba(94, 114, 228, 0.2);
+        }
+        
+        /* 隐藏数字输入框的箭头 */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        
+        .problem-timer {
+            display: none;
+        }
+        
+        /* 控制按钮 */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 35px;
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        .icon-btn {
+            background: linear-gradient(135deg, #5e72e4, #825ee4);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 100px; /* 增大按钮 */
+            height: 100px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 
+                0 8px 25px rgba(94, 114, 228, 0.3),
+                0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem; /* 增大图标 */
+        }
+        
+        .icon-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 12px 30px rgba(94, 114, 228, 0.4),
+                0 6px 20px rgba(0,0,0,0.15);
+        }
+        
+        .icon-btn:active {
+            transform: translateY(2px);
+            box-shadow: 
+                0 4px 12px rgba(94, 114, 228, 0.3),
+                0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .end-btn {
+            background: linear-gradient(135deg, #fb6340, #f5365c);
+            box-shadow: 
+                0 8px 25px rgba(251, 99, 64, 0.3),
+                0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .end-btn:hover {
+            box-shadow: 
+                0 12px 30px rgba(251, 99, 64, 0.4),
+                0 6px 20px rgba(0,0,0,0.15);
+        }
+        
+        .end-btn:active {
+            box-shadow: 
+                0 4px 12px rgba(251, 99, 64, 0.3),
+                0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* 按钮图标位置调整 */
+        .icon-btn i.fa-play {
+            position: relative;
+            left: 3px;
+        }
+        
+        .icon-btn i.fa-stop {
+            transform: scale(0.9);
+        }
+        
+        /* 结果弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 35px 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 22px;
+            right: 24px;
+            font-size: 32px;
+            cursor: pointer;
+            color: #a0aec0;
+            transition: all 0.3s;
+        }
+        
+        .close-btn:hover {
+            color: #5e72e4;
+            transform: scale(1.1);
+        }
+        
+        .modal-title {
+            text-align: center;
+            margin-bottom: 28px;
+            color: #5e72e4;
+            font-size: 2.2rem; /* 增大字体 */
+            font-weight: 500;
+        }
+        
+        .instructions-list {
+            list-style: none;
+            padding: 0 20px;
+        }
+        
+        .instructions-list li {
+            margin-bottom: 16px;
+            padding: 16px 20px;
+            background: #f8faff;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            font-size: 1.2rem; /* 增大字体 */
+            color: #525f7f;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+        
+        .instructions-list li i {
+            color: #5e72e4;
+            font-size: 1.5rem;
+            min-width: 35px;
+            text-align: center;
+        }
+        
+        .result-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-top: 28px;
+        }
+        
+        .stat-item {
+            padding: 20px;
+            background: #f8faff;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+        
+        .stat-label {
+            font-size: 1.2rem; /* 增大字体 */
+            color: #8898aa;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 2.1rem; /* 增大字体 */
+            font-weight: 600;
+            color: #5e72e4;
+        }
+        
+        .time-stamp {
+            text-align: center;
+            margin: 28px 0 20px;
+            padding: 14px;
+            background: #f8faff;
+            border-radius: 12px;
+            color: #525f7f;
+            font-size: 1.3rem; /* 增大字体 */
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+        
+        .wrong-list {
+            margin-top: 25px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8faff;
+            border-radius: 16px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+        
+        .wrong-title {
+            text-align: center;
+            margin-bottom: 18px;
+            color: #5e72e4;
+            font-size: 1.5rem; /* 增大字体 */
+            font-weight: 500;
+        }
+        
+        .wrong-item {
+            padding: 14px 18px;
+            margin-bottom: 12px;
+            background: white;
+            border-radius: 12px;
+            font-family: 'Microsoft YaHei', sans-serif;
+            font-size: 1.4rem; /* 增大字体 */
+            text-align: center;
+            color: #525f7f;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+        }
+        
+        .no-wrong {
+            text-align: center;
+            color: #5e72e4;
+            font-size: 1.3rem;
+            padding: 18px;
+            font-weight: 500;
+        }
+        
+        .version {
+            text-align: center;
+            margin-top: 20px;
+            color: #5e72e4;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        /* 装饰元素 */
+        .decoration {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(94, 114, 228, 0.1) 0%, rgba(94, 114, 228, 0) 70%);
+            z-index: -1;
+        }
+        
+        .dec1 {
+            top: 10%;
+            left: 10%;
+        }
+        
+        .dec2 {
+            bottom: 10%;
+            right: 10%;
+            width: 180px;
+            height: 180px;
+        }
+        
+        /* 移动设备优化 */
+        @media (max-width: 480px) {
+            .title-char {
+                font-size: 2.3rem; /* 移动端调整 */
+            }
+            
+            .main-content {
+                padding: 25px 15px;
+            }
+            
+            .answer-input {
+                font-size: 2.8rem; /* 移动端调整 */
+                padding: 20px;
+            }
+            
+            .icon-btn {
+                width: 85px;
+                height: 85px;
+                font-size: 2.4rem;
+            }
+            
+            .help-btn {
+                width: 32px;
+                height: 32px;
+                top: 20px;
+                right: 20px;
+            }
+            
+            .instructions-list li {
+                font-size: 1.05rem;
+                padding: 14px;
+            }
+            
+            .modal-content {
+                padding: 25px 20px;
+            }
+            
+            .stat-value {
+                font-size: 1.9rem;
+            }
+            
+            .modal-title {
+                font-size: 1.8rem;
+            }
+            
+            .title-container {
+                gap: 10px; /* 移动端间隔稍小 */
+            }
+        }
+        
+        /* 新增提示样式 */
+        .last-result-hint {
+            position: absolute;
+            bottom: 5px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="decoration dec1"></div>
+    <div class="decoration dec2"></div>
+    
+    <div class="container">
+        <header>
+            <div class="title-container" id="title-container">
+                <span class="title-char">小</span>
+                <span class="title-char">善</span>
+                <span class="title-char">口</span>
+                <span class="title-char">答</span>
+            </div>
+            <div class="help-btn" id="help-btn">
+                <i class="fas fa-question"></i>
+            </div>
+            <!-- 已删除提示语 -->
+        </header>
+        
+        <div class="main-content">
+            <!-- 输入框 -->
+            <div class="input-container">
+                <div id="problem-timer" class="problem-timer">10</div>
+                <input type="number" inputmode="numeric" id="answer-input" class="answer-input" disabled
+                    onkeydown="return event.key !== 'ArrowUp' && event.key !== 'ArrowDown'"
+                    onwheel="event.preventDefault()">
+            </div>
+            
+            <!-- 控制按钮 -->
+            <div class="controls">
+                <button id="start-btn" class="icon-btn">
+                    <i class="fas fa-play"></i>
+                </button>
+                <button id="end-btn" class="icon-btn end-btn" style="display: none;">
+                    <i class="fas fa-stop"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 使用说明弹窗 -->
+    <div class="modal" id="instruction-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-modal">&times;</span>
+            <h2 class="modal-title">使用说明</h2>
+            <ul class="instructions-list">
+                <li><i class="fas fa-random"></i>20以内加减法随机播报</li>
+                <li><i class="fas fa-clock"></i>开始3分钟后自动结束</li>
+                <li><i class="fas fa-stop-circle"></i>点击红色按钮可提前结束</li>
+                <li><i class="fas fa-keyboard"></i>按回车或提交键提交答案</li>
+                <li><i class="fas fa-hourglass-half"></i>10秒内未输入视为超时</li>
+                <li><i class="fas fa-laptop"></i>仅支持电脑端使用</li>
+                <li><i class="fas fa-history"></i>点标题查看最近训练数据</li>
+            </ul>
+            <div class="version">v1.3.1</div>
+        </div>
+    </div>
+    
+    <!-- 结果弹窗 -->
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-result">&times;</span>
+            <h2 class="modal-title" id="result-title">训练结果</h2>
+            
+            <div class="time-stamp" id="time-stamp"></div>
+            
+            <div class="result-stats">
+                <div class="stat-item">
+                    <div class="stat-label">答题数</div>
+                    <div id="result-count" class="stat-value">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">正确数</div>
+                    <div id="result-correct" class="stat-value">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">正确率</div>
+                    <div id="result-accuracy" class="stat-value">0%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">总用时</div>
+                    <div id="result-time" class="stat-value">0:00</div>
+                </div>
+            </div>
+            
+            <div class="wrong-list">
+                <div class="wrong-title">错题记录</div>
+                <div id="wrong-problems"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentProblem = '';
+        let correctAnswer = 0;
+        let answeredCount = 0;
+        let correctCount = 0;
+        let totalTime = 3 * 60; // 3分钟
+        let timeUsed = 0;
+        let timerInterval;
+        let problemTimer;
+        let isActive = false;
+        let audioEnabled = false;
+        let wrongProblems = []; // 存储错题
+        
+        // 用于存储最近一次训练结果
+        let lastResult = null;
+        
+        // DOM元素
+        const startBtn = document.getElementById('start-btn');
+        const endBtn = document.getElementById('end-btn');
+        const answerInput = document.getElementById('answer-input');
+        const helpBtn = document.getElementById('help-btn');
+        const instructionModal = document.getElementById('instruction-modal');
+        const closeModal = document.getElementById('close-modal');
+        const problemTimerElement = document.getElementById('problem-timer');
+        const resultModal = document.getElementById('result-modal');
+        const closeResult = document.getElementById('close-result');
+        const resultCount = document.getElementById('result-count');
+        const resultCorrect = document.getElementById('result-correct');
+        const resultAccuracy = document.getElementById('result-accuracy');
+        const resultTime = document.getElementById('result-time');
+        const wrongProblemsElement = document.getElementById('wrong-problems');
+        const timeStampElement = document.getElementById('time-stamp');
+        const titleContainer = document.getElementById('title-container');
+        const resultTitle = document.getElementById('result-title');
+        const lastResultHint = document.getElementById('last-result-hint');
+        
+        // 生成20以内的加减法题目
+        function generateProblem() {
+            const operation = Math.random() > 0.5 ? '+' : '-';
+            let num1, num2;
+            
+            if (operation === '+') {
+                num1 = Math.floor(Math.random() * 10) + 1;
+                num2 = Math.floor(Math.random() * (20 - num1)) + 1;
+                correctAnswer = num1 + num2;
+            } else {
+                num1 = Math.floor(Math.random() * 18) + 3;
+                num2 = Math.floor(Math.random() * (num1 - 1)) + 1;
+                correctAnswer = num1 - num2;
+            }
+            
+            currentProblem = `${num1} ${operation} ${num2}`;
+            return currentProblem;
+        }
+        
+        // 语音朗读题目
+        function speakProblem(problem) {
+            if (!('speechSynthesis' in window)) {
+                console.error("您的浏览器不支持语音功能");
+                return;
+            }
+            
+            // 停止当前语音
+            window.speechSynthesis.cancel();
+            
+            // 简洁播报：只读算式，不加"等于"
+            let text = problem.replace('-', '减').replace('+', '加');
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 1.8; 
+            utterance.volume = 1.0;
+            utterance.pitch = 1.1;
+            
+            // 处理语音播放错误
+            utterance.onerror = function(event) {
+                console.error('语音播放错误:', event.error);
+            };
+            
+            try {
+                window.speechSynthesis.speak(utterance);
+                audioEnabled = true;
+            } catch (e) {
+                console.error("语音播报失败:", e);
+            }
+        }
+        
+        // 开始答题倒计时
+        function startProblemTimer() {
+            let timeLeft = 10; // 修改为10秒
+            problemTimerElement.textContent = timeLeft;
+            
+            problemTimer = setInterval(() => {
+                timeLeft--;
+                problemTimerElement.textContent = timeLeft;
+                
+                // 时间到
+                if (timeLeft <= 0) {
+                    clearInterval(problemTimer);
+                    handleTimeout();
+                }
+            }, 1000);
+        }
+        
+        // 处理超时
+        function handleTimeout() {
+            // 记录错题
+            wrongProblems.push({
+                problem: currentProblem,
+                userAnswer: "超时"
+            });
+            
+            answeredCount++;
+            
+            // 立即生成新题目
+            if (isActive) {
+                generateNewProblem();
+            }
+        }
+        
+        // 重置问题计时器
+        function resetProblemTimer() {
+            clearInterval(problemTimer);
+            problemTimerElement.textContent = '10'; // 修改为10秒
+        }
+        
+        // 检查答案
+        function checkAnswer() {
+            clearInterval(problemTimer);
+            
+            // 获取用户答案
+            const userAnswer = parseInt(answerInput.value);
+            const isCorrect = !isNaN(userAnswer) && userAnswer === correctAnswer;
+            
+            // 记录错题
+            if (!isCorrect) {
+                wrongProblems.push({
+                    problem: currentProblem,
+                    userAnswer: isNaN(userAnswer) ? "未输入" : userAnswer.toString()
+                });
+            }
+            
+            if (isCorrect) {
+                correctCount++;
+            }
+            
+            answeredCount++;
+            
+            // 清空输入框并保持焦点
+            answerInput.value = '';
+            setTimeout(() => {
+                answerInput.focus();
+            }, 50);
+            
+            // 立即生成新题目
+            if (isActive) {
+                generateNewProblem();
+            }
+        }
+        
+        // 开始训练
+        function startTraining() {
+            // 重置状态
+            answeredCount = 0;
+            correctCount = 0;
+            timeUsed = 0;
+            wrongProblems = [];
+            isActive = true;
+            startBtn.style.display = 'none';
+            endBtn.style.display = 'block';
+            answerInput.value = '';
+            problemTimerElement.textContent = '10'; // 修改为10秒
+            
+            // 启用输入框
+            answerInput.disabled = false;
+            
+            // 设置输入框焦点
+            setTimeout(() => {
+                answerInput.focus();
+            }, 100);
+            
+            // 开始总计时
+            startTotalTimer();
+            
+            // 生成第一题
+            generateNewProblem();
+        }
+        
+        // 生成新题目
+        function generateNewProblem() {
+            resetProblemTimer();
+            
+            // 生成题目
+            const problem = generateProblem();
+            
+            // 语音朗读题目
+            speakProblem(problem);
+            
+            // 设置输入框焦点
+            setTimeout(() => {
+                answerInput.focus();
+            }, 100);
+            
+            // 开始答题倒计时
+            startProblemTimer();
+        }
+        
+        // 开始总计时
+        function startTotalTimer() {
+            let timeRemaining = totalTime;
+            
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                timeUsed++;
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    endTraining();
+                }
+            }, 1000);
+        }
+        
+        // 结束训练
+        function endTraining() {
+            clearInterval(timerInterval);
+            resetProblemTimer();
+            isActive = false;
+            startBtn.style.display = 'block';
+            endBtn.style.display = 'none';
+            answerInput.disabled = true;
+            
+            // 停止语音
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            
+            // 保存训练结果
+            saveLastResult();
+            
+            // 显示结果
+            showResults();
+        }
+        
+        // 保存最近一次训练结果
+        function saveLastResult() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            lastResult = {
+                answeredCount: answeredCount,
+                correctCount: correctCount,
+                timeUsed: timeUsed,
+                wrongProblems: [...wrongProblems],
+                endTime: `${year}-${month}-${day} ${hours}:${minutes}`
+            };
+            
+            // 保存到localStorage
+            localStorage.setItem('lastResult', JSON.stringify(lastResult));
+        }
+        
+        // 显示最近一次训练结果
+        function showLastResult() {
+            // 尝试从localStorage获取
+            const storedResult = localStorage.getItem('lastResult');
+            
+            if (storedResult) {
+                lastResult = JSON.parse(storedResult);
+            }
+            
+            if (lastResult) {
+                // 填充结果弹窗
+                resultTitle.textContent = "最近一次训练结果";
+                resultCount.textContent = lastResult.answeredCount;
+                resultCorrect.textContent = lastResult.correctCount;
+                
+                const accuracy = lastResult.answeredCount > 0 
+                    ? Math.round((lastResult.correctCount / lastResult.answeredCount) * 100) 
+                    : 0;
+                resultAccuracy.textContent = `${accuracy}%`;
+                
+                const minutes = Math.floor(lastResult.timeUsed / 60);
+                const seconds = lastResult.timeUsed % 60;
+                resultTime.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                
+                timeStampElement.textContent = `结束时间：${lastResult.endTime}`;
+                
+                // 显示错题
+                wrongProblemsElement.innerHTML = '';
+                if (lastResult.wrongProblems.length > 0) {
+                    lastResult.wrongProblems.forEach(item => {
+                        const wrongItem = document.createElement('div');
+                        wrongItem.className = 'wrong-item';
+                        wrongItem.textContent = `${item.problem} = ${item.userAnswer}`;
+                        wrongProblemsElement.appendChild(wrongItem);
+                    });
+                } else {
+                    const noWrong = document.createElement('div');
+                    noWrong.className = 'no-wrong';
+                    noWrong.textContent = '该次训练没有错题，太棒了！';
+                    wrongProblemsElement.appendChild(noWrong);
+                }
+                
+                // 显示结果弹窗
+                resultModal.style.display = 'flex';
+            } else {
+                // 如果没有历史记录
+                resultTitle.textContent = "训练结果";
+                resultCount.textContent = 0;
+                resultCorrect.textContent = 0;
+                resultAccuracy.textContent = "0%";
+                resultTime.textContent = "0:00";
+                timeStampElement.textContent = `结束时间：无记录`;
+                
+                wrongProblemsElement.innerHTML = '';
+                const noRecord = document.createElement('div');
+                noRecord.className = 'no-wrong';
+                noRecord.textContent = '暂无训练记录，请先完成一次训练';
+                wrongProblemsElement.appendChild(noRecord);
+                
+                // 显示结果弹窗
+                resultModal.style.display = 'flex';
+            }
+        }
+        
+        // 显示结果
+        function showResults() {
+            resultTitle.textContent = "训练结果";
+            resultCount.textContent = answeredCount;
+            resultCorrect.textContent = correctCount;
+            const accuracy = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+            resultAccuracy.textContent = `${accuracy}%`;
+            
+            // 格式化时间
+            const minutes = Math.floor(timeUsed / 60);
+            const seconds = timeUsed % 60;
+            resultTime.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            
+            // 显示训练结束时间
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutesStamp = String(now.getMinutes()).padStart(2, '0');
+            timeStampElement.textContent = `结束时间：${year}-${month}-${day} ${hours}:${minutesStamp}`;
+            
+            // 显示错题
+            wrongProblemsElement.innerHTML = '';
+            if (wrongProblems.length > 0) {
+                wrongProblems.forEach(item => {
+                    const wrongItem = document.createElement('div');
+                    wrongItem.className = 'wrong-item';
+                    wrongItem.textContent = `${item.problem} = ${item.userAnswer}`;
+                    wrongProblemsElement.appendChild(wrongItem);
+                });
+            } else {
+                const noWrong = document.createElement('div');
+                noWrong.className = 'no-wrong';
+                noWrong.textContent = '本次训练没有错题，太棒了！';
+                wrongProblemsElement.appendChild(noWrong);
+            }
+            
+            // 显示结果弹窗
+            resultModal.style.display = 'flex';
+        }
+        
+        // 初始化
+        window.onload = function() {
+            // 设置事件监听器
+            startBtn.addEventListener('click', startTraining);
+            endBtn.addEventListener('click', endTraining);
+            
+            // 移动端提交处理
+            answerInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    if (isActive) {
+                        checkAnswer();
+                    }
+                }
+            });
+            
+            // 使用说明弹窗控制
+            helpBtn.addEventListener('click', () => {
+                instructionModal.style.display = 'flex';
+            });
+            
+            closeModal.addEventListener('click', () => {
+                instructionModal.style.display = 'none';
+            });
+            
+            closeResult.addEventListener('click', () => {
+                resultModal.style.display = 'none';
+            });
+            
+            // 点击标题显示最近一次训练结果
+            titleContainer.addEventListener('click', () => {
+                showLastResult();
+            });
+            
+            // 点击弹窗外部关闭
+            window.addEventListener('click', (e) => {
+                if (e.target === instructionModal) {
+                    instructionModal.style.display = 'none';
+                }
+                if (e.target === resultModal) {
+                    resultModal.style.display = 'none';
+                }
+            });
+            
+            // 添加触摸事件监听器以激活音频
+            document.body.addEventListener('touchstart', function() {
+                // 触摸事件用于激活音频
+            });
+            
+            // 添加点击事件监听器以激活音频
+            document.body.addEventListener('click', function() {
+                // 点击事件用于激活音频
+            });
+            
+            // 检查是否有历史记录，显示提示
+            if (localStorage.getItem('lastResult')) {
+                lastResultHint.style.display = 'block';
+            } else {
+                lastResultHint.style.display = 'none';
+            }
+        };
+    </script>
+</body>
+</html>
