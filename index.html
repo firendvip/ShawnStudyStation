@@ -740,7 +740,8 @@
     document.querySelectorAll('.nav-item[data-has-dropdown]').forEach(item => {
       item.addEventListener('mouseenter', () => {
         clearTimeout(closeTimer);
-        openTimer = setTimeout(() => openDropdown(item), 280);
+        clearTimeout(openTimer);
+        openDropdown(item);
       });
       item.addEventListener('mouseleave', () => {
         clearTimeout(openTimer);
