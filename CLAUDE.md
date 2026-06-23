@@ -10,15 +10,15 @@
 - 涉及 **PinPin** 的改动：先同步到运行副本与本仓库副本，再以本仓库（`WebStation2/ShawnStudyStation`）为准提交。
 - 提交后仍按下方既有规则打开预览、写更新日志。
 
-## 完成后自动打开预览（always on）
+## 完成后自动在 Chrome 打开预览（always on）
 
-每次修复 bug 或完成需求后，必须自动用 `open` 打开对应的 HTML 文件进行预览：
+每次修复 bug 或完成需求后，必须自动在**谷歌浏览器（Google Chrome）**中打开对应 HTML 预览——**用 `open -a "Google Chrome" <文件>`**，不要用默认 `open`（会打到 Claude 桌面端预览）。
 
-- 若本次改动的是**子页面**（如 `vendor/koudaa/index.html`、`vendor/PinPin`、`vendor/lottery/index.html` 等），直接 `open` 该子页面文件。
-- 若本次改动的是**主站**（根目录 `index.html`）或涉及主站外壳/菜单，则 `open` 根目录 `index.html`。
+- 若本次改动的是**子页面**（如 `vendor/koudaa/index.html`、`vendor/PinPin`、`vendor/lottery/index.html` 等），打开该子页面文件。
+- 若本次改动的是**主站**（根目录 `index.html`）或涉及主站外壳/菜单，则打开根目录 `index.html`。
 - 若同时改动主站与子页面，优先打开主站 `index.html`。
 
-执行示例：`open vendor/koudaa/index.html` 或 `open index.html`。
+执行示例：`open -a "Google Chrome" index.html` 或 `open -a "Google Chrome" vendor/koudaa/index.html`。
 
 ## 子页面与菜单的统一间距（always on）
 
