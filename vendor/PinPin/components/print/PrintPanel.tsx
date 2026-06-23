@@ -49,13 +49,13 @@ function printPdf(url: string): void {
  */
 export function PrintPanel({ settings }: Props) {
   const today = todayLocalDate()
-  const span = Math.max(1, settings.printDays) - 1
-  // 录入时间范围(取词)
-  const [recFrom, setRecFrom] = useState(addDays(today, -span))
-  const [recTo, setRecTo] = useState(today)
-  // 书写时间范围(分配)
+  const days = Math.max(1, settings.printDays) // 默认打印天数 N(默认 7)
+  // 录入时间范围(取词):前 N 天到昨天,即 [今天-N, 今天-1]
+  const [recFrom, setRecFrom] = useState(addDays(today, -days))
+  const [recTo, setRecTo] = useState(addDays(today, -1))
+  // 书写时间范围(分配):今天起往后 N 天,即 [今天, 今天+N-1]
   const [writeFrom, setWriteFrom] = useState(today)
-  const [writeTo, setWriteTo] = useState(addDays(today, span))
+  const [writeTo, setWriteTo] = useState(addDays(today, days - 1))
 
   const [allEntries, setAllEntries] = useState<EntryItem[]>([])
   const [reports, setReports] = useState<PdfReportItem[]>([])
