@@ -324,7 +324,7 @@ function openVideo(rec,pb){
  v.controls=true; v.classList.add('vfront'); box.appendChild(v);
  m.appendChild(box); m.addEventListener('click',e=>{ if(e.target===m)stopPlayback(); });
  document.addEventListener('keydown',function esc(e){ if(e.key==='Escape'){stopPlayback();document.removeEventListener('keydown',esc);} });
- document.body.appendChild(m); if(v.paused)v.play().catch(()=>{}); }
+ document.body.appendChild(m); if(v.paused)v.play().catch(()=>{ try{speakCardFallback(rec);}catch(_){} }); }
 function pauseToggle(btn){
  if(Cur.video){ if(Cur.video.paused){Cur.video.play();setPI(btn,false);}else{Cur.video.pause();setPI(btn,true);} }
  else if(cardAudioEl&&cardAudioEl.src&&!cardAudioEl.ended){ if(cardAudioEl.paused){cardAudioEl.play().catch(()=>{});setPI(btn,false);}else{cardAudioEl.pause();setPI(btn,true);} }
@@ -342,7 +342,8 @@ function setPI(btn,paused){ if(btn)btn.innerHTML=paused?IC_PLAY:IC_PAUSE; }
 /* 当前“归属”的暂停/播放按钮：共享媒体(cardAudioEl/视频)的 play/pause/ended 事件统一驱动它，
    使图标永远反映真实播放状态——播放中显示⏸，停/暂停/播完恢复▶，绝不卡在⏸。 */
 let activePB=null;
-function setActivePB(btn){ activePB=btn||null; }
+/* 切换“当前归属按钮”时,把旧按钮图标复位为▶播放态,避免它停止后仍卡在⏸。 */
+function setActivePB(btn){ if(activePB&&activePB!==btn){ try{setPI(activePB,true);}catch(e){} } activePB=btn||null; }
 /* 是否有任一媒体正在出声（音频/视频未暂停，或 TTS 正在说） */
 function anyPlaying(){
  try{ if(cardAudioEl&&!cardAudioEl.paused&&!cardAudioEl.ended)return true; }catch(e){}

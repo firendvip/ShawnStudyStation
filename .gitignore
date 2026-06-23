@@ -32,3 +32,7 @@ vendor/CoCaWordCards/COCA_wordcards.xlsx
 vendor/gaokao-english-recite/audio/
 vendor/PinPin/storage/
 server/storage/
+
+# 自然拼读视频(本地软链到另一份副本的 video/video_trim,体积大且为绝对路径,不提交)
+vendor/phonics-flashcards/video
+vendor/phonics-flashcards/video_trim
