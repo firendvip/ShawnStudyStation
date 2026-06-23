@@ -165,25 +165,6 @@ export default function HomePage() {
   return (
     <div className={styles.page}>
       <div className={styles.tabRow}>
-        <button
-          type="button"
-          onClick={() => (revealed ? setRevealed(false) : setShowPassword(true))}
-          title="显示 / 隐藏所有标签页的答案"
-          style={{
-            flex: '0 0 auto',
-            border: `1.5px solid ${revealed ? '#359658' : '#d2cdc5'}`,
-            background: revealed ? '#dcf7e2' : 'transparent',
-            color: revealed ? '#007c3a' : '#71675d',
-            borderRadius: '999px',
-            padding: '5px 12px',
-            fontSize: '13px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {revealed ? '显示答案：开' : '显示答案：关'}
-        </button>
         <nav className={styles.tabs} aria-label="页面切换">
           {TABS.map(([key, label]) => (
             <button
@@ -196,6 +177,54 @@ export default function HomePage() {
             </button>
           ))}
         </nav>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={revealed}
+          aria-label="显示答案"
+          title="显示 / 隐藏所有标签页的答案"
+          onClick={() => (revealed ? setRevealed(false) : setShowPassword(true))}
+          style={{
+            marginLeft: 'auto',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            border: 'none',
+            background: 'transparent',
+            padding: 0,
+            cursor: 'pointer',
+            flex: '0 0 auto',
+          }}
+        >
+          <span style={{ fontSize: '12.5px', fontWeight: 700, color: revealed ? '#007c3a' : '#71675d', whiteSpace: 'nowrap' }}>
+            显示答案
+          </span>
+          <span
+            style={{
+              position: 'relative',
+              width: '40px',
+              height: '22px',
+              borderRadius: '999px',
+              background: revealed ? '#359658' : '#d2cdc5',
+              transition: 'background .2s',
+              flex: '0 0 auto',
+            }}
+          >
+            <span
+              style={{
+                position: 'absolute',
+                top: '2px',
+                left: revealed ? '20px' : '2px',
+                width: '18px',
+                height: '18px',
+                borderRadius: '50%',
+                background: '#fff',
+                boxShadow: '0 1px 2px rgba(0,0,0,.25)',
+                transition: 'left .2s',
+              }}
+            />
+          </span>
+        </button>
         <button
           type="button"
           className={styles.gear}
