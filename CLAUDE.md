@@ -1,5 +1,15 @@
 # 项目规则（ShawnStudyStation）
 
+## 完成后自动提交 GitHub（always on）
+
+每完成一个 bug 修复或需求后，**必须自动提交并推送到 GitHub**：
+
+- 仓库：`origin = https://github.com/firendvip/ShawnStudyStation`，默认分支 **main**，直接提交到 main 并 `push`。
+- 流程：`git add -A` → `git commit`（简洁中文说明，可用 `feat:` / `fix:` / `opt:` 前缀）→ `git push origin main`。
+- **不要提交**大体积媒体与生成物：`vendor/CoCaWordCards/audio/`、`vendor/gaokao-english-recite/audio/`、`node_modules/`、`.next/`、`storage/`、`.env`、`*.db`（均已在 `.gitignore` 排除，勿移除）。
+- 涉及 **PinPin** 的改动：先同步到运行副本与本仓库副本，再以本仓库（`WebStation2/ShawnStudyStation`）为准提交。
+- 提交后仍按下方既有规则打开预览、写更新日志。
+
 ## 完成后自动打开预览（always on）
 
 每次修复 bug 或完成需求后，必须自动用 `open` 打开对应的 HTML 文件进行预览：
