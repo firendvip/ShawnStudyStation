@@ -87,10 +87,11 @@ async function mergeGuestInto(guestUserId: string, targetUserId: string): Promis
   for (const r of guestReports) {
     const clash = await prisma.pdfReport.findUnique({
       where: {
-        userId_cycleStart_cycleEnd: {
+        userId_cycleStart_cycleEnd_withAnswer: {
           userId: targetUserId,
           cycleStart: r.cycleStart,
           cycleEnd: r.cycleEnd,
+          withAnswer: r.withAnswer,
         },
       },
     })

@@ -801,7 +801,11 @@
         </div>
         <div class="cl-list">
           <div class="cl-item latest">
-            <div class="cl-ver-row"><span class="cl-ver">v1.44</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-23</span></div>
+            <div class="cl-ver-row"><span class="cl-ver">v1.45</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-24</span></div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>「错字练习」点「生成 PDF」会一次做好两份:孩子用的「练习版」和家长对照的「答案版」(拼音下方显示对应字词),文件名自动带上名字和日期(如「小善周拼拼6.01-6.07练习.pdf」)。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.44</span><span class="cl-date">2026-06-23</span></div>
             <div class="cl-line"><span class="cl-tag fix">修复</span>「自然拼读」点播放视频按钮弹窗里没有画面的问题(本地缺少视频文件,已补上)。</div>
             <div class="cl-line"><span class="cl-tag fix">修复</span>「自然拼读」播着一张卡的声音时去点另一张卡的视频,原卡左上角按钮会卡在⏸,现在会正确恢复成▶。</div>
           </div>
@@ -1431,6 +1435,20 @@
     }
     window.addEventListener('message', e => { if (e.data && e.data.type === 'lottery-ready') postLottery(); });
 
+    /* 错字练习(PinPin)昵称下发:子页面就绪后回传当前昵称,用于生成 PDF 的文件名。 */
+    function postPinpinConfig() {
+      const pf = document.getElementById('frame-cuozi');
+      if (pf && pf.contentWindow) {
+        try { pf.contentWindow.postMessage({ type: 'pinpin-config', nickname: (userSettings.nickname || '') }, '*'); } catch (_) {}
+      }
+    }
+    window.addEventListener('message', e => {
+      if (!e.data || e.data.type !== 'pinpin-ready') return;
+      const pf = document.getElementById('frame-cuozi');
+      if (!pf || e.source !== pf.contentWindow) return;
+      postPinpinConfig();
+    });
+
     /* 错字练习「查看答案」密码校验:是否等于账号登录密码。
        仅响应错字练习 iframe(frame-cuozi),避免其它来源借此暴力尝试密码。 */
     window.addEventListener('message', async e => {
@@ -1538,6 +1556,7 @@
         await api('/settings', { method: 'PUT', auth: true, body: { data: next } });
         userSettings = next;
         renderAccount();
+        postPinpinConfig();
         document.getElementById('settings-saved').classList.add('visible');
       } catch (e) { showError(errEl, e.message); }
     });

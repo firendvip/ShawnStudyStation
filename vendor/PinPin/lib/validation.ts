@@ -60,6 +60,8 @@ export const reportSchema = z.object({
   showWriteSpace: z.boolean().optional(),
   showSubtitle: z.boolean().optional(),
   evenDistribute: z.boolean().optional(),
+  showAnswer: z.boolean().optional(),
+  userName: z.string().max(40).optional(),
 })
 
 export const updateEntrySchema = z.object({

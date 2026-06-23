@@ -28,6 +28,8 @@ export interface PdfReportItem {
   cycleEnd: string
   entryCount: number
   createdAt: string
+  displayName?: string
+  withAnswer?: boolean
 }
 
 export interface AppSettings {

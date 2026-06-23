@@ -171,6 +171,8 @@ export interface PrintOptions {
   showWriteSpace?: boolean
   showSubtitle?: boolean
   evenDistribute?: boolean
+  showAnswer?: boolean
+  userName?: string
 }
 
 export interface ReportRanges {
@@ -180,14 +182,50 @@ export interface ReportRanges {
   writeTo: string
 }
 
+const PRINT_USERNAME_KEY = 'pinpin_print_username'
+let printUserName: string | null = null
+
+/** 记录主站传入的昵称:写入内存与 localStorage,供生成 PDF 文件名使用。 */
+export function setPrintUserName(name: string): void {
+  const trimmed = (name ?? '').trim()
+  printUserName = trimmed || null
+  try {
+    if (typeof window !== 'undefined') {
+      if (trimmed) {
+        window.localStorage.setItem(PRINT_USERNAME_KEY, trimmed)
+      } else {
+        window.localStorage.removeItem(PRINT_USERNAME_KEY)
+      }
+    }
+  } catch {
+    // localStorage 不可用时忽略,仅保留内存值
+  }
+}
+
+/** 取得昵称:localStorage 优先,其次内存变量。 */
+function getPrintUserName(): string | undefined {
+  try {
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem(PRINT_USERNAME_KEY)
+      if (stored && stored.trim()) {
+        return stored.trim()
+      }
+    }
+  } catch {
+    // 忽略
+  }
+  return printUserName ?? undefined
+}
+
 export async function generateManualReport(
   ranges: ReportRanges,
   options: PrintOptions = {},
 ): Promise<PdfReportItem> {
+  const userName = options.userName ?? getPrintUserName()
   const response = await apiFetch('/api/reports', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...ranges, ...options }),
+    body: JSON.stringify({ ...ranges, ...options, userName }),
   })
   const data = await parseEnvelope<{ report: PdfReportItem }>(response)
   return data.report

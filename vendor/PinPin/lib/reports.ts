@@ -14,6 +14,8 @@ interface ReportRow {
   cycleEnd: string
   entryCount: number
   createdAt: Date
+  displayName?: string | null
+  withAnswer?: boolean
 }
 
 function toReportItem(row: ReportRow): PdfReportItem {
@@ -23,7 +25,15 @@ function toReportItem(row: ReportRow): PdfReportItem {
     cycleEnd: row.cycleEnd,
     entryCount: row.entryCount,
     createdAt: row.createdAt.toISOString(),
+    displayName: row.displayName ?? undefined,
+    withAnswer: row.withAnswer ?? false,
   }
+}
+
+/** YYYY-MM-DD → 月.日(月去前导零、日保留两位)。 */
+function mmdd(date: string): string {
+  const [, mm, dd] = date.split('-')
+  return `${Number(mm)}.${dd}`
 }
 
 async function ensureStorageDir(): Promise<void> {
@@ -48,6 +58,8 @@ export interface PrintOptions {
   showWriteSpace?: boolean
   showSubtitle?: boolean
   evenDistribute?: boolean
+  showAnswer?: boolean
+  userName?: string
 }
 
 export interface BuildResult {
@@ -87,9 +99,12 @@ export async function buildReportForRange(
     return { empty: true }
   }
 
+  const showAnswer = !!options.showAnswer
   const sections: PdfSection[] = days.map((d) => ({
     heading: `书写日期 · ${formatCN(d.date)}`,
-    cells: d.entries.map((e) => ({ pinyin: e.pinyin })),
+    cells: d.entries.map((e) =>
+      showAnswer ? { pinyin: e.pinyin, text: e.text } : { pinyin: e.pinyin },
+    ),
   }))
 
   const counts = days.map((d) => d.entries.length)
@@ -112,16 +127,34 @@ export async function buildReportForRange(
   })
 
   await ensureStorageDir()
-  const filename = `report-${userId}-${writeFrom}_${writeTo}.pdf`
+  const filename = `report-${userId}-${writeFrom}_${writeTo}-${showAnswer ? 'ans' : 'prac'}.pdf`
   await fs.writeFile(path.join(STORAGE_DIR, filename), buffer)
 
+  const label = `${mmdd(writeFrom)}-${mmdd(writeTo)}`
+  const suffix = showAnswer ? '答案' : '练习'
+  const who = (options.userName && options.userName.trim()) || '小善'
+  const displayName = `${who}周拼拼${label}${suffix}.pdf`
+
   const where = {
-    userId_cycleStart_cycleEnd: { userId, cycleStart: writeFrom, cycleEnd: writeTo },
+    userId_cycleStart_cycleEnd_withAnswer: {
+      userId,
+      cycleStart: writeFrom,
+      cycleEnd: writeTo,
+      withAnswer: showAnswer,
+    },
   }
   const row = await prisma.pdfReport.upsert({
     where,
-    update: { filename, entryCount: total },
-    create: { userId, cycleStart: writeFrom, cycleEnd: writeTo, filename, entryCount: total },
+    update: { filename, displayName, withAnswer: showAnswer, entryCount: total },
+    create: {
+      userId,
+      cycleStart: writeFrom,
+      cycleEnd: writeTo,
+      filename,
+      displayName,
+      withAnswer: showAnswer,
+      entryCount: total,
+    },
   })
   return { report: toReportItem(row) }
 }
@@ -136,7 +169,7 @@ export async function getReportFile(
   }
   try {
     const buffer = await fs.readFile(path.join(STORAGE_DIR, row.filename))
-    return { buffer, filename: row.filename }
+    return { buffer, filename: row.displayName || row.filename }
   } catch (error) {
     console.error('[reports] 读取 PDF 文件失败', error)
     return null

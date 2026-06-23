@@ -77,16 +77,18 @@ model Setting {
 
 /// 已生成的 PDF 报告
 model PdfReport {
-  id         String   @id @default(cuid())
-  userId     String
-  cycleStart String
-  cycleEnd   String
-  filename   String
-  entryCount Int
-  createdAt  DateTime @default(now())
+  id          String   @id @default(cuid())
+  userId      String
+  cycleStart  String
+  cycleEnd    String
+  filename    String
+  displayName String?
+  withAnswer  Boolean  @default(false)
+  entryCount  Int
+  createdAt   DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, cycleStart, cycleEnd])
+  @@unique([userId, cycleStart, cycleEnd, withAnswer])
   @@index([userId])
 }

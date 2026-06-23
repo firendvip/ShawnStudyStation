@@ -12,17 +12,6 @@ type Props = {
   settings: AppSettings
 }
 
-/** 在新标签页打开生成的 PDF(用 <a target=_blank>,避免 await 后 window.open 被拦截)。 */
-function openPdf(url: string): void {
-  const a = document.createElement('a')
-  a.href = url
-  a.target = '_blank'
-  a.rel = 'noopener'
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-}
-
 function printPdf(url: string): void {
   const iframe = document.createElement('iframe')
   iframe.style.position = 'fixed'
@@ -119,22 +108,23 @@ export function PrintPanel({ settings }: Props) {
     setBusy(true)
     setError(null)
     try {
-      const report = await generateManualReport(
-        { recFrom, recTo, writeFrom, writeTo },
-        {
-          title,
-          columns: settings.printColumns,
-          fontSize: settings.printFontSize,
-          margin: settings.printMargin,
-          rowGap: settings.printRowGap,
-          showIndex: settings.printShowIndex,
-          showWriteSpace: settings.printShowWriteSpace,
-          showSubtitle: settings.printShowSubtitle,
-          evenDistribute: settings.printEvenDistribute,
-        },
-      )
+      const ranges = { recFrom, recTo, writeFrom, writeTo }
+      const base = {
+        title,
+        columns: settings.printColumns,
+        fontSize: settings.printFontSize,
+        margin: settings.printMargin,
+        rowGap: settings.printRowGap,
+        showIndex: settings.printShowIndex,
+        showWriteSpace: settings.printShowWriteSpace,
+        showSubtitle: settings.printShowSubtitle,
+        evenDistribute: settings.printEvenDistribute,
+      }
+      // 一键生成两份:练习版(无答案)+ 答案版(拼音下方带字词答案)
+      await generateManualReport(ranges, { ...base, showAnswer: false })
+      await generateManualReport(ranges, { ...base, showAnswer: true })
       await loadReports()
-      openPdf(reportUrl(report.id)) // 生成后直接打开 PDF,避免「看不到文件」
+      // 按用户要求:生成后只进列表,不自动打开新标签
     } catch (err) {
       setError(err instanceof Error ? err.message : '生成失败')
     } finally {
@@ -248,7 +238,14 @@ export function PrintPanel({ settings }: Props) {
             {reports.map((report) => (
               <li key={report.id} className={styles.report}>
                 <span className={styles.reportRange}>
-                  {formatCN(report.cycleStart)} ~ {formatCN(report.cycleEnd)} · {report.entryCount} 词
+                  {report.displayName
+                    ? `${report.displayName.replace(/\.pdf$/, '')} · ${report.entryCount} 词`
+                    : `${formatCN(report.cycleStart)} ~ ${formatCN(report.cycleEnd)} · ${report.entryCount} 词`}
+                  {report.displayName
+                    ? null
+                    : report.withAnswer
+                      ? ' · 答案'
+                      : ' · 练习'}
                 </span>
                 <a
                   className={styles.download}

@@ -9,6 +9,7 @@ import {
   fetchSettings,
   saveSettings,
   fetchMe,
+  setPrintUserName,
   type AddResult,
 } from '@/lib/api'
 import type { AppSettings, AuthUser, EntryItem, PracticeDay } from '@/lib/types'
@@ -88,6 +89,22 @@ export default function HomePage() {
     } catch {
       setWeekPractice([])
     }
+  }, [])
+
+  // 接收主站(父窗口)传入的昵称,用于 PDF 文件名;并在 mount 时主动告知父窗口本帧已就绪。
+  useEffect(() => {
+    function onMessage(e: MessageEvent) {
+      if (e.data?.type === 'pinpin-config' && typeof e.data.nickname === 'string') {
+        setPrintUserName(e.data.nickname)
+      }
+    }
+    window.addEventListener('message', onMessage)
+    try {
+      window.parent?.postMessage({ type: 'pinpin-ready' }, '*')
+    } catch {
+      // 非 iframe 环境忽略
+    }
+    return () => window.removeEventListener('message', onMessage)
   }, [])
 
   // 启动时获取访客身份(免登录:后端会自动创建访客并种 cookie)

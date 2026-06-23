@@ -19,9 +19,13 @@ const COLOR_INK = '#33302b'
 const COLOR_INDEX = '#b8b3aa'
 const COLOR_BORDER = '#d8d3c8'
 const COLOR_ACCENT = '#3f7d52'
+const COLOR_ANSWER = '#9a958c'
+const ANSWER_GAP = 3
 
 export interface PdfCellInput {
   pinyin: string
+  /** 答案版:拼音下方显示的字词答案 */
+  text?: string
 }
 
 export interface PdfSection {
@@ -73,10 +77,15 @@ export function generatePinyinPdf(options: GeneratePdfOptions): Promise<Buffer> 
       const cellWidth = contentWidth / columns
       const pinyinSize = options.pinyinSize ?? pinyinFontSize(columns)
       const rowGap = options.rowGap ?? CELL_GAP
+      // 是否为答案版:任一格带有字词答案
+      const hasAnswer = options.sections.some((s) => s.cells.some((c) => !!c.text))
+      const answerSize = Math.max(9, Math.round(pinyinSize * 0.95))
+      const answerBlock = hasAnswer ? ANSWER_GAP + answerSize : 0
       const rowHeight =
         CELL_PADDING * 2 +
         pinyinSize +
         4 +
+        answerBlock +
         (options.grid.showWriteSpace ? CELL_GAP + WRITE_BOX_HEIGHT : 0)
 
       // 标题(可空)与副标题(可空)
@@ -120,7 +129,9 @@ export function generatePinyinPdf(options: GeneratePdfOptions): Promise<Buffer> 
               height: rowHeight,
               index: i + j + 1,
               pinyin: cell.pinyin,
+              text: cell.text,
               pinyinSize,
+              answerSize,
               grid: options.grid,
             })
           })
@@ -143,7 +154,9 @@ interface CellDrawArgs {
   height: number
   index: number
   pinyin: string
+  text?: string
   pinyinSize: number
+  answerSize: number
   grid: GridOptions
 }
 
@@ -167,12 +180,29 @@ function drawCell(doc: PDFKit.PDFDocument, args: CellDrawArgs): void {
     size -= 1
     doc.fontSize(size)
   }
+  const pinyinY = args.y + CELL_PADDING + 4
   doc.fillColor(COLOR_INK)
-  doc.text(args.pinyin, args.x + CELL_PADDING, args.y + CELL_PADDING + 4, {
+  doc.text(args.pinyin, args.x + CELL_PADDING, pinyinY, {
     width: avail,
     align: 'center',
     lineBreak: false,
   })
+
+  // 答案版:拼音正下方居中绘制字词答案(较小字号、较浅颜色,自动缩小避免溢出)
+  if (args.text) {
+    let aSize = args.answerSize
+    doc.fontSize(aSize)
+    while (aSize > 7 && doc.widthOfString(args.text) > avail) {
+      aSize -= 1
+      doc.fontSize(aSize)
+    }
+    doc.fillColor(COLOR_ANSWER)
+    doc.text(args.text, args.x + CELL_PADDING, pinyinY + size + ANSWER_GAP, {
+      width: avail,
+      align: 'center',
+      lineBreak: false,
+    })
+  }
 
   if (args.grid.showWriteSpace) {
     const boxX = args.x + CELL_PADDING

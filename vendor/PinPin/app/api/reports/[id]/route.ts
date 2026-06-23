@@ -22,10 +22,13 @@ export async function GET(
   if (!file) {
     return new Response('Not found', { status: 404 })
   }
+  // 文件名含中文,用 RFC5987 编码,并提供 ASCII 回退,避免非 ASCII 头部被截断/报错。
+  const asciiFallback = file.filename.replace(/[^\x20-\x7E]/g, '_')
+  const encoded = encodeURIComponent(file.filename)
   return new Response(new Uint8Array(file.buffer), {
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="${file.filename}"`,
+      'Content-Disposition': `inline; filename="${asciiFallback}"; filename*=UTF-8''${encoded}`,
     },
   })
 }
