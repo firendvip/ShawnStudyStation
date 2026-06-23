@@ -7,6 +7,7 @@
 export { AUTH_CONFIG } from './config'
 export {
   createGuestSession,
+  getOrCreateUserByClientToken,
   requestLoginCode,
   verifyLoginCode,
   getUserByToken,

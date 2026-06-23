@@ -194,7 +194,11 @@ export async function generateManualReport(
 }
 
 export function reportUrl(id: string): string {
-  return `/api/reports/${encodeURIComponent(id)}`
+  // PDF 通过普通 URL(新标签/下载/iframe)访问,无法带 x-guest-token 头,
+  // 故把访客令牌放到查询参数 gt,让服务端据此识别同一访客,避免「Not found」。
+  const t = guestToken()
+  const q = t ? `?gt=${encodeURIComponent(t)}` : ''
+  return `/api/reports/${encodeURIComponent(id)}${q}`
 }
 
 export async function deleteReport(id: string): Promise<void> {
