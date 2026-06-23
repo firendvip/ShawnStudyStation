@@ -12,6 +12,17 @@ type Props = {
   settings: AppSettings
 }
 
+/** 在新标签页打开生成的 PDF(用 <a target=_blank>,避免 await 后 window.open 被拦截)。 */
+function openPdf(url: string): void {
+  const a = document.createElement('a')
+  a.href = url
+  a.target = '_blank'
+  a.rel = 'noopener'
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+}
+
 function printPdf(url: string): void {
   const iframe = document.createElement('iframe')
   iframe.style.position = 'fixed'
@@ -108,7 +119,7 @@ export function PrintPanel({ settings }: Props) {
     setBusy(true)
     setError(null)
     try {
-      await generateManualReport(
+      const report = await generateManualReport(
         { recFrom, recTo, writeFrom, writeTo },
         {
           title,
@@ -123,6 +134,7 @@ export function PrintPanel({ settings }: Props) {
         },
       )
       await loadReports()
+      openPdf(reportUrl(report.id)) // 生成后直接打开 PDF,避免「看不到文件」
     } catch (err) {
       setError(err instanceof Error ? err.message : '生成失败')
     } finally {
@@ -172,7 +184,12 @@ export function PrintPanel({ settings }: Props) {
               onChange={(e) => e.target.value && setWriteTo(e.target.value)}
             />
           </label>
-          <button type="button" className={styles.generate} onClick={handleGenerate} disabled={busy}>
+          <button
+            type="button"
+            className={styles.generate}
+            onClick={handleGenerate}
+            disabled={busy || withContent.length === 0}
+          >
             {busy ? '生成中…' : '生成 PDF'}
           </button>
         </div>
