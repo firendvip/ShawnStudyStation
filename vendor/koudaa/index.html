@@ -533,7 +533,7 @@
                 <li><i class="fas fa-laptop"></i>仅支持电脑端使用</li>
                 <li><i class="fas fa-history"></i>点标题查看最近训练数据</li>
             </ul>
-            <div class="version">v1.4.1</div>
+            <div class="version">v1.5.0</div>
         </div>
     </div>
     
@@ -627,11 +627,14 @@
             return currentProblem;
         }
         
-        // 播报题目：优先用响度归一化的真人语音音频（音量与「单词速刷」MP3 一致），
-        // 浏览器语音合成(TTS)无法放大到 1.0 以上、音量偏小，仅作兜底。
-        const numAudio = new Audio();
+        // 播报题目：优先用「整句」神经语音(edge-tts Xiaoxiao,自然流畅、像真人),
+        // 整句缺失时回退到「逐词拼接」(num_/add/sub 真人音),再缺失回退浏览器语音合成。
+        const phraseAudio = new Audio();   // 整句:audio/phrases/add_A_B.mp3 / sub_A_B.mp3
+        phraseAudio.preload = 'auto';
+        const numAudio = new Audio();      // 逐词兜底
         numAudio.preload = 'auto';
         let numQueue = [], numQi = 0, numFallbackText = '';
+        let phraseFellBack = false;
         function tokenSrc(tok) { return `audio/${tok}.mp3?v=1`; }
         function playNextToken() {
             if (numQi >= numQueue.length) { audioEnabled = true; return; }
@@ -642,6 +645,10 @@
         numAudio.addEventListener('ended', () => { numQi++; playNextToken(); });
         numAudio.addEventListener('error', () => speakFallback(numFallbackText));
 
+        // 整句加载/播放失败 -> 回退逐词拼接(只触发一次)
+        function fallbackToTokens() { if (phraseFellBack) return; phraseFellBack = true; numQi = 0; playNextToken(); }
+        phraseAudio.addEventListener('error', fallbackToTokens);
+
         // 兜底：用语音合成朗读整题（仅在音频缺失/无法播放时）
         function speakFallback(text) {
             if (!text || !('speechSynthesis' in window)) return;
@@ -651,16 +658,20 @@
             try { window.speechSynthesis.speak(u); audioEnabled = true; } catch (e) {}
         }
 
-        // 语音朗读题目
+        // 语音朗读题目：整句优先,逐词与 TTS 依次兜底
         function speakProblem(problem) {
+            try { phraseAudio.pause(); } catch (e) {}
             try { numAudio.pause(); } catch (e) {}
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
             const m = String(problem).match(/(\d+)\s*([+\-])\s*(\d+)/);
             if (!m) { speakFallback(problem); return; }   // 解析失败 -> 兜底朗读
             numFallbackText = problem;
-            numQueue = ['num_' + m[1], m[2] === '+' ? 'add' : 'sub', 'num_' + m[3]];
+            const op = m[2] === '+' ? 'add' : 'sub';
+            numQueue = ['num_' + m[1], op, 'num_' + m[3]];   // 逐词兜底序列
             numQi = 0;
-            playNextToken();
+            phraseFellBack = false;
+            phraseAudio.src = `audio/phrases/${op}_${m[1]}_${m[3]}.mp3?v=1`;  // 整句(已按 +20% 自然语速)
+            phraseAudio.play().then(() => { audioEnabled = true; }).catch(fallbackToTokens);
         }
         
         // 开始答题倒计时
