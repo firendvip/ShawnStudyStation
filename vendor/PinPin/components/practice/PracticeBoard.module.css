@@ -35,6 +35,9 @@
   background: var(--color-surface);
   border: 1px solid var(--color-line-strong);
   border-radius: var(--radius-sm);
+  /* 让网格项可收缩到内容宽度以下,FitText 才能测到真实可用宽度 */
+  min-width: 0;
+  overflow: hidden;
 }
 
 .index {
@@ -52,6 +55,8 @@
   color: var(--color-ink);
   text-align: center;
   word-break: break-word;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .answer {
@@ -62,6 +67,8 @@
   text-align: center;
   border-top: 1px dashed var(--color-line);
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .del {
