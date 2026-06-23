@@ -1,9 +1,10 @@
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import type { NextResponse } from 'next/server'
 import { AUTH_CONFIG } from './config'
 import {
   createGuestSession,
   destroySessionByToken,
+  getOrCreateUserByClientToken,
   getUserByToken,
   type AuthUser,
 } from './service'
@@ -31,6 +32,12 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
  * 必须在路由处理器中调用(set cookie 依赖可写的请求 cookie 存储)。
  */
 export async function getOrCreateUser(): Promise<AuthUser> {
+  // 跨站 iframe(localhost 子站内嵌进 file:// 主站)下三方 cookie 不可用,
+  // 优先用客户端通过 x-guest-token 头携带的访客令牌,保证读写身份一致。
+  const headerToken = (await headers()).get('x-guest-token')
+  if (headerToken && headerToken.length >= 16) {
+    return getOrCreateUserByClientToken(headerToken)
+  }
   const existing = await getCurrentUser()
   if (existing) {
     return existing

@@ -40,6 +40,29 @@ export async function createGuestSession(): Promise<{ user: AuthUser; token: str
   return { user: toAuthUser(user), token }
 }
 
+/**
+ * 用客户端持有的令牌取/建访客会话。
+ * 适用于 cookie 不可用的场景:如本地把 PinPin(localhost) 以 iframe 内嵌进 file:// 主站,
+ * 浏览器会拦截三方 cookie,导致每次请求都新建空访客、"录入后不显示"。
+ * 客户端把该令牌持久化在 localStorage 并随请求头 x-guest-token 携带,
+ * 服务端据此把同一访客的读写绑定到同一身份。
+ */
+export async function getOrCreateUserByClientToken(token: string): Promise<AuthUser> {
+  const existing = await getUserByToken(token)
+  if (existing) {
+    return existing
+  }
+  const user = await prisma.user.create({ data: {} })
+  await prisma.session.create({
+    data: {
+      userId: user.id,
+      tokenHash: sha256(token),
+      expiresAt: new Date(Date.now() + AUTH_CONFIG.sessionTtlMs),
+    },
+  })
+  return toAuthUser(user)
+}
+
 /** 生成并(演示)下发验证码。演示模式下返回 demoCode 供前端展示。 */
 export async function requestLoginCode(phone: string): Promise<{ demoCode?: string }> {
   const code = generateNumericCode(AUTH_CONFIG.codeLength)

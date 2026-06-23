@@ -80,10 +80,10 @@ async function verifyAndConsume(email, purpose, code) {
  * @param {string} email
  * @returns {Promise<number>}
  */
-async function secondsSinceLastSend(email) {
+async function secondsSinceLastSend(email, purpose) {
   const { rows } = await query(
-    'SELECT MAX(created_at) AS last FROM email_codes WHERE email = $1',
-    [email]
+    `SELECT MAX(created_at) AS last FROM email_codes WHERE email = $1${purpose ? ' AND purpose = $2' : ''}`,
+    purpose ? [email, purpose] : [email]
   );
   const last = rows[0] && rows[0].last;
   if (last === null || last === undefined) return Infinity;
@@ -95,10 +95,10 @@ async function secondsSinceLastSend(email) {
  * @param {string} email
  * @returns {Promise<number>}
  */
-async function sendsInLastHour(email) {
+async function sendsInLastHour(email, purpose) {
   const { rows } = await query(
-    'SELECT COUNT(*) AS count FROM email_codes WHERE email = $1 AND created_at >= $2',
-    [email, Date.now() - ONE_HOUR_MS]
+    `SELECT COUNT(*) AS count FROM email_codes WHERE email = $1 AND created_at >= $2${purpose ? ' AND purpose = $3' : ''}`,
+    purpose ? [email, Date.now() - ONE_HOUR_MS, purpose] : [email, Date.now() - ONE_HOUR_MS]
   );
   // pg returns COUNT(*) as a string — coerce to a number.
   return rows[0] ? Number(rows[0].count) : 0;

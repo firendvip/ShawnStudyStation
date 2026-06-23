@@ -28,9 +28,9 @@ export async function POST(request: Request) {
     return fail(parsed.error.issues[0]?.message ?? '参数校验失败', 400)
   }
 
-  const { from, to, ...print } = parsed.data
+  const { recFrom, recTo, writeFrom, writeTo, ...print } = parsed.data
   try {
-    const result = await buildReportForRange(user.id, from, to, print)
+    const result = await buildReportForRange(user.id, recFrom, recTo, writeFrom, writeTo, print)
     if (result.empty) {
       return fail('所选日期内没有数据,无法生成 PDF', 400)
     }

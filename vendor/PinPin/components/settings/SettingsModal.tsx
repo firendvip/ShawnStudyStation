@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { buildDefaultSettings, MAX_FONT_SIZE, MIN_FONT_SIZE, type AppSettings } from '@/lib/types'
 import styles from './SettingsModal.module.css'
 
@@ -10,25 +10,42 @@ type Props = {
   onSave: (settings: AppSettings) => void
 }
 
-/** 设置:通用 + 打印设置两个模块,宽屏自适应栅格布局。 */
+/** 设置:修改即实时保存(无「取消/保存」按钮)。 */
 export function SettingsModal({ settings, onClose, onSave }: Props) {
   const [form, setForm] = useState<AppSettings>(settings)
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const downOnOverlay = useRef(false)
 
   const set = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) =>
-    setForm((prev) => ({ ...prev, [key]: value }))
+    setForm((prev) => {
+      const next = { ...prev, [key]: value }
+      // 修改即自动保存(防抖,避免拖动滑块时频繁请求)
+      if (saveTimer.current) clearTimeout(saveTimer.current)
+      saveTimer.current = setTimeout(() => onSave(next), 350)
+      return next
+    })
 
   const handleRestoreDefaults = () => {
     if (!window.confirm('确定要恢复默认设置吗?当前设置将被覆盖。')) {
       return
     }
     const defaults = buildDefaultSettings(form.cycleStartDate)
+    if (saveTimer.current) clearTimeout(saveTimer.current)
     setForm(defaults)
     onSave(defaults)
   }
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+    <div
+      className={styles.overlay}
+      onMouseDown={(e) => {
+        downOnOverlay.current = e.target === e.currentTarget
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && downOnOverlay.current) onClose()
+      }}
+    >
+      <div className={styles.modal}>
         <h3 className={styles.title}>设置</h3>
 
         {/* ===== 通用 ===== */}
@@ -211,11 +228,8 @@ export function SettingsModal({ settings, onClose, onSave }: Props) {
           <button type="button" className={styles.restore} onClick={handleRestoreDefaults}>
             恢复默认设置
           </button>
-          <button type="button" className={styles.cancel} onClick={onClose}>
-            取消
-          </button>
-          <button type="button" className={styles.primary} onClick={() => onSave(form)}>
-            保存
+          <button type="button" className={styles.primary} onClick={onClose}>
+            关闭
           </button>
         </div>
       </div>

@@ -69,7 +69,7 @@ export async function getSettings(userId: string): Promise<AppSettings> {
     cycleStartDate: await getCycleStartDate(userId),
     pinyinFontSize: toNumber(await getSetting(userId, PINYIN_FS_KEY), DEFAULT_PINYIN_FONT_SIZE),
     answerFontSize: toNumber(await getSetting(userId, ANSWER_FS_KEY), DEFAULT_ANSWER_FONT_SIZE),
-    dateEntryEnabled: toBool(await getSetting(userId, DATE_ENTRY_KEY), false),
+    dateEntryEnabled: toBool(await getSetting(userId, DATE_ENTRY_KEY), true),
     printDays: toNumber(await getSetting(userId, PRINT_DAYS_KEY), d.printDays),
     printColumns: toNumber(await getSetting(userId, PRINT_COLUMNS_KEY), d.printColumns),
     printFontSize: toNumber(await getSetting(userId, PRINT_FS_KEY), d.printFontSize),

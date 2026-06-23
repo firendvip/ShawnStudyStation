@@ -119,7 +119,7 @@ export default function HomePage() {
   }, [user, loadToday, loadTodayPractice, loadWeekPractice])
 
   const switchTab = (next: Tab) => {
-    setRevealed(false)
+    // 「显示答案」为全局开关:切换标签不重置,仅手动关闭或刷新才关闭
     setTab(next)
     if (next === 'today') {
       void loadTodayPractice()
@@ -152,21 +152,11 @@ export default function HomePage() {
   }
 
   const handleSaveSettings = async (next: AppSettings) => {
+    // 实时保存:只保存与刷新,不关闭弹窗(关闭由「关闭」按钮 / 点遮罩处理)
     await saveSettings(next)
     setSettings(next)
-    setShowSettings(false)
     await refreshPractice()
   }
-
-  const revealButton = (
-    <button
-      type="button"
-      className={styles.revealBtn}
-      onClick={() => (revealed ? setRevealed(false) : setShowPassword(true))}
-    >
-      {revealed ? '隐藏答案' : '查看答案'}
-    </button>
-  )
 
   if (authLoading || !user) {
     return <div className={styles.page} />
@@ -175,6 +165,25 @@ export default function HomePage() {
   return (
     <div className={styles.page}>
       <div className={styles.tabRow}>
+        <button
+          type="button"
+          onClick={() => (revealed ? setRevealed(false) : setShowPassword(true))}
+          title="显示 / 隐藏所有标签页的答案"
+          style={{
+            flex: '0 0 auto',
+            border: `1.5px solid ${revealed ? '#359658' : '#d2cdc5'}`,
+            background: revealed ? '#dcf7e2' : 'transparent',
+            color: revealed ? '#007c3a' : '#71675d',
+            borderRadius: '999px',
+            padding: '5px 12px',
+            fontSize: '13px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {revealed ? '显示答案：开' : '显示答案：关'}
+        </button>
         <nav className={styles.tabs} aria-label="页面切换">
           {TABS.map(([key, label]) => (
             <button
@@ -202,7 +211,7 @@ export default function HomePage() {
         {tab === 'record' && (
           <section>
             <RecordPanel
-              dateEntryEnabled={settings?.dateEntryEnabled ?? false}
+              dateEntryEnabled={settings?.dateEntryEnabled ?? true}
               onSubmit={handleAdd}
             />
             <TodayList entries={todayEntries} onDelete={handleDelete} />
@@ -213,7 +222,6 @@ export default function HomePage() {
           <section>
             <div className={styles.tabHeader}>
               <span className={styles.count}>今日 共 {countWords(todayPractice)} 词</span>
-              {revealButton}
             </div>
             <PracticeBoard
               days={todayPractice}
@@ -231,7 +239,6 @@ export default function HomePage() {
           <section>
             <div className={styles.tabHeader}>
               <span className={styles.count}>今日 共 {countWords(weekPractice)} 词</span>
-              {revealButton}
             </div>
             <PracticeBoard
               days={weekPractice}
@@ -249,6 +256,7 @@ export default function HomePage() {
           <AllPanel
             pinyinFontSize={settings?.pinyinFontSize}
             answerFontSize={settings?.answerFontSize}
+            revealed={revealed}
           />
         )}
 

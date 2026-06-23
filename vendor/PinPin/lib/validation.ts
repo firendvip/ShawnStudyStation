@@ -47,8 +47,10 @@ export const settingsSchema = z.object({
 })
 
 export const reportSchema = z.object({
-  from: dateSchema,
-  to: dateSchema,
+  recFrom: dateSchema,
+  recTo: dateSchema,
+  writeFrom: dateSchema,
+  writeTo: dateSchema,
   title: z.string().trim().max(60).optional(),
   columns: z.number().int().min(1).max(10).optional(),
   fontSize: z.number().int().min(8).max(40).optional(),

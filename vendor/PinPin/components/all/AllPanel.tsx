@@ -1,14 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import {
-  fetchAllEntries,
-  addEntries,
-  updateEntry,
-  removeEntry,
-} from '@/lib/api'
+import { fetchAllEntries, addEntries, updateEntry, removeEntry } from '@/lib/api'
 import { parseWords } from '@/lib/parseWords'
-import { addDays, writeDateFor, todayLocalDate, formatCN } from '@/lib/date'
+import { todayLocalDate, formatCN } from '@/lib/date'
 import type { EntryItem, PracticeDay } from '@/lib/types'
 import { PracticeBoard } from '@/components/practice/PracticeBoard'
 import { PasswordModal } from '@/components/common/PasswordModal'
@@ -17,31 +12,30 @@ import styles from './AllPanel.module.css'
 type Props = {
   pinyinFontSize?: number
   answerFontSize?: number
+  /** 由「显示答案」全局开关控制是否显示字词答案。 */
+  revealed?: boolean
 }
 
-/** 按录入日期分组(date=书写日期=录入+1),新→旧。 */
-function groupByWriteDate(entries: EntryItem[]): PracticeDay[] {
+/** 按录入日期分组(新→旧)。 */
+function groupByRecordDate(entries: EntryItem[]): PracticeDay[] {
   const map = new Map<string, EntryItem[]>()
   for (const entry of entries) {
     const list = map.get(entry.recordDate) ?? []
     list.push(entry)
     map.set(entry.recordDate, list)
   }
-  return [...map.entries()].map(([recordDate, items]) => ({
-    date: writeDateFor(recordDate),
-    entries: items,
-  }))
+  return [...map.entries()]
+    .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+    .map(([recordDate, items]) => ({ date: recordDate, entries: items }))
 }
 
-/** 全部拼拼:展示所有录入(按书写日期新→旧),编辑(密码)后可增删改。 */
-export function AllPanel({ pinyinFontSize, answerFontSize }: Props) {
+/** 全部拼拼:展示所有录入(按录入日期新→旧),编辑(密码)后可增删改。 */
+export function AllPanel({ pinyinFontSize, answerFontSize, revealed = false }: Props) {
   const [entries, setEntries] = useState<EntryItem[]>([])
   const [editing, setEditing] = useState(false)
-  const [answersRevealed, setAnswersRevealed] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [showViewPassword, setShowViewPassword] = useState(false)
   const [addText, setAddText] = useState('')
-  const [writeDate, setWriteDate] = useState(writeDateFor(todayLocalDate()))
+  const [recordDate, setRecordDate] = useState(todayLocalDate())
 
   const load = useCallback(async () => {
     setEntries(await fetchAllEntries())
@@ -57,6 +51,10 @@ export function AllPanel({ pinyinFontSize, answerFontSize }: Props) {
     })()
   }, [load])
 
+  const today = todayLocalDate()
+  const dayLabel = (date: string): string =>
+    `录入日期 · ${formatCN(date)}${date === today ? ' (今日)' : ''}`
+
   const handleEditCommit = async (id: string, text: string) => {
     try {
       await updateEntry(id, text)
@@ -71,14 +69,31 @@ export function AllPanel({ pinyinFontSize, answerFontSize }: Props) {
     await load()
   }
 
+  /** 删除某一天的全部字词(先弹确认框)。 */
+  const handleDeleteDay = async (day: PracticeDay) => {
+    if (day.entries.length === 0) return
+    const ok = window.confirm(
+      `确定删除「${dayLabel(day.date)}」这一天的全部 ${day.entries.length} 个字词吗?\n删除后无法恢复。`,
+    )
+    if (!ok) return
+    try {
+      for (const entry of day.entries) {
+        await removeEntry(entry.id)
+      }
+      await load()
+    } catch (error) {
+      alert(error instanceof Error ? error.message : '删除失败')
+    }
+  }
+
   const handleAdd = async () => {
     const words = parseWords(addText)
     if (words.length === 0) {
       return
     }
     try {
-      // 录入书写日期 → 实际录入日期 = 书写日期 - 1
-      await addEntries(words, addDays(writeDate, -1))
+      // 直接按所填「录入日期」保存
+      await addEntries(words, recordDate)
       setAddText('')
       await load()
     } catch (error) {
@@ -86,30 +101,13 @@ export function AllPanel({ pinyinFontSize, answerFontSize }: Props) {
     }
   }
 
-  const groups = groupByWriteDate(entries)
-
-  const today = todayLocalDate()
-  const tomorrow = addDays(today, 1)
-  const dayLabel = (date: string): string => {
-    if (date === today) return `今日  ${formatCN(date)}`
-    if (date === tomorrow) return `明日  ${formatCN(date)}`
-    return formatCN(date)
-  }
+  const groups = groupByRecordDate(entries)
 
   return (
     <section>
       <div className={styles.header}>
         <span className={styles.count}>共 {entries.length} 词</span>
         <div className={styles.headerActions}>
-          <button
-            type="button"
-            className={styles.editBtn}
-            onClick={() =>
-              answersRevealed ? setAnswersRevealed(false) : setShowViewPassword(true)
-            }
-          >
-            {answersRevealed ? '隐藏答案' : '查看答案'}
-          </button>
           <button
             type="button"
             className={styles.editBtn}
@@ -123,12 +121,12 @@ export function AllPanel({ pinyinFontSize, answerFontSize }: Props) {
       {editing && (
         <div className={styles.addBox}>
           <label className={styles.dateRow}>
-            <span className={styles.dateLabel}>录入书写日期</span>
+            <span className={styles.dateLabel}>录入日期</span>
             <input
               type="date"
               className={styles.dateInput}
-              value={writeDate}
-              onChange={(e) => e.target.value && setWriteDate(e.target.value)}
+              value={recordDate}
+              onChange={(e) => e.target.value && setRecordDate(e.target.value)}
             />
           </label>
           <div className={styles.addRow}>
@@ -149,26 +147,18 @@ export function AllPanel({ pinyinFontSize, answerFontSize }: Props) {
 
       <PracticeBoard
         days={groups}
-        revealed={editing || answersRevealed}
+        revealed={editing || revealed}
         showDateHeaders
         editable={editing}
         onEditCommit={handleEditCommit}
         onDelete={handleDelete}
+        onDeleteDay={handleDeleteDay}
         emptyText="还没有任何录入。"
         pinyinFontSize={pinyinFontSize}
         answerFontSize={answerFontSize}
         formatDayLabel={dayLabel}
       />
 
-      {showViewPassword && (
-        <PasswordModal
-          onClose={() => setShowViewPassword(false)}
-          onSuccess={() => {
-            setAnswersRevealed(true)
-            setShowViewPassword(false)
-          }}
-        />
-      )}
       {showPassword && (
         <PasswordModal
           onClose={() => setShowPassword(false)}

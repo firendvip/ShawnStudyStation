@@ -1,13 +1,14 @@
 {
   "name": "shawn-study-station-server",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Secure Node.js backend for 小善学习站 — email + SMTP verification auth, JWT sessions, per-page PostgreSQL data storage.",
   "type": "commonjs",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "dev": "node src/index.js",
-    "migrate": "node src/migrate.js"
+    "migrate": "node src/migrate.js",
+    "test": "jest --runInBand"
   },
   "engines": {
     "node": ">=18"
@@ -22,5 +23,9 @@
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.14",
     "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "supertest": "^7.2.2"
   }
 }

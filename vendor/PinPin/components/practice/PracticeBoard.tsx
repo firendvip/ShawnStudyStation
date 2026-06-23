@@ -114,6 +114,7 @@ type Props = {
   editable?: boolean
   onEditCommit?: (id: string, text: string) => void
   onDelete?: (id: string) => void
+  onDeleteDay?: (day: PracticeDay) => void
   pinyinFontSize?: number
   answerFontSize?: number
   onRecord?: (text: string) => void | Promise<void>
@@ -129,6 +130,7 @@ export function PracticeBoard({
   editable = false,
   onEditCommit,
   onDelete,
+  onDeleteDay,
   pinyinFontSize,
   answerFontSize,
   onRecord,
@@ -144,8 +146,30 @@ export function PracticeBoard({
       {withContent.map((day) => (
         <div key={day.date} className={styles.day}>
           {showDateHeaders && (
-            <h3 className={styles.dayHeader}>
-              {(formatDayLabel ?? formatCN)(day.date)}
+            <h3
+              className={styles.dayHeader}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}
+            >
+              <span>{(formatDayLabel ?? formatCN)(day.date)}</span>
+              {editable && onDeleteDay && (
+                <button
+                  type="button"
+                  onClick={() => onDeleteDay(day)}
+                  style={{
+                    border: '1px solid #c0392b',
+                    color: '#c0392b',
+                    background: 'transparent',
+                    borderRadius: '999px',
+                    padding: '2px 12px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    flex: '0 0 auto',
+                  }}
+                >
+                  删除整天
+                </button>
+              )}
             </h3>
           )}
           <div className={styles.grid}>

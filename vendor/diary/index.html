@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>日记 · 小善学习站</title>
+  <style>
+    :root {
+      --paper:#fcfaf4; --surface:#ffffff; --ink:#362c24; --ink-soft:#71675d; --ink-dim:#a09890;
+      --accent:#359658; --accent-strong:#007c3a; --accent-soft:#dcf7e2;
+      --line:#e5e1da; --line-strong:#d2cdc5; --danger:#c0392b;
+      --radius:1.25rem; --radius-sm:.75rem;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0;
+        font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC","Segoe UI",system-ui,sans-serif; }
+    body { background: var(--paper); color: var(--ink); display: flex; justify-content: center;
+           align-items: flex-start; padding: 24px 16px 64px; min-height: 100vh; }
+    .wrap { width: 100%; max-width: 720px; display: flex; flex-direction: column; gap: 16px; }
+    .hidden { display: none !important; }
+    .card-base { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+                 box-shadow: 0 1px 2px rgba(54,44,36,.04), 0 8px 20px rgba(54,44,36,.05); }
+
+    /* ── 锁屏 / 设置 / 重置 ── */
+    .lock { max-width: 400px; margin: 6vh auto 0; padding: 32px 28px; text-align: center;
+            box-shadow: 0 1px 2px rgba(54,44,36,.05), 0 12px 30px rgba(54,44,36,.08); }
+    .lock .icon { font-size: 2.6rem; }
+    .lock h1 { font-size: 1.5rem; font-weight: 800; margin: 10px 0 6px; }
+    .lock p { color: var(--ink-soft); font-size: .9rem; margin-bottom: 18px; line-height: 1.6; }
+    .lock input { width: 100%; border: 1.5px solid var(--line-strong); border-radius: var(--radius-sm);
+            padding: 12px 14px; font-size: 1.1rem; color: var(--ink); background: var(--paper); margin-bottom: 11px; }
+    .lock input.pw { font-size: 1.4rem; letter-spacing: .4em; text-align: center; }
+    .lock input:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+    .code-row { display: flex; gap: 8px; margin-bottom: 11px; }
+    .code-row input { margin-bottom: 0; }
+    .code-row .send { flex: 0 0 auto; border: 1.5px solid var(--accent); background: transparent;
+            color: var(--accent-strong); border-radius: var(--radius-sm); padding: 0 14px; font-size: .85rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .code-row .send:disabled { opacity: .55; cursor: default; }
+    .btn { width: 100%; border: none; border-radius: var(--radius-sm); padding: 13px; font-size: 1rem;
+           font-weight: 700; cursor: pointer; background: var(--accent); color: #fff; transition: background .2s; }
+    .btn:hover { background: var(--accent-strong); }
+    .btn.ghost { background: transparent; color: var(--ink-soft); border: 1.5px solid var(--line-strong); }
+    .btn.ghost:hover { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
+    .err { color: var(--danger); font-size: .85rem; min-height: 1.2em; margin-bottom: 8px; }
+    .hint { color: var(--accent-strong); font-size: .82rem; min-height: 1.1em; margin-bottom: 8px; }
+    .link { display: inline-block; margin-top: 14px; color: var(--accent-strong); font-size: .85rem; cursor: pointer; }
+    .link:hover { text-decoration: underline; }
+
+    /* ── 日期 + 天气 + 搜索 同一排 ── */
+    .bar { position: relative; display: flex; align-items: center; gap: 8px; padding: 12px 16px; flex-wrap: wrap; }
+    .date-pill { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line-strong);
+                 background: var(--surface); color: var(--ink); border-radius: 999px; padding: 4px 10px;
+                 font-size: .78rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .date-pill:hover { border-color: var(--accent); }
+    .date-pill .chev { color: var(--ink-dim); font-size: .62rem; transition: transform .2s; }
+    .date-pill.open .chev { transform: rotate(180deg); }
+    .weather-label { font-size: .78rem; font-weight: 600; color: var(--ink-soft); margin-left: 2px; }
+    .weather-sel { border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+                   border-radius: 999px; padding: 4px 8px; font-size: .78rem; font-weight: 600; cursor: pointer; }
+    .weather-sel:focus { outline: none; border-color: var(--accent); }
+    .weather-custom { border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+                   border-radius: 999px; padding: 4px 10px; font-size: .78rem; width: 110px; }
+    .weather-custom:focus { outline: none; border-color: var(--accent); }
+    .spacer { flex: 1; }
+    .search { position: relative; width: 200px; max-width: 48%; }
+    .search input { width: 100%; border: 1.5px solid var(--line); background: var(--paper); border-radius: 999px;
+                    padding: 7px 12px 7px 32px; font-size: .85rem; color: var(--ink); }
+    .search input:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+    .search .icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-dim); font-size: .95rem; pointer-events: none; }
+    .search-results { position: absolute; top: calc(100% + 6px); right: 0; width: 340px; max-width: 86vw; z-index: 30;
+                      max-height: 320px; overflow-y: auto; padding: 6px; }
+    .search-results.hidden { display: none; }
+    .sr-item { display: block; width: 100%; text-align: left; border: none; background: transparent;
+               padding: 10px 12px; border-radius: var(--radius-sm); cursor: pointer; }
+    .sr-item:hover { background: var(--accent-soft); }
+    .sr-date { font-size: .85rem; font-weight: 700; color: var(--accent-strong); }
+    .sr-snippet { font-size: .85rem; color: var(--ink-soft); margin-top: 3px; line-height: 1.5;
+                  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .sr-snippet mark { background: #ffe9a8; color: inherit; border-radius: 3px; padding: 0 1px; }
+    .sr-empty { padding: 12px; text-align: center; color: var(--ink-dim); font-size: .88rem; }
+
+    /* ── 日历 ── */
+    .cal { padding: 0 14px 14px; }
+    .cal.hidden { display: none; }
+    .cal-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 4px 10px; }
+    .cal-title { font-weight: 700; font-size: .98rem; }
+    .cal-nav { border: none; background: transparent; color: var(--ink-soft); font-size: 1.3rem;
+               width: 34px; height: 34px; border-radius: 50%; cursor: pointer; line-height: 1; }
+    .cal-nav:hover { background: var(--accent-soft); color: var(--accent-strong); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-wk { text-align: center; font-size: .72rem; color: var(--ink-dim); padding: 4px 0; }
+    .cal-cell { aspect-ratio: 1; }
+    .cal-day { position: relative; width: 100%; height: 100%; border: none; background: transparent;
+               color: var(--ink); font-size: .9rem; border-radius: 10px; cursor: pointer; }
+    .cal-day:hover { background: var(--accent-soft); }
+    .cal-day.today { font-weight: 800; color: var(--accent-strong); }
+    .cal-day.sel { background: var(--accent); color: #fff; }
+    .cal-day.future { color: var(--ink-dim); opacity: .45; cursor: not-allowed; }
+    .cal-dot { position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%);
+               width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+    .cal-day.sel .cal-dot { background: #fff; }
+
+    /* ── 编辑器 ── */
+    .editor { padding: 20px; }
+    .editor .ed-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .editor h2 { font-size: 1.15rem; font-weight: 700; }
+    .saved { font-size: .78rem; color: var(--accent-strong); opacity: 0; transition: opacity .3s; white-space: nowrap; }
+    .saved.show { opacity: 1; }
+    .editor textarea { width: 100%; min-height: 320px; resize: vertical; border: 1.5px solid var(--line-strong);
+              border-radius: var(--radius-sm); padding: 14px 16px; font-size: 1.05rem; line-height: 1.85;
+              color: var(--ink); background: var(--paper); }
+    .editor textarea:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+    .mini { border: 1px solid var(--line-strong); background: transparent; color: var(--ink-soft);
+            border-radius: 999px; padding: 4px 11px; font-size: .75rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .mini:hover { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
+
+    /* ── 修改密码弹窗 ── */
+    .overlay { position: fixed; inset: 0; background: rgba(54,44,36,.38); display: flex; align-items: center;
+               justify-content: center; padding: 16px; z-index: 50; }
+    .overlay .panel { width: 100%; max-width: 360px; background: var(--surface); border-radius: var(--radius);
+               padding: 26px; box-shadow: 0 20px 40px rgba(0,0,0,.12); }
+    .overlay .panel h3 { text-align: center; font-size: 1.3rem; margin-bottom: 16px; }
+    .overlay .panel input { width: 100%; border: 1.5px solid var(--line-strong); border-radius: var(--radius-sm);
+               padding: 11px 14px; font-size: 1.1rem; letter-spacing: .3em; text-align: center;
+               color: var(--ink); background: var(--paper); margin-bottom: 10px; }
+    .overlay .panel input:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+    .overlay .panel .row { display: flex; gap: 10px; margin-top: 6px; }
+    .overlay .panel .row .btn { flex: 1; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- 设置密码 -->
+    <div class="card-base lock hidden" id="screen-setup">
+      <div class="icon">🔐</div>
+      <h1>设置日记密码</h1>
+      <p>首次使用，请设置一个 4–6 位数字密码。<br>日记内容会被加密，只有输入正确密码才能查看。</p>
+      <input type="password" id="setup-pw" class="pw" inputmode="numeric" maxlength="6" placeholder="设置密码" autocomplete="new-password" />
+      <input type="password" id="setup-pw2" class="pw" inputmode="numeric" maxlength="6" placeholder="再次输入密码" autocomplete="new-password" />
+      <p class="err" id="setup-err"></p>
+      <button class="btn" id="setup-btn">创建日记本</button>
+    </div>
+
+    <!-- 输入密码 -->
+    <div class="card-base lock hidden" id="screen-unlock">
+      <div class="icon">📔</div>
+      <h1>输入密码</h1>
+      <p>输入密码即可查看（密码正确会自动解锁，无需回车）。</p>
+      <input type="password" id="unlock-pw" class="pw" inputmode="numeric" maxlength="6" placeholder="日记密码" autocomplete="off" />
+      <p class="err" id="unlock-err"></p>
+      <button class="btn" id="unlock-btn">解锁</button>
+      <span class="link" id="to-reset">忘记密码？通过邮箱重置</span>
+    </div>
+
+    <!-- 邮箱重置密码 -->
+    <div class="card-base lock hidden" id="screen-reset">
+      <div class="icon">✉️</div>
+      <h1>邮箱重置密码</h1>
+      <p>用账号邮箱验证身份后，设置一个新密码即可。</p>
+      <input type="email" id="reset-email" placeholder="账号邮箱" autocomplete="email" />
+      <div class="code-row">
+        <input type="text" id="reset-code" inputmode="numeric" maxlength="6" placeholder="6 位验证码" autocomplete="one-time-code" />
+        <button class="send" id="reset-send" type="button">获取验证码</button>
+      </div>
+      <input type="password" id="reset-pw" class="pw" inputmode="numeric" maxlength="6" placeholder="新密码（4–6 位数字）" autocomplete="new-password" />
+      <input type="password" id="reset-pw2" class="pw" inputmode="numeric" maxlength="6" placeholder="再次输入新密码" autocomplete="new-password" />
+      <p class="hint" id="reset-hint"></p>
+      <p class="err" id="reset-err"></p>
+      <button class="btn" id="reset-btn">验证并重置</button>
+      <span class="link" id="to-unlock">返回输入密码</span>
+    </div>
+
+    <!-- 日记本 -->
+    <div class="hidden" id="screen-app">
+      <div class="wrap" style="gap:16px;">
+        <div class="card-base">
+          <div class="bar">
+            <button class="date-pill" id="date-pill" type="button"><span id="date-label">—</span><span class="chev">▾</span></button>
+            <span class="weather-label">天气：</span>
+            <select class="weather-sel" id="weather-sel" title="天气"></select>
+            <input type="text" id="weather-custom" class="weather-custom hidden" maxlength="20" placeholder="自定义天气" />
+            <span class="spacer"></span>
+            <div class="search">
+              <span class="icon">🔍</span>
+              <input type="text" id="search" placeholder="搜索日记…" autocomplete="off" />
+              <div class="card-base search-results hidden" id="search-results"></div>
+            </div>
+          </div>
+          <div class="cal hidden" id="cal"></div>
+        </div>
+
+        <div class="card-base editor">
+          <div class="ed-head">
+            <h2 id="editor-title">今天的日记</h2>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="saved" id="saved">已加密保存 ✓</span>
+              <button class="mini" id="change-pw-btn" type="button">修改密码</button>
+              <button class="mini" id="lock-btn" type="button">🔒 锁定</button>
+            </div>
+          </div>
+          <textarea id="entry" placeholder="写下今天的心情、故事或小秘密…只有你能看到 😊"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 修改密码弹窗 -->
+  <div class="overlay hidden" id="change-overlay">
+    <div class="panel">
+      <h3>修改密码</h3>
+      <input type="password" id="cp-cur" inputmode="numeric" maxlength="6" placeholder="当前密码" autocomplete="off" />
+      <input type="password" id="cp-new" inputmode="numeric" maxlength="6" placeholder="新密码（4–6 位数字）" autocomplete="new-password" />
+      <input type="password" id="cp-new2" inputmode="numeric" maxlength="6" placeholder="再次输入新密码" autocomplete="new-password" />
+      <p class="err" id="cp-err"></p>
+      <div class="row">
+        <button class="btn ghost" id="cp-cancel" type="button">取消</button>
+        <button class="btn" id="cp-save" type="button">确认修改</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ────────── 后端 API（邮箱重置用） ────────── */
+    const API = location.protocol === 'file:' ? 'http://localhost:4000/api' : '/api';
+    async function apiPost(path, body) {
+      let res;
+      try { res = await fetch(API + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
+      catch (e) { throw new Error('无法连接服务器，请确认后端已启动'); }
+      let data = {}; try { data = await res.json(); } catch (_) {}
+      if (!res.ok) throw new Error(data.error || ('请求失败 (' + res.status + ')'));
+      return data;
+    }
+
+    /* ────────── 加密：随机主密钥(本地存储)加密日记 + 密码仅作验证门 ──────────
+       这样改密/重置密码只换“门”，永不动数据；用户无需知道数据保留与否，
+       下次用新密码即可访问。 */
+    const enc = new TextEncoder(), dec = new TextDecoder();
+    const META_KEY = 'diary_meta', ENTRY_PREFIX = 'diary_entry_', VERIFIER = 'diary-ok';
+    const PW_RE = /^\d{4,6}$/, EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+    const PRESET_WEATHERS = ['无', '☀️ 晴', '🌤️ 晴间多云', '⛅ 多云', '☁️ 阴', '🌦️ 阵雨', '🌧️ 雨', '⛈️ 雷阵雨', '🌨️ 雪', '🌫️ 雾', '💨 大风'];
+    const CUSTOM_OPT = '自定义';
+    const subtle = (window.crypto && window.crypto.subtle) || null;
+    const $ = id => document.getElementById(id);
+
+    function b64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+    function unb64(s) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+    async function deriveGateKey(pw, salt) {
+      const base = await subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']);
+      return subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 120000, hash: 'SHA-256' }, base,
+        { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    }
+    async function genMasterKey() { return subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']); }
+    async function exportRaw(k) { return b64(await subtle.exportKey('raw', k)); }
+    async function importMaster(s) { return subtle.importKey('raw', unb64(s), { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']); }
+    async function encryptText(key, text) {
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const data = await subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(text));
+      return { iv: b64(iv), data: b64(data) };
+    }
+    async function decryptText(key, obj) {
+      const data = await subtle.decrypt({ name: 'AES-GCM', iv: unb64(obj.iv) }, key, unb64(obj.data));
+      return dec.decode(data);
+    }
+
+    let cryptoKey = null; // 内容主密钥（解锁后驻留内存）
+    function readMeta() { try { return JSON.parse(localStorage.getItem(META_KEY)); } catch (e) { return null; } }
+    function writeMeta(m) { localStorage.setItem(META_KEY, JSON.stringify(m)); }
+    function hasDiary() { return !!localStorage.getItem(META_KEY); }
+
+    async function setupPassword(pw) {
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const gate = await deriveGateKey(pw, salt);
+      const master = await genMasterKey();
+      writeMeta({ v: 2, salt: b64(salt), verifier: await encryptText(gate, VERIFIER), mkey: await exportRaw(master) });
+      cryptoKey = master;
+    }
+    // 旧版（密码直接派生内容密钥）首次解锁时迁移到 v2：数据原样保留，仅换成主密钥方案。
+    async function migrateV1(pw, salt, gate) {
+      const master = await genMasterKey();
+      for (const k of Object.keys(localStorage)) {
+        if (!k.startsWith(ENTRY_PREFIX)) continue;
+        try { const t = await decryptText(gate, JSON.parse(localStorage.getItem(k))); localStorage.setItem(k, JSON.stringify(await encryptText(master, t))); } catch (e) {}
+      }
+      writeMeta({ v: 2, salt: b64(salt), verifier: await encryptText(gate, VERIFIER), mkey: await exportRaw(master) });
+      cryptoKey = master;
+    }
+    async function tryUnlock(pw) {
+      const meta = readMeta(); if (!meta) return false;
+      const salt = unb64(meta.salt);
+      const gate = await deriveGateKey(pw, salt);
+      try { if ((await decryptText(gate, meta.verifier)) !== VERIFIER) return false; } catch (e) { return false; }
+      if (meta.mkey) cryptoKey = await importMaster(meta.mkey);
+      else await migrateV1(pw, salt, gate);
+      return true;
+    }
+    // 改密（知道当前密码）：换门不动数据
+    async function changePasswordKeepData(curPw, newPw) {
+      if (!(await tryUnlock(curPw))) return false; // 校验 + 确保已迁移、cryptoKey 就绪
+      const meta = readMeta();
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const gate = await deriveGateKey(newPw, salt);
+      writeMeta({ v: 2, salt: b64(salt), verifier: await encryptText(gate, VERIFIER), mkey: meta.mkey });
+      return true;
+    }
+    // 重置（忘记密码，邮箱验证后）：换门不动数据；主密钥本地可取，故内容保留
+    async function resetPasswordKeepData(newPw) {
+      const meta = readMeta();
+      const mkey = (meta && meta.mkey) ? meta.mkey : await exportRaw(await genMasterKey());
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const gate = await deriveGateKey(newPw, salt);
+      writeMeta({ v: 2, salt: b64(salt), verifier: await encryptText(gate, VERIFIER), mkey });
+      cryptoKey = await importMaster(mkey);
+    }
+
+    /* ────────── 日期 / 条目（条目内含天气，向后兼容旧纯文本） ────────── */
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function todayStr() { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+    function fmt(dateStr) { const [y, m, d] = dateStr.split('-').map(Number); return `${y}年${m}月${d}日 星期${WEEK[new Date(y, m - 1, d).getDay()]}`; }
+    let selected = todayStr();
+
+    function markedDates() {
+      const set = new Set();
+      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(ENTRY_PREFIX)) set.add(k.slice(ENTRY_PREFIX.length)); }
+      return set;
+    }
+    async function loadEntry(dateStr) {
+      const raw = localStorage.getItem(ENTRY_PREFIX + dateStr);
+      if (!raw) return { text: '', weather: '无' };
+      try {
+        const dt = await decryptText(cryptoKey, JSON.parse(raw));
+        try { const o = JSON.parse(dt); if (o && typeof o === 'object' && 'text' in o) return { text: o.text || '', weather: o.weather || '无' }; } catch (_) {}
+        return { text: dt, weather: '无' };
+      } catch (e) { return { text: '', weather: '无' }; }
+    }
+    async function saveEntry(dateStr, text, weather) {
+      if (!text && (!weather || weather === '无')) { localStorage.removeItem(ENTRY_PREFIX + dateStr); return; }
+      localStorage.setItem(ENTRY_PREFIX + dateStr, JSON.stringify(await encryptText(cryptoKey, JSON.stringify({ text, weather }))));
+    }
+
+    /* ────────── 屏幕切换 ────────── */
+    const screens = { setup: $('screen-setup'), unlock: $('screen-unlock'), reset: $('screen-reset'), app: $('screen-app') };
+    function show(name) { Object.entries(screens).forEach(([k, el]) => el.classList.toggle('hidden', k !== name)); }
+    function bootScreen() {
+      if (!subtle) { screens.setup.classList.remove('hidden'); screens.setup.innerHTML = '<div class="icon">⚠️</div><h1>无法加密</h1><p>当前环境不支持安全加密（需在 https 或本地打开），暂无法使用日记。</p>'; return; }
+      show(hasDiary() ? 'unlock' : 'setup');
+      if (!hasDiary()) {} else $('unlock-pw').focus();
+    }
+
+    /* 设置密码 */
+    $('setup-btn').addEventListener('click', async () => {
+      const pw = $('setup-pw').value, pw2 = $('setup-pw2').value, err = $('setup-err');
+      err.textContent = '';
+      if (!PW_RE.test(pw)) { err.textContent = '密码必须是 4–6 位数字'; return; }
+      if (pw !== pw2) { err.textContent = '两次输入的密码不一致'; return; }
+      await setupPassword(pw); enterApp();
+    });
+
+    /* 解锁（密码正确自动解锁，无需回车；按钮/回车也可用） */
+    const unlockPw = $('unlock-pw');
+    let autoTimer = null, autoBusy = false, autoPending = false;
+    async function autoUnlock() {
+      if (autoBusy) { autoPending = true; return; }
+      const pw = unlockPw.value;
+      if (!PW_RE.test(pw)) return;
+      autoBusy = true;
+      try { if (await tryUnlock(pw)) { unlockPw.value = ''; $('unlock-err').textContent = ''; enterApp(); return; } }
+      finally { autoBusy = false; }
+      if (autoPending) { autoPending = false; autoUnlock(); }
+    }
+    unlockPw.addEventListener('input', () => { $('unlock-err').textContent = ''; clearTimeout(autoTimer); autoTimer = setTimeout(autoUnlock, 160); });
+    async function doUnlock() {
+      const pw = unlockPw.value, err = $('unlock-err');
+      err.textContent = '';
+      if (!PW_RE.test(pw)) { err.textContent = '请输入 4–6 位数字密码'; return; }
+      if (await tryUnlock(pw)) { unlockPw.value = ''; enterApp(); } else err.textContent = '密码不正确';
+    }
+    $('unlock-btn').addEventListener('click', doUnlock);
+    unlockPw.addEventListener('keydown', e => { if (e.key === 'Enter') doUnlock(); });
+
+    /* 邮箱重置流程（换密码、保留数据） */
+    $('to-reset').addEventListener('click', () => { $('reset-err').textContent = ''; $('reset-hint').textContent = ''; show('reset'); });
+    $('to-unlock').addEventListener('click', () => { show('unlock'); unlockPw.focus(); });
+    let resetTimer = null;
+    $('reset-send').addEventListener('click', async () => {
+      const email = $('reset-email').value.trim(), err = $('reset-err'), hint = $('reset-hint'), btn = $('reset-send');
+      err.textContent = ''; hint.textContent = '';
+      if (!EMAIL_RE.test(email)) { err.textContent = '请输入正确的邮箱'; return; }
+      btn.disabled = true;
+      try {
+        const r = await apiPost('/auth/send-code', { email, purpose: 'diary' });
+        let left = 60; btn.textContent = left + 's';
+        resetTimer = setInterval(() => { left--; if (left <= 0) { clearInterval(resetTimer); btn.disabled = false; btn.textContent = '重新获取'; } else btn.textContent = left + 's'; }, 1000);
+        hint.textContent = r.devCode ? ('演示模式验证码：' + r.devCode) : '验证码已发送，请查收邮箱';
+      } catch (e) { btn.disabled = false; btn.textContent = '获取验证码'; err.textContent = e.message; }
+    });
+    $('reset-btn').addEventListener('click', async () => {
+      const email = $('reset-email').value.trim(), code = $('reset-code').value.trim();
+      const pw = $('reset-pw').value, pw2 = $('reset-pw2').value, err = $('reset-err');
+      err.textContent = '';
+      if (!EMAIL_RE.test(email)) { err.textContent = '请输入正确的邮箱'; return; }
+      if (!/^\d{6}$/.test(code)) { err.textContent = '请输入 6 位验证码'; return; }
+      if (!PW_RE.test(pw)) { err.textContent = '新密码必须是 4–6 位数字'; return; }
+      if (pw !== pw2) { err.textContent = '两次输入的新密码不一致'; return; }
+      try {
+        await apiPost('/auth/verify-code', { email, code, purpose: 'diary' });
+        await resetPasswordKeepData(pw);
+        ['reset-email', 'reset-code', 'reset-pw', 'reset-pw2'].forEach(id => $(id).value = '');
+        $('reset-hint').textContent = '';
+        enterApp();
+      } catch (e) { err.textContent = e.message; }
+    });
+
+    /* 锁定 */
+    function lock() {
+      cryptoKey = null; $('entry').value = ''; $('unlock-err').textContent = '';
+      $('search').value = ''; $('search-results').classList.add('hidden');
+      $('cal').classList.add('hidden'); $('date-pill').classList.remove('open');
+      show('unlock'); unlockPw.focus();
+    }
+    $('lock-btn').addEventListener('click', lock);
+
+    /* ────────── 日记本 ────────── */
+    const dateLabel = $('date-label'), pill = $('date-pill'), calEl = $('cal'), entry = $('entry'),
+      savedTag = $('saved'), editorTitle = $('editor-title'), weatherSel = $('weather-sel'), weatherCustom = $('weather-custom');
+    [...PRESET_WEATHERS, CUSTOM_OPT].forEach(w => { const o = document.createElement('option'); o.value = w; o.textContent = w; weatherSel.appendChild(o); });
+
+    function setWeatherUI(weather) {
+      if (PRESET_WEATHERS.includes(weather)) { weatherSel.value = weather; weatherCustom.classList.add('hidden'); weatherCustom.value = ''; }
+      else { weatherSel.value = CUSTOM_OPT; weatherCustom.classList.remove('hidden'); weatherCustom.value = weather; }
+    }
+    function currentWeather() { return weatherSel.value === CUSTOM_OPT ? weatherCustom.value.trim() : weatherSel.value; }
+
+    async function openDate(dateStr) {
+      selected = dateStr;
+      dateLabel.textContent = fmt(dateStr);
+      editorTitle.textContent = dateStr === todayStr() ? '今天的日记' : `${dateStr} 的日记`;
+      const e = await loadEntry(dateStr);
+      entry.value = e.text; setWeatherUI(e.weather);
+    }
+    async function enterApp() { show('app'); await openDate(todayStr()); }
+
+    let viewY, viewM;
+    function renderCal() {
+      const marked = markedDates(), t = todayStr();
+      const first = new Date(viewY, viewM, 1).getDay();
+      const days = new Date(viewY, viewM + 1, 0).getDate();
+      let html = `<div class="cal-head"><button class="cal-nav" data-nav="-1" aria-label="上个月">‹</button>`
+        + `<span class="cal-title">${viewY}年${viewM + 1}月</span>`
+        + `<button class="cal-nav" data-nav="1" aria-label="下个月">›</button></div><div class="cal-grid">`;
+      WEEK.forEach(w => html += `<div class="cal-wk">${w}</div>`);
+      for (let i = 0; i < first; i++) html += '<div class="cal-cell"></div>';
+      for (let d = 1; d <= days; d++) {
+        const ds = `${viewY}-${pad(viewM + 1)}-${pad(d)}`;
+        const cls = ['cal-day'];
+        if (ds === selected) cls.push('sel');
+        if (ds === t) cls.push('today');
+        if (ds > t) cls.push('future');
+        const dot = marked.has(ds) ? '<span class="cal-dot"></span>' : '';
+        const dis = ds > t ? ' disabled' : '';
+        html += `<div class="cal-cell"><button class="${cls.join(' ')}" data-date="${ds}"${dis}>${d}${dot}</button></div>`;
+      }
+      calEl.innerHTML = html + '</div>';
+    }
+    calEl.addEventListener('click', e => {
+      const nav = e.target.closest('[data-nav]');
+      if (nav) { viewM += Number(nav.dataset.nav); if (viewM < 0) { viewM = 11; viewY--; } if (viewM > 11) { viewM = 0; viewY++; } renderCal(); return; }
+      const day = e.target.closest('[data-date]');
+      if (day && !day.disabled) { openDate(day.dataset.date); calEl.classList.add('hidden'); pill.classList.remove('open'); }
+    });
+    pill.addEventListener('click', () => {
+      const willOpen = calEl.classList.contains('hidden');
+      if (willOpen) { const [y, m] = selected.split('-').map(Number); viewY = y; viewM = m - 1; renderCal(); }
+      calEl.classList.toggle('hidden'); pill.classList.toggle('open', willOpen);
+    });
+
+    /* 自动保存（正文 + 天气） */
+    let savedTimer = null;
+    function flashSaved() { savedTag.classList.add('show'); clearTimeout(savedTimer); savedTimer = setTimeout(() => savedTag.classList.remove('show'), 1200); }
+    let saveTimer = null;
+    function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 400); }
+    async function saveNow() { await saveEntry(selected, entry.value, currentWeather()); flashSaved(); }
+    entry.addEventListener('input', scheduleSave);
+    weatherSel.addEventListener('change', () => {
+      if (weatherSel.value === CUSTOM_OPT) { weatherCustom.classList.remove('hidden'); weatherCustom.focus(); }
+      else { weatherCustom.classList.add('hidden'); weatherCustom.value = ''; clearTimeout(saveTimer); saveNow(); }
+    });
+    weatherCustom.addEventListener('input', scheduleSave);
+
+    /* 搜索 */
+    const searchInput = $('search'), searchResults = $('search-results');
+    function escapeHtml(s) { return s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+    function snippet(text, q) {
+      const lower = text.toLowerCase(), pos = lower.indexOf(q);
+      const start = Math.max(0, pos - 20), end = Math.min(text.length, pos + q.length + 40);
+      const frag = (start > 0 ? '…' : '') + text.slice(start, end) + (end < text.length ? '…' : '');
+      const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'ig');
+      return escapeHtml(frag).replace(re, m => `<mark>${m}</mark>`);
+    }
+    let searchSeq = 0;
+    async function runSearch() {
+      const q = searchInput.value.trim().toLowerCase();
+      if (!q || !cryptoKey) { searchResults.classList.add('hidden'); return; }
+      const seq = ++searchSeq;
+      const dates = [...markedDates()].sort((a, b) => b.localeCompare(a));
+      const out = [];
+      for (const ds of dates) { const e = await loadEntry(ds); if (e.text && e.text.toLowerCase().includes(q)) out.push({ ds, text: e.text }); }
+      if (seq !== searchSeq) return;
+      if (!out.length) searchResults.innerHTML = '<div class="sr-empty">没有找到匹配的日记</div>';
+      else searchResults.innerHTML = out.map(r => `<button class="sr-item" data-date="${r.ds}"><div class="sr-date">${fmt(r.ds)}</div><div class="sr-snippet">${snippet(r.text, q)}</div></button>`).join('');
+      searchResults.classList.remove('hidden');
+    }
+    let searchTimer = null;
+    searchInput.addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 250); });
+    searchResults.addEventListener('click', e => {
+      const item = e.target.closest('[data-date]');
+      if (!item) return;
+      openDate(item.dataset.date);
+      searchInput.value = ''; searchResults.classList.add('hidden');
+      calEl.classList.add('hidden'); pill.classList.remove('open');
+    });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.search')) searchResults.classList.add('hidden');
+      if (!e.target.closest('.bar') && !e.target.closest('.cal')) { calEl.classList.add('hidden'); pill.classList.remove('open'); }
+    });
+
+    /* 修改密码（保留数据） */
+    const changeOverlay = $('change-overlay');
+    function openChange() { ['cp-cur', 'cp-new', 'cp-new2'].forEach(id => $(id).value = ''); $('cp-err').textContent = ''; changeOverlay.classList.remove('hidden'); }
+    function closeChange() { changeOverlay.classList.add('hidden'); }
+    $('change-pw-btn').addEventListener('click', openChange);
+    $('cp-cancel').addEventListener('click', closeChange);
+    $('cp-save').addEventListener('click', async () => {
+      const cur = $('cp-cur').value, nw = $('cp-new').value, nw2 = $('cp-new2').value, err = $('cp-err');
+      err.textContent = '';
+      if (!PW_RE.test(nw)) { err.textContent = '新密码必须是 4–6 位数字'; return; }
+      if (nw !== nw2) { err.textContent = '两次输入的新密码不一致'; return; }
+      if (!(await changePasswordKeepData(cur, nw))) { err.textContent = '当前密码不正确'; return; }
+      closeChange(); flashSaved();
+    });
+
+    /* 仅允许数字输入（密码/验证码） */
+    document.querySelectorAll('input[inputmode=numeric]').forEach(inp => {
+      inp.addEventListener('input', () => { inp.value = inp.value.replace(/\D/g, '').slice(0, 6); });
+    });
+
+    bootScreen();
+  </script>
+</body>
+</html>

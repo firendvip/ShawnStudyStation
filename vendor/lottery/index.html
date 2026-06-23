@@ -34,10 +34,10 @@
         body {
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
             background: var(--color-paper);
-            padding: 20px;
+            padding: 24px 20px 20px;
         }
         
         .container {
@@ -224,6 +224,7 @@
         }
         
         .modal-content {
+            position: relative;
             background-color: var(--color-surface);
             padding: 30px;
             border-radius: var(--radius-lg);
@@ -233,11 +234,46 @@
             overflow-y: auto;
             box-shadow: 0 8px 24px rgba(54,44,36,.12);
         }
-        
+
         .modal h2 {
-            margin-bottom: 20px;
+            margin-bottom: 4px;
             text-align: center;
             color: var(--color-ink);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .modal .modal-sub {
+            text-align: center;
+            color: var(--color-ink-soft);
+            font-size: .9rem;
+            margin-bottom: 22px;
+        }
+
+        .modal .setting-hint {
+            color: var(--color-ink-dim);
+            font-size: .82rem;
+            margin-bottom: 10px;
+        }
+
+        .modal-close-x {
+            position: absolute;
+            top: 16px;
+            right: 18px;
+            width: 30px;
+            height: 30px;
+            border: none;
+            background: transparent;
+            color: var(--color-ink-dim);
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            transition: background .2s, color .2s;
+        }
+        .modal-close-x:hover {
+            background: var(--color-accent-soft);
+            color: var(--color-accent-strong);
         }
         
         .setting-group {
@@ -310,14 +346,6 @@
             font-weight: bold;
         }
         
-        .save-btn {
-            background: var(--color-accent);
-            color: #fff;
-        }
-        .save-btn:hover {
-            background: var(--color-accent-strong);
-        }
-        
         .cancel-btn {
             background: var(--color-paper);
             color: var(--color-ink-soft);
@@ -349,6 +377,7 @@
         
         .history-modal .modal-content {
             max-width: 600px;
+            overflow: hidden; /* 只让内部记录列表滚动，避免出现两个滚动条 */
         }
         
         .history-list {
@@ -441,40 +470,16 @@
     <!-- 设置模态框 -->
     <div class="modal" id="settings-modal">
         <div class="modal-content">
+            <button class="modal-close-x" id="cancel-btn" aria-label="关闭">✕</button>
             <h2>设置</h2>
-            
-            <div class="setting-group">
-                <label class="setting-label">游戏标题</label>
-                <input type="text" class="title-input" id="title-input" placeholder="请输入游戏标题">
-            </div>
-            
-            <div class="setting-group">
-                <label class="setting-label">角色设置</label>
-                <div class="image-upload">
-                    <div class="image-preview" id="image-preview">
-                        <span>上传图片</span>
-                    </div>
-                    <input type="file" id="image-upload" accept="image/*" style="display: none;">
-                    <div class="size-warning" id="size-warning">图片大小不能超过8MB</div>
-                    <div class="image-buttons">
-                        <button class="modal-btn upload-btn" id="upload-btn">上传图片</button>
-                        <button class="modal-btn delete-btn" id="delete-btn">删除图片</button>
-                    </div>
-                </div>
-                <input type="text" class="player-input" id="player-input" placeholder="请输入角色名称">
-            </div>
-            
+            <p class="modal-sub">修改即自动保存</p>
+
             <div class="setting-group">
                 <label class="setting-label">奖品设置</label>
-                <p>最多可设置10个奖品，每个奖品对应一个格子</p>
+                <p class="setting-hint">最多可设置 10 个奖品，每个奖品对应一个格子，概率均分</p>
                 <div id="prize-inputs">
                     <!-- 奖品输入框将通过JavaScript动态生成 -->
                 </div>
-            </div>
-            
-            <div class="modal-buttons">
-                <button class="modal-btn cancel-btn" id="cancel-btn">取消</button>
-                <button class="modal-btn save-btn" id="save-btn">保存</button>
             </div>
         </div>
     </div>
@@ -482,7 +487,7 @@
     <!-- 历史记录模态框 -->
     <div class="modal history-modal" id="history-modal">
         <div class="modal-content">
-            <h2>Winning Record</h2>
+            <h2>获奖记录</h2>
             <div class="history-list" id="history-list">
                 <!-- 历史记录将通过JavaScript动态生成 -->
             </div>
@@ -502,17 +507,9 @@
             const settingsModal = document.getElementById('settings-modal');
             const historyModal = document.getElementById('history-modal');
             const cancelBtn = document.getElementById('cancel-btn');
-            const saveBtn = document.getElementById('save-btn');
             const closeHistoryBtn = document.getElementById('close-history-btn');
             const prizeInputs = document.getElementById('prize-inputs');
-            const titleInput = document.getElementById('title-input');
-            const playerInput = document.getElementById('player-input');
             const circlePath = document.getElementById('circle-path');
-            const imageUpload = document.getElementById('image-upload');
-            const uploadBtn = document.getElementById('upload-btn');
-            const deleteBtn = document.getElementById('delete-btn');
-            const imagePreview = document.getElementById('image-preview');
-            const sizeWarning = document.getElementById('size-warning');
             
             // 默认奖品列表
             let prizes = [
@@ -528,20 +525,19 @@
                 "大声朗读"
             ];
             
-            // 小善主题色系 - 和谐的绿色/中性色调
+            // 协调的彩色色环 — 同明度/饱和度的多色相，白字+阴影下清晰好看
             const colors = [
-                "#2f7d4f", "#6b8f71", "#8a6d4b", "#2c7a6b",
-                "#7a8450", "#b5734f", "#3a6b45", "#9c8268",
-                "#355e4a", "#a86b4c"
+                "#3AA76D", "#2E9E8E", "#3E8FB0", "#5B7FC4", "#7E73C0",
+                "#A86FB0", "#C76B92", "#D9826A", "#CDA24A", "#6FA84C"
             ];
             
             // 中奖历史记录
             let history = JSON.parse(localStorage.getItem('circleHistory')) || [];
             
-            // 游戏标题和角色名称
-            let gameTitleText = localStorage.getItem('gameTitle') || "小善走格子";
-            let playerText = localStorage.getItem('playerText') || "小善";
-            let playerImage = localStorage.getItem('playerImage') || "";
+            // 标题与转球：来自账号（昵称 + 头像），由主站通过 postMessage 下发
+            let gameTitleText = "小善专属转盘";
+            let playerText = "善";
+            let playerImage = "";
             
             // 当前游戏状态
             let isPlaying = false;
@@ -757,13 +753,6 @@
             
             // 打开设置模态框
             function openSettings() {
-                // 设置标题和角色名称输入框的值
-                titleInput.value = gameTitleText;
-                playerInput.value = playerText;
-                
-                // 设置图片预览
-                updateImagePreview();
-                
                 prizeInputs.innerHTML = '';
                 
                 prizes.forEach((prize, index) => {
@@ -789,114 +778,46 @@
                 settingsModal.style.display = 'flex';
             }
             
-            // 更新图片预览
-            function updateImagePreview() {
-                if (playerImage) {
-                    imagePreview.style.backgroundImage = `url(${playerImage})`;
-                    imagePreview.innerHTML = '';
-                } else {
-                    imagePreview.style.backgroundImage = 'none';
-                    imagePreview.innerHTML = '<span>上传图片</span>';
-                }
-            }
-            
-            // 保存设置
-            function saveSettings() {
-                // 保存标题和角色名称
-                gameTitleText = titleInput.value.trim() || "小善走格子";
-                playerText = playerInput.value.trim() || "小善";
-                
-                // 保存到本地存储
-                localStorage.setItem('gameTitle', gameTitleText);
-                localStorage.setItem('playerText', playerText);
-                
-                // 更新奖品列表
+            // 修改即自动保存：实时把奖品写入本地存储并应用，无需点保存按钮
+            function applySettingsLive() {
+                // 奖品列表：仅当至少有一个非空奖品时才更新，避免清空过程中渲染空盘
                 const inputs = prizeInputs.querySelectorAll('.prize-input');
                 const newPrizes = [];
-                
                 inputs.forEach(input => {
-                    if (input.value.trim() !== '') {
-                        newPrizes.push(input.value.trim());
-                    }
+                    if (input.value.trim() !== '') newPrizes.push(input.value.trim());
                 });
-                
-                // 确保至少有一个奖品
-                if (newPrizes.length === 0) {
-                    alert('请至少设置一个奖品！');
-                    return;
+                if (newPrizes.length > 0) {
+                    prizes = newPrizes;
+                    localStorage.setItem('prizes', JSON.stringify(prizes));
                 }
-                
-                // 更新奖品列表
-                prizes = newPrizes;
-                
-                // 保存到本地存储
-                localStorage.setItem('prizes', JSON.stringify(prizes));
-                
-                // 重新初始化游戏
+
+                // 重新渲染（不关闭弹窗）
                 initGame();
-                
-                // 关闭模态框
-                settingsModal.style.display = 'none';
             }
             
-            // 从本地存储加载数据
+            // 从本地存储加载数据（仅奖品；标题/转球来自账号）
             function loadFromLocalStorage() {
-                // 加载奖品列表
                 const savedPrizes = localStorage.getItem('prizes');
                 if (savedPrizes) {
                     prizes = JSON.parse(savedPrizes);
                 }
-                
-                // 加载标题和角色名称
-                const savedTitle = localStorage.getItem('gameTitle');
-                if (savedTitle) {
-                    gameTitleText = savedTitle;
-                }
-                
-                const savedPlayer = localStorage.getItem('playerText');
-                if (savedPlayer) {
-                    playerText = savedPlayer;
-                }
-                
-                // 加载角色图片
-                const savedImage = localStorage.getItem('playerImage');
-                if (savedImage) {
-                    playerImage = savedImage;
-                }
             }
-            
-            // 处理图片上传
-            function handleImageUpload(event) {
-                const file = event.target.files[0];
-                if (file) {
-                    // 检查文件大小（8MB = 8 * 1024 * 1024 bytes）
-                    if (file.size > 8 * 1024 * 1024) {
-                        sizeWarning.style.display = 'block';
-                        return;
-                    } else {
-                        sizeWarning.style.display = 'none';
-                    }
-                    
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        playerImage = e.target.result;
-                        localStorage.setItem('playerImage', playerImage);
-                        updateImagePreview();
-                        updatePlayerDisplay();
-                    };
-                    reader.readAsDataURL(file);
-                }
+
+            // 接收主站下发的账号信息：昵称 → 标题「{昵称}专属转盘」，头像 → 转球图案
+            function applyAccount(nickname, avatar) {
+                const nick = (nickname || '').trim();
+                gameTitleText = (nick || '小善') + '专属转盘';
+                playerText = (nick || '小善').charAt(0);
+                playerImage = avatar || '';
+                initGame();
             }
-            
-            // 删除图片
-            function deleteImage() {
-                playerImage = "";
-                localStorage.setItem('playerImage', playerImage);
-                updateImagePreview();
-                updatePlayerDisplay();
-                sizeWarning.style.display = 'none';
-            }
-            
+            window.addEventListener('message', function(e) {
+                const d = e.data;
+                if (d && d.type === 'lottery-config') applyAccount(d.nickname, d.avatar);
+            });
+            // 通知主站：转盘已就绪，请下发账号信息
+            try { if (window.parent && window.parent !== window) window.parent.postMessage({ type: 'lottery-ready' }, '*'); } catch (_) {}
+
             // 初始化游戏
             loadFromLocalStorage();
             initGame();
@@ -908,42 +829,36 @@
                 }
             });
             
-            // 添加图片上传事件
-            uploadBtn.addEventListener('click', function() {
-                imageUpload.click();
-            });
-            
-            imageUpload.addEventListener('change', handleImageUpload);
-            
-            // 添加删除图片事件
-            deleteBtn.addEventListener('click', deleteImage);
-            
             // 添加设置按钮点击事件
             settingsBtn.addEventListener('click', openSettings);
             helpBtn.addEventListener('click', function() {
                 historyModal.style.display = 'flex';
             });
-            
+
             cancelBtn.addEventListener('click', function() {
                 settingsModal.style.display = 'none';
-                sizeWarning.style.display = 'none';
             });
-            
-            saveBtn.addEventListener('click', saveSettings);
-            
+
+            // 修改即自动保存：奖品输入实时生效
+            prizeInputs.addEventListener('input', function(e) {
+                if (e.target.classList.contains('prize-input')) applySettingsLive();
+            });
+
             closeHistoryBtn.addEventListener('click', function() {
                 historyModal.style.display = 'none';
             });
             
-            // 点击模态框外部关闭模态框
+            // 点击模态框外部关闭模态框（记录 mousedown 起点，避免拖拽选词后误关闭）
+            let modalMouseDownTarget = null;
+            window.addEventListener('mousedown', function(event) { modalMouseDownTarget = event.target; });
             window.addEventListener('click', function(event) {
-                if (event.target === settingsModal) {
+                if (event.target === settingsModal && modalMouseDownTarget === settingsModal) {
                     settingsModal.style.display = 'none';
-                    sizeWarning.style.display = 'none';
                 }
-                if (event.target === historyModal) {
+                if (event.target === historyModal && modalMouseDownTarget === historyModal) {
                     historyModal.style.display = 'none';
                 }
+                modalMouseDownTarget = null;
             });
             
             // 窗口大小改变时重新初始化游戏板

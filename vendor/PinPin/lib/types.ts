@@ -87,7 +87,7 @@ export function buildDefaultSettings(cycleStartDate: string): AppSettings {
     cycleStartDate,
     pinyinFontSize: DEFAULT_PINYIN_FONT_SIZE,
     answerFontSize: DEFAULT_ANSWER_FONT_SIZE,
-    dateEntryEnabled: false,
+    dateEntryEnabled: true,
     ...DEFAULT_PRINT_SETTINGS,
   }
 }

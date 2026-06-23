@@ -25,3 +25,10 @@ server/data/
 # large phonics media (audio is inlined in the HTML; video gracefully falls back to TTS)
 vendor/phonics-flashcards/video/
 vendor/phonics-flashcards/video_trim/
+
+# 大体积媒体与生成文件(不提交到 GitHub,本地/部署单独提供)
+vendor/CoCaWordCards/audio/
+vendor/CoCaWordCards/COCA_wordcards.xlsx
+vendor/gaokao-english-recite/audio/
+vendor/PinPin/storage/
+server/storage/

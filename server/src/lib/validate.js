@@ -10,7 +10,7 @@ const CODE_RE = /^\d{6}$/;
 const PAGE_RE = /^[a-z0-9_-]{1,32}$/;
 const PASSWORD_MIN = 4;
 const PASSWORD_MAX = 64;
-const PURPOSE_WHITELIST = Object.freeze(['register', 'login', 'reset']);
+const PURPOSE_WHITELIST = Object.freeze(['register', 'login', 'reset', 'diary']);
 
 /**
  * Normalise an email for storage and lookup: trim surrounding whitespace and
@@ -31,7 +31,7 @@ function validateEmail(value) {
   return trimmed.length <= EMAIL_MAX && EMAIL_RE.test(trimmed);
 }
 
-/** Password length within [8, 64]. */
+/** Password length within [4, 64]. */
 function validatePassword(value) {
   return typeof value === 'string' && value.length >= PASSWORD_MIN && value.length <= PASSWORD_MAX;
 }

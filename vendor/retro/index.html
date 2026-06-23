@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>每日复盘 · 小善学习站</title>
+  <style>
+    :root {
+      --paper:#fcfaf4; --surface:#ffffff; --ink:#362c24; --ink-soft:#71675d; --ink-dim:#a09890;
+      --accent:#359658; --accent-strong:#007c3a; --accent-soft:#dcf7e2;
+      --line:#e5e1da; --line-strong:#d2cdc5; --radius:1.25rem; --radius-sm:.75rem;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0;
+        font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC","Segoe UI",system-ui,sans-serif; }
+    body { background: var(--paper); color: var(--ink); display: flex; justify-content: center;
+           align-items: flex-start; padding: 24px 16px 64px; min-height: 100vh; }
+    .wrap { width: 100%; max-width: 720px; display: flex; flex-direction: column; gap: 16px; }
+
+    .head { text-align: center; }
+    .head h1 { font-size: 2rem; font-weight: 800; letter-spacing: -.5px; }
+    .head h1 .accent { color: var(--accent); }
+    .head p { color: var(--ink-soft); font-size: .95rem; margin-top: 6px; }
+
+    .card-base { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+                 box-shadow: 0 1px 2px rgba(54,44,36,.04), 0 8px 20px rgba(54,44,36,.05); }
+
+    /* ── 日期 + 搜索 同一排 ── */
+    .bar { position: relative; display: flex; align-items: center; gap: 10px; padding: 12px 16px; }
+    .date-pill { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line-strong);
+                 background: var(--surface); color: var(--ink); border-radius: 999px; padding: 4px 10px;
+                 font-size: .78rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .date-pill:hover { border-color: var(--accent); }
+    .date-pill .chev { color: var(--ink-dim); font-size: .62rem; transition: transform .2s; }
+    .date-pill.open .chev { transform: rotate(180deg); }
+    .today-btn { border: 1px solid var(--accent); background: transparent; color: var(--accent-strong);
+                 border-radius: 999px; padding: 4px 10px; font-size: .72rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .today-btn:hover { background: var(--accent-soft); }
+    .spacer { flex: 1; }
+
+    .search { position: relative; width: 230px; max-width: 52%; }
+    .search input { width: 100%; border: 1.5px solid var(--line); background: var(--paper); border-radius: 999px;
+                    padding: 7px 12px 7px 32px; font-size: .85rem; color: var(--ink); }
+    .search input:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+    .search .icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-dim); font-size: .95rem; pointer-events: none; }
+    .search-results { position: absolute; top: calc(100% + 6px); right: 0; width: 340px; max-width: 86vw; z-index: 30;
+                      max-height: 320px; overflow-y: auto; padding: 6px; }
+    .search-results.hidden { display: none; }
+    .sr-item { display: block; width: 100%; text-align: left; border: none; background: transparent;
+               padding: 10px 12px; border-radius: var(--radius-sm); cursor: pointer; }
+    .sr-item:hover { background: var(--accent-soft); }
+    .sr-date { font-size: .85rem; font-weight: 700; color: var(--accent-strong); }
+    .sr-snippet { font-size: .85rem; color: var(--ink-soft); margin-top: 3px; line-height: 1.5;
+                  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .sr-snippet mark { background: #ffe9a8; color: inherit; border-radius: 3px; padding: 0 1px; }
+    .sr-empty { padding: 12px; text-align: center; color: var(--ink-dim); font-size: .88rem; }
+
+    /* ── 日历 ── */
+    .cal { padding: 0 14px 14px; }
+    .cal.hidden { display: none; }
+    .cal-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 4px 10px; }
+    .cal-title { font-weight: 700; font-size: .98rem; }
+    .cal-nav { border: none; background: transparent; color: var(--ink-soft); font-size: 1.3rem;
+               width: 34px; height: 34px; border-radius: 50%; cursor: pointer; line-height: 1; }
+    .cal-nav:hover { background: var(--accent-soft); color: var(--accent-strong); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-wk { text-align: center; font-size: .72rem; color: var(--ink-dim); padding: 4px 0; }
+    .cal-cell { aspect-ratio: 1; }
+    .cal-day { position: relative; width: 100%; height: 100%; border: none; background: transparent;
+               color: var(--ink); font-size: .9rem; border-radius: 10px; cursor: pointer; }
+    .cal-day:hover { background: var(--accent-soft); }
+    .cal-day.today { font-weight: 800; color: var(--accent-strong); }
+    .cal-day.sel { background: var(--accent); color: #fff; }
+    .cal-day.future { color: var(--ink-dim); opacity: .45; cursor: not-allowed; }
+    .cal-dot { position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%);
+               width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+    .cal-day.sel .cal-dot { background: #fff; }
+
+    /* ── 三段卡片 ── */
+    .card { padding: 18px 20px; border-left: 5px solid var(--bar-color, var(--accent)); }
+    .card .card-label { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: 700;
+            color: var(--ink); margin-bottom: 4px; }
+    .card .card-label .emoji { font-size: 1.3rem; }
+    .hint-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .card .card-hint { color: var(--ink-dim); font-size: .82rem; }
+    .saved { font-size: .78rem; color: var(--accent-strong); opacity: 0; transition: opacity .3s; white-space: nowrap; }
+    .saved.show { opacity: 1; }
+    .card textarea { width: 100%; min-height: 110px; resize: vertical; border: 1.5px solid var(--line-strong);
+            border-radius: var(--radius-sm); padding: 12px 14px; font-size: 1rem; line-height: 1.7;
+            color: var(--ink); background: var(--paper); }
+    .card textarea:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+    .card.did { --bar-color: #5B7FC4; }
+    .card.well { --bar-color: #3AA76D; }
+    .card.improve { --bar-color: #D9826A; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <h1>每日<span class="accent">复盘</span></h1>
+      <p>每天花几分钟回顾一下，把今天的收获和想法记下来吧 ✨</p>
+    </div>
+
+    <div class="card-base">
+      <div class="bar">
+        <button class="date-pill" id="date-pill" type="button"><span id="date-label">—</span><span class="chev">▾</span></button>
+        <button class="today-btn" id="today-btn" type="button">今天</button>
+        <span class="spacer"></span>
+        <div class="search">
+          <span class="icon">🔍</span>
+          <input type="text" id="search" placeholder="搜索复盘…" autocomplete="off" />
+          <div class="card-base search-results hidden" id="search-results"></div>
+        </div>
+      </div>
+      <div class="cal hidden" id="cal"></div>
+    </div>
+
+    <div class="card-base card did">
+      <div class="card-label"><span class="emoji">📝</span>今天主要做了哪几件事？</div>
+      <div class="hint-row"><span class="card-hint">把今天完成的事情，一件一件写下来</span><span class="saved">已自动保存 ✓</span></div>
+      <textarea id="did" placeholder="例如：1. 完成了数学作业&#10;2. 读了 20 分钟课外书&#10;3. 练了字帖"></textarea>
+    </div>
+
+    <div class="card-base card well">
+      <div class="card-label"><span class="emoji">👍</span>哪些做得很好？</div>
+      <div class="hint-row"><span class="card-hint">为自己点赞，记下今天表现棒的地方</span><span class="saved">已自动保存 ✓</span></div>
+      <textarea id="well" placeholder="例如：今天主动复习了错题，很专心"></textarea>
+    </div>
+
+    <div class="card-base card improve">
+      <div class="card-label"><span class="emoji">💪</span>哪些还可以做得更好？</div>
+      <div class="hint-row"><span class="card-hint">想想明天可以怎么做，会更进步</span><span class="saved">已自动保存 ✓</span></div>
+      <textarea id="improve" placeholder="例如：写作业时少分心，可以更快完成"></textarea>
+    </div>
+  </div>
+
+  <script>
+    const PREFIX = 'retro:';
+    const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+    const $ = id => document.getElementById(id);
+    const pill = $('date-pill'), dateLabel = $('date-label'), calEl = $('cal');
+    const allSaved = document.querySelectorAll('.saved');
+    const fields = { did: $('did'), well: $('well'), improve: $('improve') };
+    let selected = todayStr();
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function todayStr() { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+    function fmt(dateStr) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      return `${y}年${m}月${d}日 星期${WEEK[new Date(y, m - 1, d).getDay()]}`;
+    }
+    function readEntry(dateStr) { try { return JSON.parse(localStorage.getItem(PREFIX + dateStr)) || {}; } catch (e) { return {}; } }
+    function entryText(o) { return [o.did, o.well, o.improve].filter(Boolean).join('\n'); }
+
+    function markedDates() {
+      const set = new Set();
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k || !k.startsWith(PREFIX)) continue;
+        const o = readEntry(k.slice(PREFIX.length));
+        if (o.did || o.well || o.improve) set.add(k.slice(PREFIX.length));
+      }
+      return set;
+    }
+
+    /* ── 日历 ── */
+    let viewY, viewM;
+    function renderCal() {
+      const marked = markedDates(), t = todayStr();
+      const first = new Date(viewY, viewM, 1).getDay();
+      const days = new Date(viewY, viewM + 1, 0).getDate();
+      let html = `<div class="cal-head"><button class="cal-nav" data-nav="-1" aria-label="上个月">‹</button>`
+        + `<span class="cal-title">${viewY}年${viewM + 1}月</span>`
+        + `<button class="cal-nav" data-nav="1" aria-label="下个月">›</button></div><div class="cal-grid">`;
+      WEEK.forEach(w => html += `<div class="cal-wk">${w}</div>`);
+      for (let i = 0; i < first; i++) html += '<div class="cal-cell"></div>';
+      for (let d = 1; d <= days; d++) {
+        const ds = `${viewY}-${pad(viewM + 1)}-${pad(d)}`;
+        const cls = ['cal-day'];
+        if (ds === selected) cls.push('sel');
+        if (ds === t) cls.push('today');
+        if (ds > t) cls.push('future');
+        const dot = marked.has(ds) ? '<span class="cal-dot"></span>' : '';
+        const dis = ds > t ? ' disabled' : '';
+        html += `<div class="cal-cell"><button class="${cls.join(' ')}" data-date="${ds}"${dis}>${d}${dot}</button></div>`;
+      }
+      calEl.innerHTML = html + '</div>';
+    }
+    calEl.addEventListener('click', e => {
+      const nav = e.target.closest('[data-nav]');
+      if (nav) { viewM += Number(nav.dataset.nav); if (viewM < 0) { viewM = 11; viewY--; } if (viewM > 11) { viewM = 0; viewY++; } renderCal(); return; }
+      const day = e.target.closest('[data-date]');
+      if (day && !day.disabled) { selectDate(day.dataset.date); calEl.classList.add('hidden'); pill.classList.remove('open'); }
+    });
+    pill.addEventListener('click', () => {
+      const willOpen = calEl.classList.contains('hidden');
+      if (willOpen) { const [y, m] = selected.split('-').map(Number); viewY = y; viewM = m - 1; renderCal(); }
+      calEl.classList.toggle('hidden'); pill.classList.toggle('open', willOpen);
+    });
+
+    /* ── 选择 / 保存 ── */
+    function selectDate(dateStr) {
+      selected = dateStr;
+      dateLabel.textContent = fmt(dateStr);
+      const o = readEntry(dateStr);
+      fields.did.value = o.did || ''; fields.well.value = o.well || ''; fields.improve.value = o.improve || '';
+    }
+    let savedTimer = null;
+    // 只在用户正在编辑的模块副标题后显示「已自动保存」
+    function flashSaved(el) {
+      if (!el) return;
+      allSaved.forEach(t => t.classList.remove('show'));
+      el.classList.add('show');
+      clearTimeout(savedTimer);
+      savedTimer = setTimeout(() => el.classList.remove('show'), 1200);
+    }
+    let saveTimer = null, pendingSavedEl = null;
+    function scheduleSave(e) {
+      if (e && e.target) pendingSavedEl = e.target.closest('.card').querySelector('.saved');
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        const data = { did: fields.did.value, well: fields.well.value, improve: fields.improve.value };
+        if (!data.did && !data.well && !data.improve) localStorage.removeItem(PREFIX + selected);
+        else localStorage.setItem(PREFIX + selected, JSON.stringify(data));
+        flashSaved(pendingSavedEl);
+      }, 350);
+    }
+    Object.values(fields).forEach(t => t.addEventListener('input', scheduleSave));
+    $('today-btn').addEventListener('click', () => selectDate(todayStr()));
+
+    /* ── 搜索 ── */
+    const searchInput = $('search'), searchResults = $('search-results');
+    function escapeHtml(s) { return s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+    function snippet(text, q) {
+      const lower = text.toLowerCase(), pos = lower.indexOf(q);
+      const start = Math.max(0, pos - 20), end = Math.min(text.length, pos + q.length + 40);
+      const frag = (start > 0 ? '…' : '') + text.slice(start, end) + (end < text.length ? '…' : '');
+      const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'ig');
+      return escapeHtml(frag).replace(re, m => `<mark>${m}</mark>`);
+    }
+    function runSearch() {
+      const q = searchInput.value.trim().toLowerCase();
+      if (!q) { searchResults.classList.add('hidden'); return; }
+      const out = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k || !k.startsWith(PREFIX)) continue;
+        const ds = k.slice(PREFIX.length), text = entryText(readEntry(ds));
+        if (text.toLowerCase().includes(q)) out.push({ ds, text });
+      }
+      out.sort((a, b) => b.ds.localeCompare(a.ds));
+      if (!out.length) searchResults.innerHTML = '<div class="sr-empty">没有找到匹配的内容</div>';
+      else searchResults.innerHTML = out.map(r =>
+        `<button class="sr-item" data-date="${r.ds}"><div class="sr-date">${fmt(r.ds)}</div><div class="sr-snippet">${snippet(r.text, q)}</div></button>`
+      ).join('');
+      searchResults.classList.remove('hidden');
+    }
+    searchInput.addEventListener('input', runSearch);
+    searchResults.addEventListener('click', e => {
+      const item = e.target.closest('[data-date]');
+      if (!item) return;
+      selectDate(item.dataset.date);
+      searchInput.value = ''; searchResults.classList.add('hidden');
+      calEl.classList.add('hidden'); pill.classList.remove('open');
+    });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.search')) searchResults.classList.add('hidden');
+      if (!e.target.closest('.bar') && !e.target.closest('.cal')) { calEl.classList.add('hidden'); pill.classList.remove('open'); }
+    });
+
+    selectDate(todayStr());
+  </script>
+</body>
+</html>

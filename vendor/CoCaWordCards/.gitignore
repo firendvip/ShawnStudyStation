@@ -1,0 +1,9 @@
+# 大体积中间产物 / 备份（可由 scripts 重新生成，不入库）
+audio_backup_original/
+audio_backup_trimmed/
+dict/
+data/
+# 系统/临时
+.DS_Store
+*.log
+*.tmp

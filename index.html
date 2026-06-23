@@ -62,6 +62,7 @@
       cursor: pointer;
     }
     .logo span { color: var(--color-accent); }
+    .logo #logo-name { color: var(--color-ink); }
     .brand-wrap { display: inline-flex; align-items: baseline; flex-shrink: 0; }
     .logo-page {
       font-size: 1rem;
@@ -419,7 +420,13 @@
     .view.active { display: flex; flex-direction: column; }
 
     /* Centered text views */
-    .view-home, .view-about {
+    .view-home {
+      align-items: center;
+      justify-content: flex-start;
+      gap: 1rem;
+      padding: 9rem 2rem 4rem;
+    }
+    .view-about {
       align-items: center;
       justify-content: center;
       gap: 1rem;
@@ -427,7 +434,7 @@
     }
 
     .welcome-title {
-      font-size: 3.2rem;
+      font-size: 4.4rem;
       font-weight: 800;
       color: var(--color-ink);
       text-align: center;
@@ -435,12 +442,14 @@
       line-height: 1.2;
     }
     .welcome-title span { color: var(--color-accent); }
+    .welcome-title .wt-a { color: var(--color-ink); }
+    .welcome-title .wt-b { color: var(--color-accent); }
 
     .welcome-sub {
-      font-size: 1rem;
+      font-size: 1.35rem;
       color: var(--color-ink-soft);
       text-align: center;
-      max-width: 380px;
+      max-width: 520px;
       line-height: 1.7;
     }
 
@@ -469,12 +478,45 @@
       text-align: center;
     }
 
+    /* Changelog view */
+    .view-changelog {
+      align-items: center;
+      justify-content: flex-start;
+      padding: 2.5rem 1.5rem 4rem;
+      overflow-y: auto;
+    }
+    .changelog { width: 100%; max-width: 640px; }
+    .cl-head h2 { font-size: 1.9rem; font-weight: 800; color: var(--color-ink); letter-spacing: -0.5px; }
+    .cl-head p { color: var(--color-ink-soft); font-size: 0.98rem; margin: 0.4rem 0 1.8rem; }
+    .cl-list { position: relative; padding-left: 1.4rem; }
+    .cl-list::before { content: ""; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 2px; background: var(--color-line); }
+    .cl-item { position: relative; padding-bottom: 1.8rem; }
+    .cl-item::before { content: ""; position: absolute; left: -1.4rem; top: 7px; width: 11px; height: 11px;
+      border-radius: 50%; background: var(--color-line-strong); border: 2px solid var(--color-surface); }
+    .cl-item.latest::before { background: var(--color-accent); }
+    .cl-ver-row { display: flex; align-items: center; gap: 0.6rem; }
+    .cl-ver { font-size: 1.15rem; font-weight: 800; color: var(--color-ink); }
+    .cl-latest { font-size: 0.72rem; font-weight: 700; color: #2f6fd6; background: #e8f0fe; border-radius: 999px; padding: 2px 9px; }
+    .cl-date { margin-left: auto; font-size: 0.85rem; color: var(--color-ink-soft); }
+    .cl-line { display: flex; align-items: flex-start; gap: 0.6rem; margin-top: 0.7rem; font-size: 0.98rem; color: var(--color-ink); line-height: 1.5; }
+    .cl-tag { flex: 0 0 auto; font-size: 0.74rem; font-weight: 700; border-radius: 7px; padding: 3px 8px; margin-top: 1px; white-space: nowrap; }
+    .cl-tag.add { color: #1f7a4d; background: #dcf3e6; }
+    .cl-tag.opt { color: #2f6fd6; background: #e6effd; }
+    .cl-tag.fix { color: #c0392b; background: #fde7e4; }
+
+    /* Avatar upload (personalization) */
+    .avatar-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .avatar-preview { width: 56px; height: 56px; border-radius: 50%; flex: 0 0 auto;
+      background: var(--color-paper) center/cover no-repeat; border: 1px solid var(--color-line); }
+    .avatar-btn-img { background-size: cover !important; background-position: center !important; }
+    .avatar-btn-img #avatar-initial { display: none; }
+
     /* Embedded app views */
     .view-embed { padding: 0; }
     .embed-frame {
       width: 100%;
       flex: 1;
-      min-height: calc(100vh - 123px);
+      min-height: calc(100vh - 64px);
       border: none;
       display: block;
       background: var(--color-paper);
@@ -482,9 +524,9 @@
 
     /* ════════ FOOTER ════════ */
     footer {
+      display: none;
       border-top: 1px solid var(--color-line);
       padding: 1.2rem 2rem;
-      display: flex;
       align-items: center;
       justify-content: center;
       font-size: 0.8rem;
@@ -503,7 +545,7 @@
   <!-- ── HEADER ── -->
   <header>
     <span class="brand-wrap">
-      <a class="logo" href="#" data-view="home">小善<span>学习站</span></a>
+      <a class="logo" href="#" data-view="home"><span id="logo-name">小善</span><span>学习站</span></a>
       <span class="logo-page" id="logo-page"></span>
     </span>
 
@@ -520,6 +562,8 @@
         </button>
         <div class="dropdown" role="menu">
           <a class="dropdown-item" href="#" role="menuitem" data-view="cuozi">错字练习</a>
+          <a class="dropdown-item" href="#" role="menuitem" data-view="retro">每日复盘</a>
+          <a class="dropdown-item" href="#" role="menuitem" data-view="diary">日记</a>
         </div>
       </div>
 
@@ -540,9 +584,9 @@
         </button>
         <div class="dropdown" role="menu">
           <a class="dropdown-item" href="#" role="menuitem" data-view="phonics">自然拼读</a>
-          <a class="dropdown-item" href="#" role="menuitem">单词闪卡</a>
-          <a class="dropdown-item" href="#" role="menuitem">单词小测</a>
-          <a class="dropdown-item" href="#" role="menuitem">高考作文</a>
+          <a class="dropdown-item" href="#" role="menuitem" data-view="wordcards">单词速刷</a>
+          <a class="dropdown-item" href="#" role="menuitem" data-view="wordquiz">单词小测</a>
+          <a class="dropdown-item" href="#" role="menuitem" data-view="composition">英语作文</a>
         </div>
       </div>
 
@@ -552,14 +596,21 @@
           <svg class="chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
         </button>
         <div class="dropdown" role="menu">
-          <a class="dropdown-item" href="#" role="menuitem">言使</a>
+          <a class="dropdown-item" href="https://wt.look3.cn/" target="_blank" rel="noopener noreferrer" role="menuitem">AI输入法</a>
           <a class="dropdown-item" href="#" role="menuitem">闪卡</a>
           <a class="dropdown-item" href="#" role="menuitem" data-view="lottery">转盘</a>
         </div>
       </div>
 
-      <div class="nav-item">
-        <a class="nav-link" href="#" data-nav="关于" data-view="about">关于</a>
+      <div class="nav-item" data-has-dropdown>
+        <button class="nav-link" aria-expanded="false" aria-haspopup="true" data-nav="关于">
+          关于
+          <svg class="chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
+        </button>
+        <div class="dropdown" role="menu">
+          <a class="dropdown-item" href="#" role="menuitem" data-view="changelog">更新日志</a>
+          <a class="dropdown-item" href="#" role="menuitem" data-view="about">联系我们</a>
+        </div>
       </div>
 
     </nav>
@@ -580,9 +631,9 @@
           </div>
           <button class="avatar-menu-item" id="btn-open-settings">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-            个人设置
+            个性化设置
           </button>
-          <button class="avatar-menu-item" onclick="alert('修改密码')">
+          <button class="avatar-menu-item" id="btn-open-change-password">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             修改密码
           </button>
@@ -602,8 +653,8 @@
       <button class="modal-close" id="modal-close" aria-label="关闭">✕</button>
 
       <div class="auth-pane" id="pane-login">
-        <h2 class="modal-title" id="modal-title">登录小善学习站</h2>
-        <p class="modal-sub">未登录也能使用全部功能；登录后可云端保存你的数据</p>
+        <h2 class="modal-title" id="modal-title">登录</h2>
+        <p class="modal-sub">登录后可云端保存您的学习及设置数据</p>
         <div class="form-group">
           <label class="form-label" for="login-email">邮箱</label>
           <input class="form-input" id="login-email" type="email" placeholder="请输入邮箱" autocomplete="email" />
@@ -614,7 +665,7 @@
         </div>
         <p class="modal-error" id="login-error"></p>
         <button class="btn-submit" id="btn-do-login">登录</button>
-        <p class="auth-switch">还没有账号？<a href="#" id="to-register">立即注册</a></p>
+        <p class="auth-switch">还没有账号？<a href="#" id="to-register">立即注册</a> · <a href="#" id="to-reset">忘记密码？</a></p>
       </div>
 
       <div class="auth-pane" id="pane-register" style="display:none">
@@ -640,6 +691,30 @@
         <button class="btn-submit" id="btn-do-register">注册并登录</button>
         <p class="auth-switch">已有账号？<a href="#" id="to-login">去登录</a></p>
       </div>
+
+      <div class="auth-pane" id="pane-reset" style="display:none">
+        <h2 class="modal-title">重置密码</h2>
+        <p class="modal-sub">通过邮箱验证码重置您的密码</p>
+        <div class="form-group">
+          <label class="form-label" for="reset-email">邮箱</label>
+          <input class="form-input" id="reset-email" type="email" placeholder="请输入注册邮箱" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reset-code">验证码</label>
+          <div class="code-row">
+            <input class="form-input" id="reset-code" type="text" inputmode="numeric" maxlength="6" placeholder="6 位验证码" autocomplete="one-time-code" />
+            <button class="btn-code" id="btn-send-reset-code" type="button">获取验证码</button>
+          </div>
+          <p class="code-hint" id="reset-code-hint"></p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reset-password">新密码</label>
+          <input class="form-input" id="reset-password" type="password" placeholder="4–64 位新密码" autocomplete="new-password" />
+        </div>
+        <p class="modal-error" id="reset-error"></p>
+        <button class="btn-submit" id="btn-do-reset">重置并登录</button>
+        <p class="auth-switch">想起来了？<a href="#" id="to-login-from-reset">去登录</a></p>
+      </div>
     </div>
   </div>
 
@@ -647,11 +722,29 @@
   <div class="modal-overlay" id="settings-overlay" role="dialog" aria-modal="true">
     <div class="modal">
       <button class="modal-close" id="settings-close" aria-label="关闭">✕</button>
-      <h2 class="modal-title">个人设置</h2>
+      <h2 class="modal-title">个性化设置</h2>
       <p class="modal-sub">这些设置会保存到你的账号</p>
       <div class="form-group">
-        <label class="form-label" for="set-nickname">昵称</label>
-        <input class="form-input" id="set-nickname" type="text" maxlength="20" placeholder="给自己起个名字" />
+        <label class="form-label">头像</label>
+        <div class="avatar-row">
+          <div class="avatar-preview" id="avatar-preview"></div>
+          <input type="file" id="set-avatar-file" accept="image/*" style="display:none" />
+          <button type="button" class="btn-code" id="set-avatar-btn">上传头像</button>
+          <button type="button" class="btn-code" id="set-avatar-clear">移除</button>
+        </div>
+        <p class="modal-sub" style="margin:6px 0 0">用作「转盘」页的转球图案</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="set-nickname">个人昵称</label>
+        <input class="form-input" id="set-nickname" type="text" maxlength="30" placeholder="例如：小明（左上角会显示“小明学习站”）" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="set-home-title">首页主标题</label>
+        <input class="form-input" id="set-home-title" type="text" maxlength="40" placeholder="默认：欢迎来到小善学习站" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="set-home-sub">首页副标题</label>
+        <input class="form-input" id="set-home-sub" type="text" maxlength="120" placeholder="默认：😃 在这里，让错题害羞，让难题投降 👌🎉" />
       </div>
       <p class="modal-error" id="settings-error"></p>
       <p class="settings-saved" id="settings-saved">已保存 ✓</p>
@@ -659,19 +752,236 @@
     </div>
   </div>
 
+  <!-- ── CHANGE PASSWORD MODAL ── -->
+  <div class="modal-overlay" id="change-password-overlay" role="dialog" aria-modal="true">
+    <div class="modal">
+      <button class="modal-close" id="change-password-close" aria-label="关闭">✕</button>
+      <h2 class="modal-title">修改密码</h2>
+      <p class="modal-sub">修改后请牢记新密码，下次登录使用新密码</p>
+      <div class="form-group">
+        <label class="form-label" for="cp-current">当前密码</label>
+        <input class="form-input" id="cp-current" type="password" placeholder="请输入当前密码" autocomplete="current-password" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="cp-new">新密码</label>
+        <input class="form-input" id="cp-new" type="password" placeholder="4–64 位新密码" autocomplete="new-password" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="cp-confirm">确认新密码</label>
+        <input class="form-input" id="cp-confirm" type="password" placeholder="再次输入新密码" autocomplete="new-password" />
+      </div>
+      <p class="modal-error" id="cp-error"></p>
+      <p class="settings-saved" id="cp-saved">已修改 ✓</p>
+      <button class="btn-submit" id="btn-do-change-password">确认修改</button>
+      <p class="auth-switch">忘记当前密码？<a href="#" id="cp-forgot">通过邮箱找回</a></p>
+    </div>
+  </div>
+
   <!-- ── MAIN ── -->
   <main>
     <!-- Home view -->
     <section class="view view-home active" id="view-home">
-      <h1 class="welcome-title">欢迎来到<span>小善学习站</span></h1>
-      <p class="welcome-sub">😃 在这里，让错题害羞，让难题投降 👌🎉</p>
+      <h1 class="welcome-title" id="welcome-title">欢迎来到<span>小善学习站</span></h1>
+      <p class="welcome-sub" id="welcome-sub">😃 在这里，让错题害羞，让难题投降 👌🎉</p>
     </section>
 
-    <!-- About view -->
+    <!-- 联系我们 view -->
     <section class="view view-about" id="view-about">
       <p class="about-headline">功能建议 / bug 反馈</p>
       <img class="about-qr" src="assets/feedback-qr.png" alt="功能建议与 bug 反馈二维码" />
       <p class="about-hint">扫码反馈，我们会认真倾听 💚</p>
+    </section>
+
+    <!-- 更新日志 view -->
+    <section class="view view-changelog" id="view-changelog">
+      <div class="changelog">
+        <div class="cl-head">
+          <h2>更新日志</h2>
+          <p>我们持续打磨「小善学习站」，这里用大白话记录每一次更新（每条对应一次需求/改动）。</p>
+        </div>
+        <div class="cl-list">
+          <div class="cl-item latest">
+            <div class="cl-ver-row"><span class="cl-ver">v1.37</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-23</span></div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>「错字练习 · 打印」里已生成的 PDF 可以删除(点删除会先确认)。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>各子页面的设置改为「改了就自动保存」,去掉「取消 / 保存」按钮(错字练习设置、单词小测设置等)。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>「错字练习」输入密码弹窗去掉「取消」按钮;密码校验改用预加载本地比对,密码正确瞬间解锁。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.36</span><span class="cl-date">2026-06-23</span></div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>「错字练习」左上角加「显示答案」总开关:输对账号密码后,所有标签页的拼音都会显示对应字词;除非手动关闭或刷新页面,否则一直保持显示。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>「全部拼拼」改为按「录入日期」分组显示,编辑里添加字词也直接按所填录入日期保存。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>「打印」页的「开始/结束时间」改名为「录入开始/结束时间」。</div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>「打印」页新增「书写开始时间、书写结束时间」。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>「打印」预览改为:先按录入时间取出字词,再按书写时间分配(设置里勾了平均分配就均分到每天,否则按先录先写顺序填充)。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.35</span><span class="cl-date">2026-06-23</span></div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>「错字练习 · 全部拼拼」编辑状态下,每个日期右上角多了「删除整天」按钮,点了会先弹确认框,确认后删掉这一天的全部字词。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.34</span><span class="cl-date">2026-06-23</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>「错字练习」查看答案的密码改成你的账号登录密码,输对自动解锁、不用按确定(像电脑开机输密码那样)；未登录时仍可用默认密码 1234。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.33</span><span class="cl-date">2026-06-23</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>「错字练习」设置里「开启日期录入」默认就勾选好，录入页可直接选任意日期。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.32</span><span class="cl-date">2026-06-23</span></div>
+            <div class="cl-line"><span class="cl-tag fix">修复</span>「错字练习」录入字词后列表不显示的问题（内嵌页面身份没对上，导致写进去和读出来的不是同一份，现已修好）。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.31</span><span class="cl-date">2026-06-22</span></div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>个性化设置里可以上传头像，头像会用作「转盘」页转动的小球图案。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>「转盘」标题改为「你的昵称+专属转盘」（如「小明专属转盘」），设置里不再需要填游戏标题和角色。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>转盘奖品说明补充「概率均分」，更清楚。</div>
+            <div class="cl-line"><span class="cl-tag fix">修复</span>转盘「获奖记录」弹窗原来有两条滚动条，现在只剩一条。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.30</span><span class="cl-date">2026-06-22</span></div>
+            <div class="cl-line"><span class="cl-tag fix">修复</span>日记「忘记密码」邮箱重置后不再清空日记，内容会完整保留，换个新密码继续用。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>登录密码框和日记密码框：密码输对会自动进入，不用再按回车。</div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>日记天气下拉前加上「天气：」字样，并新增「自定义」选项，可自己填写天气。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.29</span><span class="cl-date">2026-06-22</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>头像下的「个人设置」改名为「个性化设置」。</div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>个性化设置里可自定义「个人昵称、首页主标题、首页副标题」：填了昵称，左上角会显示「你的昵称+学习站」；改主/副标题，首页欢迎语也跟着变。</div>
+            <div class="cl-line"><span class="cl-tag fix">修复</span>左上角昵称恢复成黑色；自定义的首页主标题会自动用黑、绿两色分段显示，和默认标题风格一致。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.28</span><span class="cl-date">2026-06-22</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>「小学心算」的报题声音换成真人语音并调响，音量和「单词速刷」一致，不再偏小。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.27</span><span class="cl-date">2026-06-22</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>「20以内心算」恢复成原始比例，再整体等比缩小到 0.8，内容在子页面里上下居中。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>问号说明、点标题弹出的窗口都能一屏完整显示并留有边距。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.26</span><span class="cl-date">2026-06-22</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>「20以内心算」整体缩小、适配一屏显示（先前一版压得太扁已修正）。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.25</span><span class="cl-date">2026-06-22</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>把「小学心算」标题文案改为「20以内心算」。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.24</span><span class="cl-date">2026-06-22</span></div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>数学区接入「小学心算」（口算口答），界面全面改成主站风格。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>菜单「100以内心算」更名为「小学心算」。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.23</span><span class="cl-date">2026-06-22</span></div>
+            <div class="cl-line"><span class="cl-tag fix">修复</span>去除自然拼读设置页里的微信联系文案。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.22</span><span class="cl-date">2026-06-22</span></div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>沉淀一套统一前端设计规范（颜色、按钮、悬停、字号等），并设为最高优先级——以后新增/导入页面都自动套用，全站风格保持一致。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.21</span><span class="cl-date">2026-06-22</span></div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>工具区上线「转盘」抽奖小工具，配色与按钮全部改成主站风格。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.20</span><span class="cl-date">2026-06-22</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>导航子菜单支持「点击展开 / 再点收起」，鼠标悬停也改为即时弹出，去掉延迟。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.19</span><span class="cl-date">2026-06-22</span></div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>左上角会跟随当前页面显示标题，例如「小善学习站 · 错字练习」。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.18</span><span class="cl-date">2026-06-22</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>错字练习的标签页改成与自然拼读一致的分段样式（绿底白字）。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.17</span><span class="cl-date">2026-06-22</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>错字练习：标签改分段样式、去掉多余内部标题、设置齿轮与标签对齐。</div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>错字练习设置里新增「恢复默认设置」按钮。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.16</span><span class="cl-date">2026-06-21</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>主页「欢迎来到小善学习站」标题放大。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>去掉页脚左下角站名与右下角「联系我们 / 隐私政策」。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>离开自然拼读页面时自动停止其声音。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>关于页「功能建议 / bug 反馈」字号放大。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.15</span><span class="cl-date">2026-06-21</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>错字练习改为免登录直接使用（去除其自带的登录系统）。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.14</span><span class="cl-date">2026-06-21</span></div>
+            <div class="cl-line"><span class="cl-tag fix">修复</span>错字练习页面打不开 / 显示空白（页面跳转死循环）。</div>
+            <div class="cl-line"><span class="cl-tag fix">修复</span>自然拼读没有声音的问题（改为播放卡片真人原声，缺失时用朗读兜底）。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>账号密码规则放宽为最少 4 位、支持纯数字。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.13</span><span class="cl-date">2026-06-21</span></div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>网站正式部署上线，支持 HTTPS 安全访问，多服务容器化运行。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>后台数据库由本地库升级为 PostgreSQL，为多人同时使用做准备。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.12</span><span class="cl-date">2026-06-21</span></div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>接入真实邮箱发信（QQ 邮箱），注册验证码真实送达邮箱。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.11</span><span class="cl-date">2026-06-21</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>注册改为「邮箱 + 验证码 + 密码」（因个人无法使用手机短信，改用邮箱方案）。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.10</span><span class="cl-date">2026-06-21</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>关于页主文案「功能建议 / bug 反馈」字号调小。</div>
+            <div class="cl-line"><span class="cl-tag fix">修复</span>错字练习嵌入后白屏（放开页面被禁止内嵌的限制）。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>去掉自然拼读的「小善自拼闪卡」标题。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>去掉自然拼读设置里的主题切换。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>自然拼读整体改成主站配色与字体风格。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.9</span><span class="cl-date">2026-06-20</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>关于页主文案放大为「功能建议 / bug 反馈」并去掉多余标题。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>「错字拼音」更名为「错字练习」。</div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>语文区「错字练习」接入实际工具（PinPin）。</div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>英语区「自然拼读」接入实际工具（拼读闪卡）。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.8</span><span class="cl-date">2026-06-20</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>关于页改为点击后在页面中央展示反馈二维码（不再直接下拉弹出）。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>下拉子菜单改为与主菜单左对齐、文字左对齐。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>移除主页「立即开始」按钮。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.7</span><span class="cl-date">2026-06-20</span></div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>工具区增加「言使、闪卡」子菜单。</div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>关于菜单提供功能建议 / Bug 反馈二维码。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>首页欢迎语改为「😃 在这里，让错题害羞，让难题投降 👌🎉」。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.6</span><span class="cl-date">2026-06-20</span></div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>导航交互参考主流网站（悬停下拉、动效）。</div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>登录 + 注册流程，登录后显示头像与账户设置。</div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>英语区增加「单词闪卡、单词小测、高考作文」子菜单。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>「实用工具」更名为「工具」，移除「亲子」菜单。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.5</span><span class="cl-date">2026-06-20</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>「登录 / 同步」按钮简化为「登录」，移除设置按钮。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>导航改为：首页 / 语文 / 数学 / 英语 / 亲子 / 实用工具 / 关于，并整体居中。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>整站配色、按钮、字体全面对齐子站风格。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>页面中央改为「欢迎来到小善学习站」，页脚年份更新为 2026。</div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>各科子菜单：语文-错字拼音、英语-自然拼读、数学-100 以内心算。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.1</span><span class="cl-date">2026-06-20</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>左上角站名改为「小善学习站」，整体配色与子站统一。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.0</span><span class="cl-date">2026-06-20</span></div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>「小善学习站」主站首版上线，风格与子站「小善拼拼」保持一致。</div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- 错字练习 (PinPin) embedded app -->
@@ -693,6 +1003,31 @@
     <section class="view view-embed" id="view-koudaa">
       <iframe class="embed-frame" id="frame-koudaa" data-app="KOUDAA" title="小学心算" loading="lazy"></iframe>
     </section>
+
+    <!-- 英语作文 (高考英语作文背诵卡) embedded app -->
+    <section class="view view-embed" id="view-composition">
+      <iframe class="embed-frame" id="frame-composition" data-app="COMPOSITION" title="英语作文" loading="lazy"></iframe>
+    </section>
+
+    <!-- 单词速刷 (CoCaWordCards) embedded app -->
+    <section class="view view-embed" id="view-wordcards">
+      <iframe class="embed-frame" id="frame-wordcards" data-app="WORDCARDS" title="单词速刷" loading="lazy"></iframe>
+    </section>
+
+    <!-- 每日复盘 embedded app -->
+    <section class="view view-embed" id="view-retro">
+      <iframe class="embed-frame" id="frame-retro" data-app="RETRO" title="每日复盘" loading="lazy"></iframe>
+    </section>
+
+    <!-- 日记 (密码保护) embedded app -->
+    <section class="view view-embed" id="view-diary">
+      <iframe class="embed-frame" id="frame-diary" data-app="DIARY" title="日记" loading="lazy"></iframe>
+    </section>
+
+    <!-- 单词小测 embedded app -->
+    <section class="view view-embed" id="view-wordquiz">
+      <iframe class="embed-frame" id="frame-wordquiz" data-app="WORDQUIZ" title="单词小测" loading="lazy"></iframe>
+    </section>
   </main>
 
   <!-- ── FOOTER ── -->
@@ -711,7 +1046,14 @@
       LOTTERY: IS_FILE ? 'vendor/lottery/index.html'
                        : '/apps/lottery/index.html',
       KOUDAA:  IS_FILE ? 'vendor/koudaa/index.html'
-                       : '/apps/koudaa/index.html'
+                       : '/apps/koudaa/index.html',
+      COMPOSITION: IS_FILE ? 'vendor/gaokao-english-recite/高考英语作文背诵卡.html'
+                           : '/apps/gaokao-english-recite/高考英语作文背诵卡.html',
+      WORDCARDS: IS_FILE ? 'vendor/CoCaWordCards/webapp/index.html'
+                         : '/apps/wordcards/index.html',
+      RETRO: IS_FILE ? 'vendor/retro/index.html' : '/apps/retro/index.html',
+      DIARY: IS_FILE ? 'vendor/diary/index.html' : '/apps/diary/index.html',
+      WORDQUIZ: IS_FILE ? 'vendor/wordquiz/index.html' : '/apps/wordquiz/index.html'
     };
     const API = CONFIG.API;
 
@@ -772,19 +1114,20 @@
     });
 
     /* ── View switching ── */
-    function pausePhonics() {
-      const f = document.getElementById('frame-phonics');
+    /* 彻底静音一个子页面 iframe：先尽力优雅停止(媒体元素 + 语音播报)，
+       再清空 src 销毁其文档，确保 Web Audio / TTS / 音视频全部停止；返回该页时按需重新加载。 */
+    function silenceFrame(f) {
       if (!f || !f.getAttribute('src')) return;
       try {
-        const doc = f.contentDocument || (f.contentWindow && f.contentWindow.document);
-        if (!doc) throw new Error('no doc');
-        doc.querySelectorAll('audio, video').forEach(m => { try { m.pause(); } catch (e) {} });
-      } catch (e) {
-        f.removeAttribute('src'); // blocked → blank to guarantee silence; reloads on return
-      }
+        const win = f.contentWindow;
+        const doc = f.contentDocument || (win && win.document);
+        if (doc) doc.querySelectorAll('audio, video').forEach(m => { try { m.pause(); } catch (e) {} });
+        if (win && win.speechSynthesis) { try { win.speechSynthesis.cancel(); } catch (e) {} }
+      } catch (e) { /* 跨域无法访问，直接清空 src 即可静音 */ }
+      f.removeAttribute('src'); // 清空文档，保证所有音频（含 Web Audio/语音播报）停止；返回时重新加载
     }
 
-    const VIEW_NAMES = { home: '', about: '关于', cuozi: '错字练习', phonics: '自然拼读', lottery: '转盘', koudaa: '小学心算' };
+    const VIEW_NAMES = { home: '', about: '联系我们', changelog: '更新日志', cuozi: '错字练习', phonics: '自然拼读', lottery: '转盘', koudaa: '小学心算', composition: '英语作文', wordcards: '单词速刷', retro: '每日复盘', diary: '日记', wordquiz: '单词小测' };
     function switchView(viewName) {
       const lp = document.getElementById('logo-page');
       if (lp) lp.textContent = VIEW_NAMES[viewName] || '';
@@ -797,7 +1140,11 @@
           frame.setAttribute('src', CONFIG[frame.getAttribute('data-app')]);
         }
       }
-      if (viewName !== 'phonics') pausePhonics();
+      // 跳转后静音所有非当前页面的子页面 iframe，停止其残留的音频/语音/视频播放
+      const activeFrame = target ? target.querySelector('iframe[data-app]') : null;
+      document.querySelectorAll('iframe[data-app]').forEach(f => {
+        if (f !== activeFrame) silenceFrame(f);
+      });
     }
 
     /* Top-level plain nav links + logo */
@@ -835,6 +1182,7 @@
     const avatarBtn  = document.getElementById('avatar-btn');
     const paneLogin    = document.getElementById('pane-login');
     const paneRegister = document.getElementById('pane-register');
+    const paneReset    = document.getElementById('pane-reset');
 
     const getToken = () => localStorage.getItem(TOKEN_KEY);
     const setToken = t => localStorage.setItem(TOKEN_KEY, t);
@@ -858,48 +1206,61 @@
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     function switchPane(mode) {
-      const isLogin = mode === 'login';
-      paneLogin.style.display = isLogin ? '' : 'none';
-      paneRegister.style.display = isLogin ? 'none' : '';
+      paneLogin.style.display = mode === 'login' ? '' : 'none';
+      paneRegister.style.display = mode === 'register' ? '' : 'none';
+      paneReset.style.display = mode === 'reset' ? '' : 'none';
     }
     function openModal(mode) { switchPane(mode || 'login'); overlay.classList.add('open'); }
     function closeModal() {
       overlay.classList.remove('open');
       clearError(document.getElementById('login-error'));
       clearError(document.getElementById('reg-error'));
+      clearError(document.getElementById('reset-error'));
     }
 
     btnLogin.addEventListener('click', () => openModal('login'));
     btnClose.addEventListener('click', closeModal);
-    overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+    let overlayMouseDownTarget = null;
+    overlay.addEventListener('mousedown', e => { overlayMouseDownTarget = e.target; });
+    overlay.addEventListener('click', e => {
+      // 仅当按下与抬起都发生在遮罩本身时才关闭，避免在输入框内拖拽选词后误关闭
+      if (e.target === overlay && overlayMouseDownTarget === overlay) closeModal();
+      overlayMouseDownTarget = null;
+    });
     document.getElementById('to-register').addEventListener('click', e => { e.preventDefault(); switchPane('register'); });
     document.getElementById('to-login').addEventListener('click', e => { e.preventDefault(); switchPane('login'); });
+    document.getElementById('to-reset').addEventListener('click', e => { e.preventDefault(); switchPane('reset'); });
+    document.getElementById('to-login-from-reset').addEventListener('click', e => { e.preventDefault(); switchPane('login'); });
 
-    /* Send verification code */
-    const btnSendCode = document.getElementById('btn-send-code');
-    const codeHint = document.getElementById('code-hint');
-    let codeTimer = null;
-    btnSendCode.addEventListener('click', async () => {
-      const email = document.getElementById('reg-email').value.trim();
-      const errEl = document.getElementById('reg-error');
-      clearError(errEl); codeHint.textContent = '';
-      if (!emailRe.test(email)) { showError(errEl, '请输入正确的邮箱'); return; }
-      btnSendCode.disabled = true;
-      try {
-        const r = await api('/auth/send-code', { method: 'POST', body: { email, purpose: 'register' } });
-        let left = 60;
-        btnSendCode.textContent = left + 's';
-        codeTimer = setInterval(() => {
-          left--;
-          if (left <= 0) { clearInterval(codeTimer); btnSendCode.disabled = false; btnSendCode.textContent = '重新获取'; }
-          else btnSendCode.textContent = left + 's';
-        }, 1000);
-        codeHint.textContent = r.devCode ? ('演示模式验证码：' + r.devCode) : '验证码已发送，请查收邮箱';
-      } catch (e) {
-        btnSendCode.disabled = false; btnSendCode.textContent = '获取验证码';
-        showError(errEl, e.message);
-      }
-    });
+    /* Send verification code — reusable for register + password reset */
+    function wireSendCode({ btnId, emailId, hintId, errId, purpose }) {
+      const btn = document.getElementById(btnId);
+      const hint = document.getElementById(hintId);
+      let timer = null;
+      btn.addEventListener('click', async () => {
+        const email = document.getElementById(emailId).value.trim();
+        const errEl = document.getElementById(errId);
+        clearError(errEl); hint.textContent = '';
+        if (!emailRe.test(email)) { showError(errEl, '请输入正确的邮箱'); return; }
+        btn.disabled = true;
+        try {
+          const r = await api('/auth/send-code', { method: 'POST', body: { email, purpose } });
+          let left = 60;
+          btn.textContent = left + 's';
+          timer = setInterval(() => {
+            left--;
+            if (left <= 0) { clearInterval(timer); btn.disabled = false; btn.textContent = '重新获取'; }
+            else btn.textContent = left + 's';
+          }, 1000);
+          hint.textContent = r.devCode ? ('演示模式验证码：' + r.devCode) : '验证码已发送，请查收邮箱';
+        } catch (e) {
+          btn.disabled = false; btn.textContent = '获取验证码';
+          showError(errEl, e.message);
+        }
+      });
+    }
+    wireSendCode({ btnId: 'btn-send-code', emailId: 'reg-email', hintId: 'code-hint', errId: 'reg-error', purpose: 'register' });
+    wireSendCode({ btnId: 'btn-send-reset-code', emailId: 'reset-email', hintId: 'reset-code-hint', errId: 'reset-error', purpose: 'reset' });
 
     /* Register */
     document.getElementById('btn-do-register').addEventListener('click', async () => {
@@ -914,25 +1275,63 @@
       try {
         const r = await api('/auth/register', { method: 'POST', body: { email, code, password } });
         setToken(r.token);
+        loginPasswordCache = password;
+        await onLoggedIn(r.user);
+        closeModal();
+      } catch (e) { showError(errEl, e.message); }
+    });
+
+    /* Reset password (forgot password) */
+    document.getElementById('btn-do-reset').addEventListener('click', async () => {
+      const email = document.getElementById('reset-email').value.trim();
+      const code = document.getElementById('reset-code').value.trim();
+      const password = document.getElementById('reset-password').value;
+      const errEl = document.getElementById('reset-error');
+      clearError(errEl);
+      if (!emailRe.test(email)) { showError(errEl, '请输入正确的邮箱'); return; }
+      if (!/^\d{6}$/.test(code)) { showError(errEl, '请输入 6 位验证码'); return; }
+      if (password.length < 4 || password.length > 64) { showError(errEl, '密码长度需为 4–64 位'); return; }
+      try {
+        const r = await api('/auth/reset-password', { method: 'POST', body: { email, code, password } });
+        setToken(r.token);
+        loginPasswordCache = password;
         await onLoggedIn(r.user);
         closeModal();
       } catch (e) { showError(errEl, e.message); }
     });
 
     /* Login */
-    function doLogin() {
+    // 预加载:登录/重置成功后把当前登录密码缓存到内存,供「错字练习」查看答案瞬间本地校验
+    let loginPasswordCache = null;
+    function doLogin(silent) {
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
       const errEl = document.getElementById('login-error');
-      clearError(errEl);
-      if (!emailRe.test(email)) { showError(errEl, '请输入正确的邮箱'); return; }
-      if (!password) { showError(errEl, '请输入密码'); return; }
+      if (!silent) clearError(errEl);
+      if (!emailRe.test(email)) { if (!silent) showError(errEl, '请输入正确的邮箱'); return; }
+      if (!password) { if (!silent) showError(errEl, '请输入密码'); return; }
       api('/auth/login', { method: 'POST', body: { email, password } })
-        .then(async r => { setToken(r.token); await onLoggedIn(r.user); closeModal(); })
-        .catch(e => showError(errEl, e.message));
+        .then(async r => { setToken(r.token); loginPasswordCache = password; await onLoggedIn(r.user); closeModal(); })
+        .catch(e => { if (!silent) showError(errEl, e.message); });
     }
-    document.getElementById('btn-do-login').addEventListener('click', doLogin);
+    document.getElementById('btn-do-login').addEventListener('click', () => doLogin());
     document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    // 自动登录：密码正确即自动进入，无需回车（停顿后尝试一次，去重，失败静默不打扰）
+    let loginAutoTimer = null, lastLoginSig = '';
+    function scheduleAutoLogin() {
+      clearTimeout(loginAutoTimer);
+      loginAutoTimer = setTimeout(() => {
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        if (!emailRe.test(email) || password.length < 4) return;
+        const sig = email + ' ' + password;
+        if (sig === lastLoginSig) return;
+        lastLoginSig = sig;
+        doLogin(true);
+      }, 700);
+    }
+    document.getElementById('login-password').addEventListener('input', scheduleAutoLogin);
+    document.getElementById('login-email').addEventListener('input', scheduleAutoLogin);
 
     /* Logged-in state */
     let currentUser = null;
@@ -956,11 +1355,73 @@
       const nickname = userSettings.nickname || currentUser.email.split('@')[0];
       document.getElementById('avatar-initial').textContent =
         userSettings.nickname ? userSettings.nickname.charAt(0) : currentUser.email.charAt(0).toUpperCase();
+      if (userSettings.avatar) { avatarBtn.style.backgroundImage = `url(${userSettings.avatar})`; avatarBtn.classList.add('avatar-btn-img'); }
+      else { avatarBtn.style.backgroundImage = ''; avatarBtn.classList.remove('avatar-btn-img'); }
       document.getElementById('user-display-name').textContent = nickname;
       document.getElementById('user-display-email').textContent = maskEmail(currentUser.email);
       btnLogin.style.display = 'none';
       avatarWrap.classList.add('visible');
+      applyPersonalization();
     }
+
+    /* 个性化：昵称→左上角站名，主/副标题→首页文案。留空恢复默认。 */
+    const DEFAULT_HOME_SUB = '😃 在这里，让错题害羞，让难题投降 👌🎉';
+    function applyPersonalization() {
+      const nick = (userSettings.nickname || '').trim();
+      document.getElementById('logo-name').textContent = nick || '小善';
+      const titleEl = document.getElementById('welcome-title');
+      const ht = (userSettings.homeTitle || '').trim();
+      if (ht) {
+        // 语块切分为两段，分别用黑、绿两色（与默认「欢迎来到 / 小善学习站」一致）
+        let mid = Math.ceil(ht.length / 2);
+        const near = ht.slice(0, mid + 4);
+        const sp = Math.max(near.lastIndexOf(' '), near.lastIndexOf('　'));
+        if (sp > 0) mid = sp + 1;
+        const parts = [ht.slice(0, mid), ht.slice(mid)].filter(Boolean);
+        titleEl.innerHTML = '';
+        parts.forEach((c, i) => {
+          const s = document.createElement('span');
+          s.className = i % 2 ? 'wt-b' : 'wt-a';
+          s.textContent = c;
+          titleEl.appendChild(s);
+        });
+      } else {
+        titleEl.innerHTML = '欢迎来到<span>小善学习站</span>';
+      }
+      const hs = (userSettings.homeSub || '').trim();
+      document.getElementById('welcome-sub').textContent = hs || DEFAULT_HOME_SUB;
+      postLottery();
+    }
+
+    /* 把昵称/头像下发给「转盘」iframe：标题用「{昵称}专属转盘」、头像作转球 */
+    function lotteryConfig() { return { type: 'lottery-config', nickname: (userSettings.nickname || ''), avatar: (userSettings.avatar || '') }; }
+    function postLottery() {
+      const f = document.getElementById('frame-lottery');
+      if (f && f.contentWindow) { try { f.contentWindow.postMessage(lotteryConfig(), '*'); } catch (_) {} }
+    }
+    window.addEventListener('message', e => { if (e.data && e.data.type === 'lottery-ready') postLottery(); });
+
+    /* 错字练习「查看答案」密码校验:是否等于账号登录密码。
+       仅响应错字练习 iframe(frame-cuozi),避免其它来源借此暴力尝试密码。 */
+    window.addEventListener('message', async e => {
+      const d = e.data;
+      if (!d || d.type !== 'pinpin-verify-pw') return;
+      const pf = document.getElementById('frame-cuozi');
+      if (!pf || e.source !== pf.contentWindow) return;
+      let ok = false;
+      const val = String(d.value || '');
+      try {
+        if (loginPasswordCache != null) {
+          ok = val === loginPasswordCache; // 预加载:本地瞬间比对,无需访问后端
+        } else if (currentUser && getToken()) {
+          const r = await api('/auth/verify-password', { method: 'POST', auth: true, body: { password: val } });
+          ok = !!r.ok;
+        } else {
+          ok = val === '1234'; // 未登录回退默认密码
+        }
+      } catch (_) { ok = false; }
+      try { pf.contentWindow.postMessage({ type: 'pinpin-verify-pw-result', reqId: d.reqId, ok }, '*'); } catch (_) {}
+    });
 
     /* Restore session on load */
     (async () => {
@@ -982,29 +1443,67 @@
     /* Logout */
     document.getElementById('btn-logout').addEventListener('click', () => {
       clearToken();
-      currentUser = null; userSettings = {};
+      currentUser = null; userSettings = {}; loginPasswordCache = null;
+      applyPersonalization();
       avatarWrap.classList.remove('visible', 'open');
       btnLogin.style.display = '';
     });
 
     /* Account settings panel */
     const settingsOverlay = document.getElementById('settings-overlay');
+    let pendingAvatar = '';
+    function setAvatarPreview(src) {
+      document.getElementById('avatar-preview').style.backgroundImage = src ? `url(${src})` : '';
+    }
     function openSettings() {
       if (!currentUser) return;
       document.getElementById('set-nickname').value = userSettings.nickname || '';
+      document.getElementById('set-home-title').value = userSettings.homeTitle || '';
+      document.getElementById('set-home-sub').value = userSettings.homeSub || '';
+      pendingAvatar = userSettings.avatar || '';
+      setAvatarPreview(pendingAvatar);
       clearError(document.getElementById('settings-error'));
       document.getElementById('settings-saved').classList.remove('visible');
       settingsOverlay.classList.add('open');
     }
+    /* 头像上传：等比缩放到 256px 以内，体积小、便于保存到账号 */
+    function downscaleImage(file, max, cb) {
+      const img = new Image(), url = URL.createObjectURL(file);
+      img.onload = () => {
+        const scale = Math.min(1, max / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale)), h = Math.max(1, Math.round(img.height * scale));
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url); cb(c.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); cb(null); };
+      img.src = url;
+    }
+    document.getElementById('set-avatar-btn').addEventListener('click', () => document.getElementById('set-avatar-file').click());
+    document.getElementById('set-avatar-file').addEventListener('change', e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      downscaleImage(file, 256, dataUrl => { if (dataUrl) { pendingAvatar = dataUrl; setAvatarPreview(pendingAvatar); } });
+      e.target.value = '';
+    });
+    document.getElementById('set-avatar-clear').addEventListener('click', () => { pendingAvatar = ''; setAvatarPreview(''); });
     function closeSettings() { settingsOverlay.classList.remove('open'); }
     document.getElementById('settings-close').addEventListener('click', closeSettings);
-    settingsOverlay.addEventListener('click', e => { if (e.target === settingsOverlay) closeSettings(); });
+    let settingsMouseDownTarget = null;
+    settingsOverlay.addEventListener('mousedown', e => { settingsMouseDownTarget = e.target; });
+    settingsOverlay.addEventListener('click', e => {
+      // 仅当按下与抬起都在遮罩本身时才关闭，避免在输入框内拖拽选词后误关闭
+      if (e.target === settingsOverlay && settingsMouseDownTarget === settingsOverlay) closeSettings();
+      settingsMouseDownTarget = null;
+    });
     document.getElementById('btn-open-settings').addEventListener('click', () => { avatarWrap.classList.remove('open'); openSettings(); });
     document.getElementById('btn-save-settings').addEventListener('click', async () => {
       const nickname = document.getElementById('set-nickname').value.trim();
+      const homeTitle = document.getElementById('set-home-title').value.trim();
+      const homeSub = document.getElementById('set-home-sub').value.trim();
       const errEl = document.getElementById('settings-error');
       clearError(errEl);
-      const next = Object.assign({}, userSettings, { nickname });
+      const next = Object.assign({}, userSettings, { nickname, homeTitle, homeSub, avatar: pendingAvatar });
       try {
         await api('/settings', { method: 'PUT', auth: true, body: { data: next } });
         userSettings = next;
@@ -1013,8 +1512,52 @@
       } catch (e) { showError(errEl, e.message); }
     });
 
+    /* Change password (logged-in) */
+    const changePwOverlay = document.getElementById('change-password-overlay');
+    function openChangePassword() {
+      if (!currentUser) return;
+      ['cp-current', 'cp-new', 'cp-confirm'].forEach(id => { document.getElementById(id).value = ''; });
+      clearError(document.getElementById('cp-error'));
+      document.getElementById('cp-saved').classList.remove('visible');
+      changePwOverlay.classList.add('open');
+    }
+    function closeChangePassword() { changePwOverlay.classList.remove('open'); }
+    document.getElementById('change-password-close').addEventListener('click', closeChangePassword);
+    let cpMouseDownTarget = null;
+    changePwOverlay.addEventListener('mousedown', e => { cpMouseDownTarget = e.target; });
+    changePwOverlay.addEventListener('click', e => {
+      if (e.target === changePwOverlay && cpMouseDownTarget === changePwOverlay) closeChangePassword();
+      cpMouseDownTarget = null;
+    });
+    document.getElementById('btn-open-change-password').addEventListener('click', () => { avatarWrap.classList.remove('open'); openChangePassword(); });
+    // 忘记当前密码 → 关闭修改弹窗，打开邮箱重置流程并预填当前账号邮箱
+    document.getElementById('cp-forgot').addEventListener('click', e => {
+      e.preventDefault();
+      closeChangePassword();
+      if (currentUser && currentUser.email) document.getElementById('reset-email').value = currentUser.email;
+      openModal('reset');
+    });
+    document.getElementById('btn-do-change-password').addEventListener('click', async () => {
+      const currentPassword = document.getElementById('cp-current').value;
+      const newPassword = document.getElementById('cp-new').value;
+      const confirm = document.getElementById('cp-confirm').value;
+      const errEl = document.getElementById('cp-error');
+      const savedEl = document.getElementById('cp-saved');
+      clearError(errEl); savedEl.classList.remove('visible');
+      if (!currentPassword) { showError(errEl, '请输入当前密码'); return; }
+      if (newPassword.length < 4 || newPassword.length > 64) { showError(errEl, '新密码长度需为 4–64 位'); return; }
+      if (newPassword === currentPassword) { showError(errEl, '新密码不能与当前密码相同'); return; }
+      if (newPassword !== confirm) { showError(errEl, '两次输入的新密码不一致'); return; }
+      try {
+        await api('/auth/change-password', { method: 'POST', auth: true, body: { currentPassword, newPassword } });
+        loginPasswordCache = newPassword; // 同步更新预加载缓存,避免改密后校验用旧密码
+        ['cp-current', 'cp-new', 'cp-confirm'].forEach(id => { document.getElementById(id).value = ''; });
+        savedEl.classList.add('visible');
+      } catch (e) { showError(errEl, e.message); }
+    });
+
     /* Global ESC closes any open modal */
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeSettings(); } });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeSettings(); closeChangePassword(); } });
   </script>
 </body>
 </html>

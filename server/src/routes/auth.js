@@ -61,6 +61,19 @@ async function findUserByEmail(email) {
 }
 
 /**
+ * Look up a user by id. Returns the row or null.
+ * @param {number} id
+ * @returns {Promise<{id: number, email: string, password_hash: string} | null>}
+ */
+async function findUserById(id) {
+  const { rows } = await query(
+    'SELECT id, email, password_hash FROM users WHERE id = $1',
+    [id]
+  );
+  return rows[0] || null;
+}
+
+/**
  * POST /send-code — issue and (in non-dev mode) deliver a verification code.
  */
 router.post('/send-code', sendCodeLimiter, async (req, res, next) => {
@@ -71,10 +84,11 @@ router.post('/send-code', sendCodeLimiter, async (req, res, next) => {
     }
 
     const normalizedEmail = normalizeEmail(email);
-    if ((await codes.secondsSinceLastSend(normalizedEmail)) < 60) {
+    // 按 (邮箱, 用途) 分别限流，避免某一用途（如 register）刷码挤占另一用途（如 reset）的配额
+    if ((await codes.secondsSinceLastSend(normalizedEmail, purpose)) < 60) {
       throw httpError(TOO_MANY_REQUESTS, '请求过于频繁，请稍后再试');
     }
-    if ((await codes.sendsInLastHour(normalizedEmail)) >= MAX_SENDS_PER_HOUR) {
+    if ((await codes.sendsInLastHour(normalizedEmail, purpose)) >= MAX_SENDS_PER_HOUR) {
       throw httpError(TOO_MANY_REQUESTS, '请求过于频繁，请稍后再试');
     }
 
@@ -184,10 +198,117 @@ router.post('/login', authLimiter, async (req, res, next) => {
 });
 
 /**
+ * POST /verify-code — verify (and consume) an email code without side effects.
+ * Used as an identity proof (e.g. resetting the local diary password). Returns
+ * { ok: true } on success; never reveals whether the email is registered.
+ */
+router.post('/verify-code', authLimiter, async (req, res, next) => {
+  try {
+    const { email, code, purpose } = req.body || {};
+    if (!validateEmail(email) || !validateCode(code) || !validatePurpose(purpose)) {
+      throw httpError(400, '输入参数无效');
+    }
+    const ok = await codes.verifyAndConsume(normalizeEmail(email), purpose, code);
+    if (!ok) throw httpError(400, '验证码无效或已过期');
+    return res.json({ ok: true });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+/**
  * GET /me — return the authenticated user's identity.
  */
 router.get('/me', requireAuth, (req, res) => {
   res.json({ user: { id: req.user.id, email: req.user.email } });
+});
+
+/**
+ * POST /verify-password — verify a password against the logged-in user's own
+ * password (no token issued). Returns { ok }. Used so embedded tools can gate
+ * content behind the user's account login password.
+ */
+router.post('/verify-password', authLimiter, requireAuth, async (req, res, next) => {
+  try {
+    const { password } = req.body || {};
+    if (typeof password !== 'string' || !password) {
+      return res.json({ ok: false });
+    }
+    const record = await findUserById(req.user.id);
+    const ok = !!record && (await verifyPassword(password, record.password_hash));
+    return res.json({ ok });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+/**
+ * POST /change-password — change the logged-in user's password.
+ * Requires a valid session and verification of the current password.
+ */
+router.post('/change-password', authLimiter, requireAuth, async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body || {};
+    if (!validatePassword(currentPassword) || !validatePassword(newPassword)) {
+      throw httpError(400, '输入参数无效');
+    }
+    if (currentPassword === newPassword) {
+      throw httpError(400, '新密码不能与当前密码相同');
+    }
+
+    const record = await findUserById(req.user.id);
+    if (!record) {
+      throw httpError(404, '用户不存在');
+    }
+    const currentOk = await verifyPassword(currentPassword, record.password_hash);
+    if (!currentOk) {
+      throw httpError(400, '当前密码不正确');
+    }
+
+    const passwordHash = await hashPassword(newPassword);
+    await query(
+      'UPDATE users SET password_hash = $1, updated_at = $2 WHERE id = $3',
+      [passwordHash, Date.now(), record.id]
+    );
+    return res.json({ ok: true });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+/**
+ * POST /reset-password — reset a forgotten password via an emailed code.
+ * Consumes a 'reset' verification code, sets the new password, and returns a
+ * fresh session token so the user is logged straight in.
+ */
+router.post('/reset-password', authLimiter, async (req, res, next) => {
+  try {
+    const { email, code, password } = req.body || {};
+    if (!validateEmail(email) || !validateCode(code) || !validatePassword(password)) {
+      throw httpError(400, '输入参数无效');
+    }
+
+    const normalizedEmail = normalizeEmail(email);
+    const record = await findUserByEmail(normalizedEmail);
+    const codeOk = await codes.verifyAndConsume(normalizedEmail, 'reset', code);
+    // 统一错误信息：无论邮箱是否注册、验证码是否正确，都返回同一提示，
+    // 避免泄露某邮箱是否已注册（账户枚举）。两条路径都执行 verifyAndConsume，时延一致。
+    if (!record || !codeOk) {
+      throw httpError(400, '验证码无效或已过期');
+    }
+
+    const passwordHash = await hashPassword(password);
+    await query(
+      'UPDATE users SET password_hash = $1, updated_at = $2 WHERE id = $3',
+      [passwordHash, Date.now(), record.id]
+    );
+
+    const user = { id: record.id, email: record.email };
+    const token = signToken(user);
+    return res.json({ token, user });
+  } catch (err) {
+    return next(err);
+  }
 });
 
 module.exports = router;

@@ -29,3 +29,37 @@ export function evenlyDistribute(
   }
   return days
 }
+
+/**
+ * 非平均(先录先写,顺序填充):保留「录入日期」原有的分批,按录入先后依次落到
+ * 书写区间的每一天。录入组数多于书写天数时,多出的并入最后一天;少于则尾部留空。
+ * entries 需已按 recordDate、createdAt 升序。
+ */
+export function sequentialByRecordDay(
+  entries: EntryItem[],
+  writeFrom: string,
+  writeTo: string,
+): PracticeDay[] {
+  const numDays = diffDays(writeFrom, writeTo) + 1
+  if (numDays <= 0) {
+    return []
+  }
+  const groups: EntryItem[][] = []
+  let curDate: string | null = null
+  for (const e of entries) {
+    if (e.recordDate !== curDate) {
+      groups.push([])
+      curDate = e.recordDate
+    }
+    groups[groups.length - 1].push(e)
+  }
+  const days: PracticeDay[] = []
+  for (let i = 0; i < numDays; i++) {
+    days.push({ date: addDays(writeFrom, i), entries: [] })
+  }
+  groups.forEach((group, k) => {
+    const idx = Math.min(k, numDays - 1)
+    days[idx].entries.push(...group)
+  })
+  return days
+}

@@ -14,7 +14,7 @@ body{background:radial-gradient(120% 80% at 50% -10%,color-mix(in srgb,var(--pap
 color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC","Segoe UI",system-ui,sans-serif;
 -webkit-font-smoothing:antialiased;line-height:1.5;}
 .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
-header{padding:44px 0 16px;text-align:center}
+header{padding:24px 0 16px;text-align:center}
 h1{font-size:clamp(30px,4.4vw,46px);margin:0;font-weight:800;letter-spacing:-.02em}
 .bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--paper) 82%,transparent);backdrop-filter:saturate(1.4) blur(10px);
 border-bottom:1px solid var(--line)}
@@ -521,7 +521,7 @@ const setBtn=document.getElementById('setBtn'), setModal=document.getElementById
 function openSet(){ if(setModal)setModal.hidden=false; }
 function closeSet(){ if(setModal)setModal.hidden=true; }
 if(setBtn)setBtn.addEventListener('click',openSet);
-if(setModal){ setModal.addEventListener('click',e=>{ if(e.target===setModal||e.target.closest('.setclose'))closeSet(); }); }
+if(setModal){ let setMouseDownTarget=null; setModal.addEventListener('mousedown',e=>{ setMouseDownTarget=e.target; }); setModal.addEventListener('click',e=>{ if(e.target.closest('.setclose')||(e.target===setModal&&setMouseDownTarget===setModal))closeSet(); setMouseDownTarget=null; }); }
 /* 主题 */
 function applyTheme(){ document.documentElement.dataset.theme=theme;
  document.querySelectorAll('#themePick button').forEach(b=>b.classList.toggle('on',b.dataset.theme===theme)); }

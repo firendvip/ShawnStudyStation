@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>小善背单词</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #fcfaf4, #f6f1e9, #efe8dd);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            box-shadow: 
+                0 12px 30px rgba(0, 0, 0, 0.08),
+                0 4px 20px rgba(0, 0, 0, 0.03);
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(229, 225, 218, 0.7);
+            margin-top: 20px;
+        }
+        
+        header {
+            background: linear-gradient(90deg, #359658, #007c3a);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .title-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .title-char {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
+            font-size: 2.8rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #ffffff, #f6f1e9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+            position: relative;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 0 2px;
+            transition: transform 0.3s ease;
+        }
+        
+        .title-container:hover .title-char {
+            animation: floatChar 0.8s ease-in-out infinite alternate;
+        }
+        
+        .title-container:hover .title-char:nth-child(1) { animation-delay: 0s; }
+        .title-container:hover .title-char:nth-child(2) { animation-delay: 0.1s; }
+        .title-container:hover .title-char:nth-child(3) { animation-delay: 0.2s; }
+        .title-container:hover .title-char:nth-child(4) { animation-delay: 0.3s; }
+        .title-container:hover .title-char:nth-child(5) { animation-delay: 0.4s; }
+        
+        @keyframes floatChar {
+            from { transform: translateY(0); }
+            to { transform: translateY(-8px); }
+        }
+        
+        .settings-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s;
+            padding: 8px;
+        }
+        
+        .settings-icon:hover {
+            color: white;
+            transform: translateY(-50%) rotate(15deg);
+        }
+        
+        .controls-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .tabs-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .tab-btn {
+            padding: 10px 25px;
+            border-radius: 15px;
+            border: none;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            background: white;
+            color: #359658;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        
+        .nav-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.1);
+        }
+        
+        .random-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .random-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: rotate(90deg);
+        }
+        
+        .delete-btn, .copy-btn, .select-all-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            display: none;
+        }
+        
+        .delete-btn.visible, .copy-btn.visible, .select-all-btn.visible {
+            display: flex;
+        }
+        
+        .delete-btn:hover, .copy-btn:hover, .select-all-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        .group-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .group-container label {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        .group-container select {
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            min-width: 100px;
+            text-align: center;
+        }
+        
+        .main-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+        }
+        
+        .words-container {
+            display: none;
+            width: 100%;
+        }
+        
+        .words-container.active {
+            display: block;
+        }
+        
+        .words-grid {
+            display: grid;
+            gap: 12px;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        .words-grid .word-cell {
+            background: #faf7f1;
+            padding: 12px;
+            text-align: center;
+            border-radius: 14px;
+            font-weight: 500;
+            color: #362c24;
+            box-shadow: 
+                0 3px 10px rgba(0,0,0,0.05),
+                0 0 0 1px rgba(53, 150, 88, 0.1);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            white-space: normal;
+            overflow-wrap: break-word;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80px;
+            height: auto;
+        }
+        
+        .words-grid .word-cell:hover {
+            box-shadow: 
+                0 5px 15px rgba(53, 150, 88, 0.2),
+                0 0 0 1px rgba(53, 150, 88, 0.3);
+            transform: translateY(-3px);
+        }
+        
+        .words-grid .word-cell.memorized {
+            background: linear-gradient(135deg, #2f8f52, #007c3a);
+            color: white;
+            border: 2px solid #2f8f52;
+        }
+        
+        /* 修改：选中卡片样式（蓝色边框，无底色） */
+        .words-grid .word-cell.selected {
+            background: #faf7f1 !important;
+            box-shadow: 
+                0 5px 15px rgba(53, 150, 88, 0.2),
+                0 0 0 3px #359658 !important;
+            border: 2px solid #359658 !important;
+            color: #359658;
+        }
+        
+        /* 修改：已记忆卡片的选中样式 - 白色边框，外围蓝色边框 */
+        .words-grid .word-cell.selected.memorized {
+            background: linear-gradient(135deg, #2f8f52, #007c3a) !important;
+            border: 3px solid white !important;
+            box-shadow: 
+                0 5px 15px rgba(53, 150, 88, 0.3),
+                0 0 0 3px #359658 !important;
+            color: white;
+            position: relative;
+        }
+        
+        /* 已记忆卡片的外围蓝色边框效果 */
+        .words-grid .word-cell.selected.memorized::after {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border: 2px solid #359658;
+            border-radius: 16px;
+            pointer-events: none;
+        }
+        
+        .card-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            perspective: 1000px;
+        }
+        
+        .card-container.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .card-front, .card-back {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            word-break: break-word;
+            top: 0;
+            left: 0;
+            box-sizing: border-box;
+        }
+        
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        
+        /* 修改：小灯泡按钮样式 */
+        .lightbulb-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            color: #d2cdc5 !important; /* 默认浅灰色 */
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            z-index: 20;
+            transition: all 0.3s;
+            background: transparent !important;
+        }
+        
+        /* 未双击卡片选中时的icon颜色 */
+        .words-grid .word-cell.selected .lightbulb-btn {
+            color: #359658 !important; /* 选中边框的颜色 */
+        }
+        
+        /* 已双击卡片选中时的icon颜色 */
+        .words-grid .word-cell.selected.memorized .lightbulb-btn {
+            color: rgb(53, 150, 88) !important; /* RGB(88, 169, 246) */
+        }
+        
+        .lightbulb-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        /* 新增：单词详情弹窗样式 */
+        .word-detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .word-detail-content {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+            overflow: hidden;
+            animation: modalAppear 0.3s ease-out;
+        }
+        
+        .word-detail-header {
+            background: linear-gradient(90deg, #359658, #007c3a);
+            padding: 20px;
+            color: white;
+            text-align: center;
+            position: relative;
+        }
+        
+        .word-detail-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .close-word-detail {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: rgba(255,255,255,0.8);
+            transition: all 0.3s;
+        }
+        
+        .close-word-detail:hover {
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .word-detail-body {
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .word-detail-item {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e1da;
+        }
+        
+        .word-detail-item:last-child {
+            margin-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .word-detail-label {
+            font-size: 1rem;
+            color: #71675d;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .word-detail-value {
+            font-size: 1.8rem;
+            color: #362c24;
+            font-weight: 600;
+        }
+        
+        .phonetic-value {
+            font-size: 1.4rem;
+            color: #359658;
+            font-weight: 500;
+            font-style: italic;
+        }
+        
+        .chinese-value {
+            font-size: 1.6rem;
+            color: #362c24;
+            font-weight: 500;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
+        }
+        
+        .words-grid .english-cell {
+            font-size: 2.8rem;
+        }
+        
+        .words-grid .chinese-cell {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
+            font-size: 1.4rem;
+        }
+        
+        .words-grid .word-cell::before {
+            content: attr(data-index);
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            font-size: 0.9rem;
+            color: #a09890;
+            font-weight: 400;
+        }
+        
+        .pagination {
+            display: none;
+        }
+        
+        .decoration {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(53, 150, 88, 0.1) 0%, rgba(53, 150, 88, 0) 70%);
+            z-index: -1;
+        }
+        
+        .dec1 {
+            top: 10%;
+            left: 10%;
+        }
+        
+        .dec2 {
+            bottom: 10%;
+            right: 10%;
+            width: 180px;
+            height: 180px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+            overflow: hidden;
+            animation: modalAppear 0.3s ease-out;
+        }
+        
+        @keyframes modalAppear {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-header {
+            background: linear-gradient(90deg, #359658, #007c3a);
+            padding: 20px;
+            color: white;
+            text-align: center;
+            position: relative;
+        }
+        
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: rgba(255,255,255,0.8);
+            transition: all 0.3s;
+        }
+        
+        .close-modal:hover {
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .settings-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e1da;
+        }
+        
+        .setting-group {
+            flex: 1;
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .setting-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #362c24;
+        }
+        
+        .setting-group input, .setting-group select {
+            padding: 10px 15px;
+            border-radius: 12px;
+            border: 1px solid #e5e1da;
+            background: #faf7f1;
+            font-size: 1.1rem;
+            width: 100%;
+        }
+        
+        .setting-group input[type="file"] {
+            padding: 8px;
+        }
+        
+        .setting-group input[type="number"] {
+            width: 120px;
+            text-align: center;
+        }
+        
+        .upload-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e1da;
+        }
+        
+        .upload-label {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #362c24;
+        }
+        
+        .file-upload-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-input-button {
+            display: inline-block;
+            padding: 10px 15px;
+            background: #359658;
+            color: white;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .file-input-button:hover {
+            background: #02692f;
+        }
+        
+        .file-name {
+            font-size: 0.9rem;
+            color: #71675d;
+            margin-top: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .upload-info {
+            font-size: 0.9rem;
+            color: #71675d;
+            margin-top: 5px;
+        }
+        
+        .modal-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            font-size: 1.1rem;
+            color: #362c24;
+            line-height: 1.8;
+        }
+        
+        .modal-footer {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .save-btn {
+            padding: 12px 30px;
+            border-radius: 15px;
+            border: none;
+            background: linear-gradient(90deg, #359658, #007c3a);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(53, 150, 88, 0.3);
+        }
+        
+        .save-btn:hover {
+            background: linear-gradient(90deg, #02692f, #02692f);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(53, 150, 88, 0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .title-char {
+                font-size: 2.2rem;
+            }
+            
+            .controls-container {
+                flex-direction: column;
+            }
+            
+            .tabs-container {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .group-container {
+                width: 100%;
+                max-width: 300px;
+                margin: 0 auto;
+            }
+            
+            .words-grid .word-cell {
+                padding: 10px;
+                min-height: 70px;
+            }
+            
+            .words-grid .english-cell {
+                font-size: 2.0rem;
+            }
+            
+            .settings-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .upload-group {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .word-detail-content {
+                max-width: 90%;
+            }
+            
+            .word-detail-value {
+                font-size: 1.5rem;
+            }
+            
+            .phonetic-value {
+                font-size: 1.2rem;
+            }
+            
+            .chinese-value {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="decoration dec1"></div>
+    <div class="decoration dec2"></div>
+    
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <div class="title-container" id="title-container">
+                    <span class="title-char">小</span>
+                    <span class="title-char">善</span>
+                    <span class="title-char">背</span>
+                    <span class="title-char">单</span>
+                    <span class="title-char">词</span>
+                </div>
+                <div class="settings-icon" id="settings-btn">
+                    <i class="fas fa-cog"></i>
+                </div>
+            </div>
+            
+            <div class="controls-container">
+                <div class="tabs-container">
+                    <button class="tab-btn active" data-tab="english">English</button>
+                    <button class="tab-btn" data-tab="chinese">Chinese</button>
+                    <button class="tab-btn" data-tab="e-review">E-Review</button>
+                    <button class="tab-btn" data-tab="c-review">C-Review</button>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button class="nav-btn" id="prev-group-btn" title="上一组">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="nav-btn" id="next-group-btn" title="下一组">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button class="delete-btn" id="delete-btn" title="删除选中项">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="copy-btn" id="copy-btn" title="复制内容">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                    <button class="select-all-btn" id="select-all-btn" title="全选">
+                        <i class="fas fa-check-square"></i>
+                    </button>
+                    <button class="random-btn" id="random-btn" title="随机排序">
+                        <i class="fas fa-random"></i>
+                    </button>
+                    
+                    <div class="group-container">
+                        <label>当前:</label>
+                        <select id="group-select"></select>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="words-container active" id="english-container">
+                <div class="words-grid" id="english-grid"></div>
+            </div>
+            
+            <div class="words-container" id="chinese-container">
+                <div class="words-grid" id="chinese-grid"></div>
+            </div>
+            
+            <div class="words-container" id="e-review-container">
+                <div class="words-grid" id="e-review-grid"></div>
+            </div>
+            
+            <div class="words-container" id="c-review-container">
+                <div class="words-grid" id="c-review-grid"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 单词详情弹窗 -->
+    <div class="word-detail-modal" id="word-detail-modal">
+        <div class="word-detail-content">
+            <div class="word-detail-header">
+                <h2 class="word-detail-title">单词详情</h2>
+                <div class="close-word-detail" id="close-word-detail">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div class="word-detail-body">
+                <div class="word-detail-item">
+                    <div class="word-detail-label">单词</div>
+                    <div class="word-detail-value" id="detail-english"></div>
+                </div>
+                <div class="word-detail-item">
+                    <div class="word-detail-label">中文意思</div>
+                    <div class="chinese-value" id="detail-chinese"></div>
+                </div>
+                <div class="word-detail-item">
+                    <div class="word-detail-label">音标</div>
+                    <div class="phonetic-value" id="detail-phonetic"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 设置弹窗 -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">设置</h2>
+                <div class="close-modal" id="close-modal">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="settings-row">
+                    <div class="setting-group">
+                        <label for="modal-group-size">分组大小:</label>
+                        <input type="number" id="modal-group-size" min="10" max="1000" value="20">
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="english-font-size">英文字体:</label>
+                        <input type="number" id="english-font-size" min="1" max="10" step="0.1" value="2">
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="chinese-font-size">中文字体:</label>
+                        <input type="number" id="chinese-font-size" min="1" max="10" step="0.1" value="2">
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="columns-count">表格列数:</label>
+                        <input type="number" id="columns-count" min="1" max="20" step="1" value="6">
+                    </div>
+                </div>
+                
+                <!-- 修改标题设置 -->
+                <div class="settings-row">
+                    <div class="setting-group" style="flex: 1;">
+                        <label for="title-input">修改标题:</label>
+                        <input type="text" id="title-input" placeholder="输入新标题..." maxlength="20">
+                    </div>
+                </div>
+                
+                <div class="upload-group">
+                    <div class="upload-label">上传词表 (Excel格式):</div>
+                    <div class="file-upload-container">
+                        <div class="file-input-wrapper">
+                            <div class="file-input-button">
+                                <i class="fas fa-upload"></i>
+                            </div>
+                            <input type="file" id="excel-file" accept=".xlsx, .xls">
+                        </div>
+                        <div id="file-name" class="file-name"></div>
+                    </div>
+                </div>
+                <div class="upload-info">支持格式: .xlsx, .xls (最多5万词)</div>
+                <div class="upload-info">Excel格式要求：第一列单词，第二列中文意思，第三列音标（可选）</div>
+                
+                <div class="modal-info">
+                    <div>总单词数: <span id="modal-total-words">0</span></div>
+                    <div>总分组数: <span id="modal-total-groups">0</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 内置初始单词数据（包含音标）
+        const initialWords = [
+            ['apple', '苹果', '/ˈæpl/'],
+            ['banana', '香蕉', '/bəˈnænə/'],
+            ['cherry', '樱桃', '/ˈtʃeri/'],
+            ['date', '日期', '/deɪt/'],
+            ['elderberry', '接骨木莓', '/ˈeldərberi/'],
+            ['fig', '无花果', '/fɪɡ/'],
+            ['grape', '葡萄', '/ɡreɪp/'],
+            ['honeydew', '蜜瓜', '/ˈhʌniduː/'],
+            ['kiwi', '猕猴桃', '/ˈkiːwiː/'],
+            ['lemon', '柠檬', '/ˈlemən/'],
+            ['mango', '芒果', '/ˈmæŋɡoʊ/'],
+            ['nectarine', '油桃', '/ˈnektəriːn/'],
+            ['orange', '橙子', '/ˈɔːrɪndʒ/'],
+            ['peach', '桃子', '/piːtʃ/'],
+            ['quince', '榅桲', '/kwɪns/'],
+            ['raspberry', '树莓', '/ˈræzberi/'],
+            ['strawberry', '草莓', '/ˈstrɔːberi/'],
+            ['tangerine', '橘子', '/ˌtændʒəˈriːn/'],
+            ['watermelon', '西瓜', '/ˈwɔːtərmelən/']
+        ];
+
+        // 清空单词数据
+        const allWords = [];
+        const allTranslations = [];
+        const allPhonetics = [];
+
+        // 全局变量
+        let groupSize = 20;
+        let currentGroupIndex = 0;
+        let currentTab = 'english';
+        let groups = [];
+        let englishFontSize = 2;
+        let chineseFontSize = 2;
+        let columnsCount = 6;
+        let reviewWords = [];
+        let selectedCell = null;
+        let appTitle = '小善背单词';
+
+        // DOM元素
+        const groupSelect = document.getElementById('group-select');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const englishContainer = document.getElementById('english-container');
+        const chineseContainer = document.getElementById('chinese-container');
+        const eReviewContainer = document.getElementById('e-review-container');
+        const cReviewContainer = document.getElementById('c-review-container');
+        const englishGrid = document.getElementById('english-grid');
+        const chineseGrid = document.getElementById('chinese-grid');
+        const eReviewGrid = document.getElementById('e-review-grid');
+        const cReviewGrid = document.getElementById('c-review-grid');
+        const settingsBtn = document.getElementById('settings-btn');
+        const modal = document.getElementById('settings-modal');
+        const closeModal = document.getElementById('close-modal');
+        const modalGroupSize = document.getElementById('modal-group-size');
+        const modalSaveBtn = document.getElementById('modal-save');
+        const modalTotalWords = document.getElementById('modal-total-words');
+        const modalTotalGroups = document.getElementById('modal-total-groups');
+        const randomBtn = document.getElementById('random-btn');
+        const deleteBtn = document.getElementById('delete-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const selectAllBtn = document.getElementById('select-all-btn');
+        const excelFileInput = document.getElementById('excel-file');
+        const fileNameDisplay = document.getElementById('file-name');
+        const englishFontSizeInput = document.getElementById('english-font-size');
+        const chineseFontSizeInput = document.getElementById('chinese-font-size');
+        const columnsCountInput = document.getElementById('columns-count');
+        const prevGroupBtn = document.getElementById('prev-group-btn');
+        const nextGroupBtn = document.getElementById('next-group-btn');
+        const titleContainer = document.getElementById('title-container');
+        const titleInput = document.getElementById('title-input');
+        
+        // 单词详情弹窗元素
+        const wordDetailModal = document.getElementById('word-detail-modal');
+        const closeWordDetail = document.getElementById('close-word-detail');
+        const detailEnglish = document.getElementById('detail-english');
+        const detailPhonetic = document.getElementById('detail-phonetic');
+        const detailChinese = document.getElementById('detail-chinese');
+
+        // ================== 优化后的Excel导入 (完整无过滤) ==================
+        function handleExcelUpload(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    // 关键: defval: "" 保证空单元格填充空字符串，header:1 按行数组解析
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+                    
+                    // 清空原有数据
+                    allWords.length = 0;
+                    allTranslations.length = 0;
+                    allPhonetics.length = 0;
+                    
+                    const newWords = [];
+                    const newTranslations = [];
+                    const newPhonetics = [];
+                    
+                    // 逐行处理，从第0行开始 (不跳过表头/任何行)
+                    for (let i = 0; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        let word = '';
+                        let translation = '';
+                        let phonetic = '';
+                        
+                        // 只要是有效的行（数组形式），就取前三列，没有则留空字符串
+                        if (row && Array.isArray(row)) {
+                            // 单词: 第一列 (索引0)
+                            if (row[0] !== undefined && row[0] !== null) {
+                                word = String(row[0]).trim();
+                            }
+                            // 中文: 第二列 (索引1)
+                            if (row[1] !== undefined && row[1] !== null) {
+                                translation = String(row[1]).trim();
+                            }
+                            // 音标: 第三列 (索引2)
+                            if (row[2] !== undefined && row[2] !== null) {
+                                phonetic = String(row[2]).trim();
+                            }
+                        }
+                        // 无条件加入条目，确保Excel每一行（包括空行）都完整保留
+                        newWords.push(word);
+                        newTranslations.push(translation);
+                        newPhonetics.push(phonetic);
+                    }
+                    
+                    // 保留原有的5万词上限保护 (避免页面卡死，但是不做内容过滤)
+                    if (newWords.length > 50000) {
+                        alert(`词表包含 ${newWords.length} 个条目 (包括所有行)，超过最大限制5万条，仅导入前50000条。`);
+                        newWords.splice(50000);
+                        newTranslations.splice(50000);
+                        newPhonetics.splice(50000);
+                    }
+                    
+                    // 将完整数据存入全局数组
+                    Array.prototype.push.apply(allWords, newWords);
+                    Array.prototype.push.apply(allTranslations, newTranslations);
+                    Array.prototype.push.apply(allPhonetics, newPhonetics);
+                    
+                    // 保存至本地存储
+                    saveCurrentSettings();
+                    
+                    // 更新统计显示
+                    modalTotalWords.textContent = allWords.length;
+                    
+                    // 重新构建分组并刷新界面
+                    createGroups();
+                    renderGroupSelector();
+                    currentGroupIndex = 0;
+                    renderCurrentGroup();
+                    
+                    // 提示用户最终导入的真实条目数（含可能存在的空行）
+                    alert(`✅ 导入完成！\n共处理 ${newWords.length} 行数据（Excel中的所有行均已保留，未做任何跳过或过滤）。`);
+                } catch (error) {
+                    console.error('Excel解析错误:', error);
+                    alert('❌ 解析Excel文件失败，请检查文件格式是否正确。');
+                }
+            };
+            reader.onerror = function() {
+                alert('读取文件失败，请重试。');
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        // ================== 其余原有逻辑完全保持不变 ==================
+
+        // 初始化应用
+        function initApp() {
+            // 尝试从localStorage加载保存的单词数据
+            const savedWordData = localStorage.getItem('wordData');
+            if (savedWordData) {
+                const parsedData = JSON.parse(savedWordData);
+                allWords.length = 0;
+                allTranslations.length = 0;
+                allPhonetics.length = 0;
+                allWords.push(...parsedData.words);
+                allTranslations.push(...parsedData.translations);
+                if (parsedData.phonetics && parsedData.phonetics.length > 0) {
+                    allPhonetics.push(...parsedData.phonetics);
+                } else {
+                    for (let i = 0; i < allWords.length; i++) {
+                        allPhonetics.push('');
+                    }
+                }
+            } else {
+                initialWords.forEach(item => {
+                    allWords.push(item[0]);
+                    allTranslations.push(item[1]);
+                    allPhonetics.push(item[2] || '');
+                });
+            }
+            
+            // 加载应用标题
+            const savedTitle = localStorage.getItem('appTitle');
+            if (savedTitle) {
+                appTitle = savedTitle;
+                updateTitleDisplay();
+            }
+            
+            // 关键修复：每次打开时都要读取设置
+            loadSettings();
+            
+            // 在渲染之前先更新网格列数
+            updateGridColumns();
+            
+            // 加载复习单词
+            const savedReviewWords = localStorage.getItem('reviewWords');
+            if (savedReviewWords) {
+                const parsedReviewWords = JSON.parse(savedReviewWords);
+                reviewWords = parsedReviewWords;
+                
+                if (reviewWords.length > 0 && reviewWords[0].content !== undefined) {
+                    const newReviewWords = [];
+                    reviewWords.forEach(oldItem => {
+                        if (oldItem.type === 'english') {
+                            const index = allWords.indexOf(oldItem.content);
+                            if (index !== -1) {
+                                newReviewWords.push({
+                                    english: oldItem.content,
+                                    chinese: allTranslations[index],
+                                    phonetic: allPhonetics[index] || ''
+                                });
+                            }
+                        } else if (oldItem.type === 'chinese') {
+                            const index = allTranslations.indexOf(oldItem.content);
+                            if (index !== -1) {
+                                newReviewWords.push({
+                                    english: allWords[index],
+                                    chinese: allTranslations[index],
+                                    phonetic: allPhonetics[index] || ''
+                                });
+                            }
+                        }
+                    });
+                    reviewWords = newReviewWords;
+                    localStorage.setItem('reviewWords', JSON.stringify(reviewWords));
+                }
+                
+                reviewWords.forEach(item => {
+                    if (!item.phonetic) {
+                        const index = allWords.indexOf(item.english);
+                        if (index !== -1) {
+                            item.phonetic = allPhonetics[index] || '';
+                        } else {
+                            item.phonetic = '';
+                        }
+                    }
+                });
+            }
+            
+            // 加载当前标签页状态
+            const savedCurrentTab = localStorage.getItem('currentTab');
+            if (savedCurrentTab) {
+                currentTab = savedCurrentTab;
+            }
+            
+            // 加载当前分组索引
+            const savedCurrentGroupIndex = localStorage.getItem('currentGroupIndex');
+            if (savedCurrentGroupIndex !== null) {
+                currentGroupIndex = parseInt(savedCurrentGroupIndex);
+            }
+            
+            createGroups();
+            renderGroupSelector();
+            switchTab(currentTab);
+            setupEventListeners();
+            
+            modalTotalGroups.textContent = groups.length;
+            modalTotalWords.textContent = allWords.length;
+            
+            // 更新翻页按钮状态
+            updateNavButtons();
+            
+            // 添加页面关闭前保存设置的事件监听
+            window.addEventListener('beforeunload', saveCurrentSettings);
+        }
+
+        // 更新标题显示
+        function updateTitleDisplay() {
+            const titleChars = titleContainer.querySelectorAll('.title-char');
+            const chars = appTitle.split('');
+            
+            if (titleChars.length !== chars.length) {
+                titleContainer.innerHTML = '';
+                chars.forEach(char => {
+                    const span = document.createElement('span');
+                    span.className = 'title-char';
+                    span.textContent = char;
+                    titleContainer.appendChild(span);
+                });
+            } else {
+                titleChars.forEach((span, index) => {
+                    if (chars[index]) {
+                        span.textContent = chars[index];
+                    }
+                });
+            }
+            
+            document.title = appTitle + ' - 单词学习工具';
+        }
+
+        // 加载设置
+        function loadSettings() {
+            const savedGroupSize = localStorage.getItem('wordGroupSize');
+            if (savedGroupSize) groupSize = parseInt(savedGroupSize);
+            modalGroupSize.value = groupSize;
+            
+            const savedEnglishFontSize = localStorage.getItem('englishFontSize');
+            if (savedEnglishFontSize) englishFontSize = parseFloat(savedEnglishFontSize);
+            englishFontSizeInput.value = englishFontSize;
+            
+            const savedChineseFontSize = localStorage.getItem('chineseFontSize');
+            if (savedChineseFontSize) chineseFontSize = parseFloat(savedChineseFontSize);
+            chineseFontSizeInput.value = chineseFontSize;
+            
+            const savedColumnsCount = localStorage.getItem('columnsCount');
+            if (savedColumnsCount !== null && savedColumnsCount !== undefined) {
+                columnsCount = parseInt(savedColumnsCount);
+                if (columnsCount < 1) columnsCount = 1;
+                if (columnsCount > 20) columnsCount = 20;
+            }
+            columnsCountInput.value = columnsCount;
+            
+            if (titleInput) {
+                const savedTitle = localStorage.getItem('appTitle');
+                titleInput.value = savedTitle ? savedTitle : appTitle;
+            }
+        }
+
+        function saveCurrentSettings() {
+            localStorage.setItem('wordGroupSize', groupSize.toString());
+            localStorage.setItem('englishFontSize', englishFontSize.toString());
+            localStorage.setItem('chineseFontSize', chineseFontSize.toString());
+            localStorage.setItem('columnsCount', columnsCount.toString());
+            localStorage.setItem('currentTab', currentTab);
+            localStorage.setItem('currentGroupIndex', currentGroupIndex.toString());
+            localStorage.setItem('appTitle', appTitle);
+            localStorage.setItem('reviewWords', JSON.stringify(reviewWords));
+            localStorage.setItem('wordData', JSON.stringify({
+                words: allWords,
+                translations: allTranslations,
+                phonetics: allPhonetics
+            }));
+        }
+
+        function createGroups() {
+            groups = [];
+            const totalWords = allWords.length;
+            const groupCount = Math.ceil(totalWords / groupSize);
+            for (let i = 0; i < groupCount; i++) {
+                const startIdx = i * groupSize;
+                const endIdx = Math.min(startIdx + groupSize, totalWords);
+                groups.push({
+                    english: allWords.slice(startIdx, endIdx),
+                    chinese: allTranslations.slice(startIdx, endIdx),
+                    phonetics: allPhonetics.slice(startIdx, endIdx)
+                });
+            }
+            modalTotalGroups.textContent = groups.length;
+        }
+
+        function renderGroupSelector() {
+            groupSelect.innerHTML = '';
+            groups.forEach((_, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `第${index + 1}组`;
+                groupSelect.appendChild(option);
+            });
+            if (currentGroupIndex >= groups.length) currentGroupIndex = Math.max(0, groups.length - 1);
+            groupSelect.value = currentGroupIndex;
+        }
+
+        function renderCurrentGroup() {
+            updateGridColumns();
+            if (currentTab === 'english') renderEnglishGroup(false);
+            else if (currentTab === 'chinese') renderChineseGroup(false);
+            else if (currentTab === 'e-review') renderReviewGrid('english');
+            else if (currentTab === 'c-review') renderReviewGrid('chinese');
+            updateNavButtons();
+        }
+
+        function updateGridColumns() {
+            const grids = [englishGrid, chineseGrid, eReviewGrid, cReviewGrid];
+            grids.forEach(grid => { if (grid) grid.style.gridTemplateColumns = `repeat(${columnsCount}, 1fr)`; });
+        }
+
+        function adjustFontSizeToFit(cell) {
+            const originalFontSize = parseFloat(cell.style.fontSize) || 
+                                    (cell.classList.contains('english-cell') ? englishFontSize : chineseFontSize);
+            let fontSize = originalFontSize;
+            const tempSpan = document.createElement('span');
+            tempSpan.textContent = cell.textContent;
+            tempSpan.style.fontSize = fontSize + 'rem';
+            tempSpan.style.visibility = 'hidden';
+            tempSpan.style.position = 'absolute';
+            tempSpan.style.whiteSpace = 'nowrap';
+            document.body.appendChild(tempSpan);
+            const cellWidth = cell.offsetWidth - 24;
+            while (tempSpan.offsetWidth > cellWidth && fontSize > 0.5) {
+                fontSize -= 0.1;
+                tempSpan.style.fontSize = fontSize + 'rem';
+            }
+            cell.style.fontSize = fontSize + 'rem';
+            document.body.removeChild(tempSpan);
+        }
+
+        function renderEnglishGroup(shouldShuffle = false) {
+            englishGrid.innerHTML = '';
+            const currentGroup = groups[currentGroupIndex];
+            if (!currentGroup) return;
+            renderWordGrid(englishGrid, currentGroup, shouldShuffle, 'english');
+        }
+
+        function renderChineseGroup(shouldShuffle = false) {
+            chineseGrid.innerHTML = '';
+            const currentGroup = groups[currentGroupIndex];
+            if (!currentGroup) return;
+            renderWordGrid(chineseGrid, currentGroup, shouldShuffle, 'chinese');
+        }
+
+        function renderWordGrid(gridElement, groupData, shouldShuffle, type) {
+            let wordsToShow = groupData.english;
+            let translationsToShow = groupData.chinese;
+            let phoneticsToShow = groupData.phonetics;
+            if (shouldShuffle) {
+                const indices = Array.from({length: wordsToShow.length}, (_, i) => i);
+                const shuffledIndices = shuffleArray(indices);
+                wordsToShow = shuffledIndices.map(i => wordsToShow[i]);
+                translationsToShow = shuffledIndices.map(i => translationsToShow[i]);
+                phoneticsToShow = shuffledIndices.map(i => phoneticsToShow[i]);
+            }
+            if (wordsToShow.length === 0) {
+                const messageCell = document.createElement('div');
+                messageCell.className = 'word-cell';
+                messageCell.textContent = '暂无单词';
+                messageCell.style.gridColumn = `1 / span ${columnsCount}`;
+                gridElement.appendChild(messageCell);
+                return;
+            }
+            for (let i = 0; i < wordsToShow.length; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'word-cell';
+                cell.dataset.english = wordsToShow[i];
+                cell.dataset.chinese = translationsToShow[i];
+                cell.dataset.phonetic = phoneticsToShow[i] || '';
+                const cardContainer = document.createElement('div');
+                cardContainer.className = 'card-container';
+                let cardFront, cardBack;
+                if (type === 'english') {
+                    cardFront = document.createElement('div'); cardFront.className = 'card-front'; cardFront.textContent = wordsToShow[i]; cardFront.style.fontSize = englishFontSize + 'rem'; cardFront.classList.add('english-cell');
+                    cardBack = document.createElement('div'); cardBack.className = 'card-back'; cardBack.textContent = translationsToShow[i]; cardBack.style.fontSize = chineseFontSize + 'rem'; cardBack.classList.add('chinese-cell');
+                } else {
+                    cardFront = document.createElement('div'); cardFront.className = 'card-front'; cardFront.textContent = translationsToShow[i]; cardFront.style.fontSize = chineseFontSize + 'rem'; cardFront.classList.add('chinese-cell');
+                    cardBack = document.createElement('div'); cardBack.className = 'card-back'; cardBack.textContent = wordsToShow[i]; cardBack.style.fontSize = englishFontSize + 'rem'; cardBack.classList.add('english-cell');
+                }
+                cardContainer.appendChild(cardFront); cardContainer.appendChild(cardBack);
+                cell.appendChild(cardContainer);
+                const lightbulbArea = document.createElement('div');
+                lightbulbArea.className = 'lightbulb-btn';
+                lightbulbArea.innerHTML = '<i class="fas fa-lightbulb"></i>';
+                cell.appendChild(lightbulbArea);
+                cell.setAttribute('data-index', i + 1);
+                if (reviewWords.some(item => item.english === wordsToShow[i] && item.chinese === translationsToShow[i])) cell.classList.add('memorized');
+                gridElement.appendChild(cell);
+                setTimeout(() => { adjustFontSizeToFit(cardFront); adjustFontSizeToFit(cardBack); }, 0);
+                cell.addEventListener('click', (e) => { if (e.target.closest('.lightbulb-btn')) { e.stopPropagation(); showWordDetail(cell); return; } handleCellClick(cell); });
+                cell.addEventListener('dblclick', (e) => { if (e.target.closest('.lightbulb-btn')) return; handleCellDblClick(cell, type); });
+                lightbulbArea.addEventListener('click', (e) => { e.stopPropagation(); showWordDetail(cell); });
+            }
+            selectedCell = null;
+        }
+
+        function renderReviewGrid(type, shouldShuffle = false) {
+            const grid = type === 'english' ? eReviewGrid : cReviewGrid;
+            grid.innerHTML = '';
+            let wordsToShow = shouldShuffle ? shuffleArray([...reviewWords]) : reviewWords;
+            if (wordsToShow.length === 0) {
+                const messageCell = document.createElement('div');
+                messageCell.className = 'word-cell';
+                messageCell.textContent = '暂无复习单词';
+                messageCell.style.gridColumn = `1 / span ${columnsCount}`;
+                grid.appendChild(messageCell);
+                return;
+            }
+            for (let i = 0; i < wordsToShow.length; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'word-cell';
+                cell.dataset.english = wordsToShow[i].english;
+                cell.dataset.chinese = wordsToShow[i].chinese;
+                cell.dataset.phonetic = wordsToShow[i].phonetic || '';
+                const cardContainer = document.createElement('div');
+                cardContainer.className = 'card-container';
+                if (type === 'english') {
+                    const front = document.createElement('div'); front.className = 'card-front'; front.textContent = wordsToShow[i].english; front.style.fontSize = englishFontSize + 'rem'; front.classList.add('english-cell');
+                    const back = document.createElement('div'); back.className = 'card-back'; back.textContent = wordsToShow[i].chinese; back.style.fontSize = chineseFontSize + 'rem'; back.classList.add('chinese-cell');
+                    cardContainer.appendChild(front); cardContainer.appendChild(back);
+                } else {
+                    const front = document.createElement('div'); front.className = 'card-front'; front.textContent = wordsToShow[i].chinese; front.style.fontSize = chineseFontSize + 'rem'; front.classList.add('chinese-cell');
+                    const back = document.createElement('div'); back.className = 'card-back'; back.textContent = wordsToShow[i].english; back.style.fontSize = englishFontSize + 'rem'; back.classList.add('english-cell');
+                    cardContainer.appendChild(front); cardContainer.appendChild(back);
+                }
+                cell.appendChild(cardContainer);
+                const lightbulbArea = document.createElement('div');
+                lightbulbArea.className = 'lightbulb-btn';
+                lightbulbArea.innerHTML = '<i class="fas fa-lightbulb"></i>';
+                cell.appendChild(lightbulbArea);
+                cell.setAttribute('data-index', i + 1);
+                cell.classList.add('memorized');
+                grid.appendChild(cell);
+                setTimeout(() => { const front = cell.querySelector('.card-front'); const back = cell.querySelector('.card-back'); adjustFontSizeToFit(front); adjustFontSizeToFit(back); }, 0);
+                cell.addEventListener('click', (e) => { if (e.target.closest('.lightbulb-btn')) { e.stopPropagation(); showWordDetail(cell); return; } cell.classList.toggle('selected'); });
+                lightbulbArea.addEventListener('click', (e) => { e.stopPropagation(); showWordDetail(cell); });
+            }
+        }
+
+        function showWordDetail(cell) {
+            detailEnglish.textContent = cell.dataset.english;
+            detailChinese.textContent = cell.dataset.chinese;
+            detailPhonetic.textContent = (cell.dataset.phonetic && cell.dataset.phonetic.trim()) ? cell.dataset.phonetic : '暂无音标';
+            wordDetailModal.style.display = 'flex';
+        }
+
+        function handleCellClick(cell) {
+            if (currentTab !== 'english' && currentTab !== 'chinese') return;
+            if (cell === selectedCell) { cell.classList.remove('selected'); selectedCell = null; return; }
+            if (selectedCell) selectedCell.classList.remove('selected');
+            cell.classList.add('selected'); selectedCell = cell;
+        }
+
+        function handleCellDblClick(cell, type) {
+            const english = cell.dataset.english, chinese = cell.dataset.chinese, phonetic = cell.dataset.phonetic || '';
+            const idx = reviewWords.findIndex(item => item.english === english && item.chinese === chinese);
+            if (idx === -1) { reviewWords.push({ english, chinese, phonetic }); cell.classList.add('memorized'); }
+            else { reviewWords.splice(idx, 1); cell.classList.remove('memorized'); }
+            saveCurrentSettings();
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            tabBtns.forEach(btn => btn.dataset.tab === tab ? btn.classList.add('active') : btn.classList.remove('active'));
+            englishContainer.classList.remove('active'); chineseContainer.classList.remove('active'); eReviewContainer.classList.remove('active'); cReviewContainer.classList.remove('active');
+            if (tab === 'english') { englishContainer.classList.add('active'); renderEnglishGroup(false); deleteBtn.classList.remove('visible'); copyBtn.classList.remove('visible'); selectAllBtn.classList.remove('visible'); }
+            else if (tab === 'chinese') { chineseContainer.classList.add('active'); renderChineseGroup(false); deleteBtn.classList.remove('visible'); copyBtn.classList.remove('visible'); selectAllBtn.classList.remove('visible'); }
+            else if (tab === 'e-review') { eReviewContainer.classList.add('active'); renderReviewGrid('english'); deleteBtn.classList.add('visible'); copyBtn.classList.add('visible'); selectAllBtn.classList.add('visible'); }
+            else if (tab === 'c-review') { cReviewContainer.classList.add('active'); renderReviewGrid('chinese'); deleteBtn.classList.add('visible'); copyBtn.classList.add('visible'); selectAllBtn.classList.add('visible'); }
+            saveCurrentSettings(); updateNavButtons();
+        }
+
+        function updateNavButtons() {
+            if (currentTab === 'english' || currentTab === 'chinese') {
+                prevGroupBtn.style.display = 'flex'; nextGroupBtn.style.display = 'flex';
+                prevGroupBtn.disabled = currentGroupIndex === 0; nextGroupBtn.disabled = currentGroupIndex === groups.length - 1;
+            } else { prevGroupBtn.style.display = 'none'; nextGroupBtn.style.display = 'none'; }
+        }
+
+        function goToPrevGroup() { if (currentGroupIndex > 0) { currentGroupIndex--; groupSelect.value = currentGroupIndex; renderCurrentGroup(); saveCurrentSettings(); } }
+        function goToNextGroup() { if (currentGroupIndex < groups.length - 1) { currentGroupIndex++; groupSelect.value = currentGroupIndex; renderCurrentGroup(); saveCurrentSettings(); } }
+        function handleSelectAll() { if (!['e-review','c-review'].includes(currentTab)) return; const grid = currentTab === 'e-review' ? eReviewGrid : cReviewGrid; const cells = grid.querySelectorAll('.word-cell'); const allSelected = Array.from(cells).every(cell => cell.textContent !== '暂无复习单词' && cell.classList.contains('selected')); cells.forEach(cell => { if (cell.textContent !== '暂无复习单词') allSelected ? cell.classList.remove('selected') : cell.classList.add('selected'); }); }
+        function handleDeleteSelected() { if (!['e-review','c-review'].includes(currentTab)) return; const grid = currentTab === 'e-review' ? eReviewGrid : cReviewGrid; const cells = grid.querySelectorAll('.word-cell'); const remaining = []; cells.forEach(cell => { if (!cell.classList.contains('selected') && cell.textContent !== '暂无复习单词') { const eng = cell.dataset.english, chi = cell.dataset.chinese, pho = cell.dataset.phonetic || ''; if (eng && chi) remaining.push({ english: eng, chinese: chi, phonetic: pho }); } }); reviewWords = remaining; saveCurrentSettings(); renderReviewGrid(currentTab === 'e-review' ? 'english' : 'chinese'); }
+        function handleCopyContent() { let content = ''; if (currentTab === 'english' || currentTab === 'chinese') { if (selectedCell) content = selectedCell.querySelector('.card-front')?.textContent || ''; else { const grid = currentTab === 'english' ? englishGrid : chineseGrid; const cells = grid.querySelectorAll('.word-cell'); cells.forEach(cell => { if (cell.textContent !== '暂无单词') { const txt = cell.querySelector('.card-front')?.textContent; if (txt) content += txt + '\n'; } }); } } else if (currentTab === 'e-review' || currentTab === 'c-review') { const grid = currentTab === 'e-review' ? eReviewGrid : cReviewGrid; const cells = grid.querySelectorAll('.word-cell'); const selected = Array.from(cells).filter(c => c.classList.contains('selected') && c.textContent !== '暂无复习单词'); if (selected.length) selected.forEach(cell => { const txt = cell.querySelector('.card-front')?.textContent; if (txt) content += txt + '\n'; }); else cells.forEach(cell => { if (cell.textContent !== '暂无复习单词') { const txt = cell.querySelector('.card-front')?.textContent; if (txt) content += txt + '\n'; } }); } if (!content.trim()) return alert('没有内容可复制'); navigator.clipboard.writeText(content.trim()).then(() => alert('复制成功！')).catch(() => alert('复制失败，请手动复制')); }
+        function shuffleArray(arr) { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+        function handleKeyNavigation(e) {
+            if (e.key === 'Escape' && wordDetailModal.style.display === 'flex') { wordDetailModal.style.display = 'none'; return; }
+            if (e.key === 'Control' || e.code === 'ControlLeft' || e.code === 'ControlRight') { e.preventDefault(); if (wordDetailModal.style.display === 'flex') wordDetailModal.style.display = 'none'; else if (selectedCell) showWordDetail(selectedCell); else if (currentTab === 'e-review' || currentTab === 'c-review') { const grid = currentTab === 'e-review' ? eReviewGrid : cReviewGrid; const firstSel = grid.querySelector('.word-cell.selected'); if (firstSel) showWordDetail(firstSel); } return; }
+            if (e.key === 'Shift' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') { e.preventDefault(); if ((currentTab === 'english' || currentTab === 'chinese') && selectedCell) { handleCellDblClick(selectedCell, currentTab); return; } if (currentTab === 'e-review' || currentTab === 'c-review') { const grid = currentTab === 'e-review' ? eReviewGrid : cReviewGrid; const firstSel = grid.querySelector('.word-cell.selected'); if (firstSel) firstSel.classList.toggle('selected'); } return; }
+            if (currentTab === 'english' || currentTab === 'chinese') { if (!selectedCell) return; const grid = currentTab === 'english' ? englishGrid : chineseGrid; const cells = Array.from(grid.querySelectorAll('.word-cell')); const idx = cells.indexOf(selectedCell); if (idx === -1) return; let newIdx = idx; switch(e.key) { case 'ArrowUp': newIdx = idx - columnsCount; break; case 'ArrowDown': newIdx = idx + columnsCount; break; case 'ArrowLeft': newIdx = idx - 1; break; case 'ArrowRight': newIdx = idx + 1; break; case 'Enter': handleCellDblClick(selectedCell, currentTab); e.preventDefault(); return; default: return; } if (newIdx >= 0 && newIdx < cells.length) { e.preventDefault(); handleCellClick(cells[newIdx]); } } }
+        
+        function setupEventListeners() {
+            groupSelect.addEventListener('change', () => { currentGroupIndex = parseInt(groupSelect.value); renderCurrentGroup(); saveCurrentSettings(); });
+            tabBtns.forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+            settingsBtn.addEventListener('click', () => modal.style.display = 'flex');
+            closeModal.addEventListener('click', () => modal.style.display = 'none');
+            modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+            // 修改即实时保存(无「保存」按钮):每个设置项改动后自动应用
+            function applySettingsLive() {
+                const newSize = parseInt(modalGroupSize.value);
+                if (newSize >= 10 && newSize <= 1000) groupSize = newSize;
+                const ef = parseFloat(englishFontSizeInput.value); if (!isNaN(ef)) englishFontSize = ef;
+                const cf = parseFloat(chineseFontSizeInput.value); if (!isNaN(cf)) chineseFontSize = cf;
+                const newCols = parseInt(columnsCountInput.value);
+                if (newCols >= 1 && newCols <= 20) columnsCount = newCols;
+                if (titleInput.value.trim()) { appTitle = titleInput.value.trim(); updateTitleDisplay(); }
+                saveCurrentSettings(); createGroups(); renderGroupSelector();
+                const groupCount = Math.ceil(allWords.length / groupSize) || 1;
+                if (currentGroupIndex >= groupCount) currentGroupIndex = 0;
+                renderCurrentGroup();
+            }
+            let wqSettingsTimer = null;
+            function scheduleApplySettings() { if (wqSettingsTimer) clearTimeout(wqSettingsTimer); wqSettingsTimer = setTimeout(applySettingsLive, 300); }
+            [modalGroupSize, englishFontSizeInput, chineseFontSizeInput, columnsCountInput, titleInput].forEach((el) => {
+                el.addEventListener('input', scheduleApplySettings);
+                el.addEventListener('change', scheduleApplySettings);
+            });
+            randomBtn.addEventListener('click', () => { if (currentTab === 'english') renderEnglishGroup(true); else if (currentTab === 'chinese') renderChineseGroup(true); else if (currentTab === 'e-review') renderReviewGrid('english', true); else if (currentTab === 'c-review') renderReviewGrid('chinese', true); });
+            deleteBtn.addEventListener('click', handleDeleteSelected);
+            copyBtn.addEventListener('click', handleCopyContent);
+            selectAllBtn.addEventListener('click', handleSelectAll);
+            document.addEventListener('keydown', handleKeyNavigation);
+            excelFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                fileNameDisplay.textContent = file.name;
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (ext !== 'xls' && ext !== 'xlsx') { alert('请上传Excel文件(.xlsx或.xls格式)'); return; }
+                handleExcelUpload(file);
+            });
+            prevGroupBtn.addEventListener('click', goToPrevGroup);
+            nextGroupBtn.addEventListener('click', goToNextGroup);
+            closeWordDetail.addEventListener('click', () => wordDetailModal.style.display = 'none');
+            wordDetailModal.addEventListener('click', (e) => { if (e.target === wordDetailModal) wordDetailModal.style.display = 'none'; });
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>

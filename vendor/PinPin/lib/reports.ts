@@ -2,10 +2,9 @@ import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { prisma } from './prisma'
 import { generatePinyinPdf, type PdfSection } from './pdf'
-import { getPracticeForRange } from './practice'
-import { evenlyDistribute } from './distribute'
+import { evenlyDistribute, sequentialByRecordDay } from './distribute'
 import { formatCN } from './date'
-import { DEFAULT_GRID_OPTIONS, type PdfReportItem } from './types'
+import { DEFAULT_GRID_OPTIONS, type PdfReportItem, type EntryItem } from './types'
 
 const STORAGE_DIR = path.join(process.cwd(), 'storage', 'pdfs')
 
@@ -56,21 +55,32 @@ export interface BuildResult {
   empty?: boolean
 }
 
-/** 为某个书写日期区间生成练习 PDF(按天分组,仅拼音)。无数据返回 { empty: true }。 */
+/**
+ * 生成练习 PDF:先按「录入日期」区间 [recFrom, recTo] 取词,
+ * 再按「书写日期」区间 [writeFrom, writeTo] 分配(勾选平均分配则均分,否则先录先写顺序填充)。
+ * 无数据返回 { empty: true }。
+ */
 export async function buildReportForRange(
   userId: string,
-  from: string,
-  to: string,
+  recFrom: string,
+  recTo: string,
+  writeFrom: string,
+  writeTo: string,
   options: PrintOptions = {},
 ): Promise<BuildResult> {
-  const natural = await getPracticeForRange(userId, from, to)
+  const rows = await prisma.entry.findMany({
+    where: { userId, recordDate: { gte: recFrom, lte: recTo } },
+    orderBy: [{ recordDate: 'asc' }, { createdAt: 'asc' }],
+  })
+  const words: EntryItem[] = rows.map((r) => ({
+    id: r.id,
+    text: r.text,
+    pinyin: r.pinyin,
+    recordDate: r.recordDate,
+  }))
   const distributed = options.evenDistribute
-    ? evenlyDistribute(
-        natural.flatMap((d) => d.entries),
-        from,
-        to,
-      )
-    : natural
+    ? evenlyDistribute(words, writeFrom, writeTo)
+    : sequentialByRecordDay(words, writeFrom, writeTo)
   const days = distributed.filter((d) => d.entries.length > 0)
   const total = days.reduce((sum, d) => sum + d.entries.length, 0)
   if (total === 0) {
@@ -102,16 +112,16 @@ export async function buildReportForRange(
   })
 
   await ensureStorageDir()
-  const filename = `report-${userId}-${from}_${to}.pdf`
+  const filename = `report-${userId}-${writeFrom}_${writeTo}.pdf`
   await fs.writeFile(path.join(STORAGE_DIR, filename), buffer)
 
   const where = {
-    userId_cycleStart_cycleEnd: { userId, cycleStart: from, cycleEnd: to },
+    userId_cycleStart_cycleEnd: { userId, cycleStart: writeFrom, cycleEnd: writeTo },
   }
   const row = await prisma.pdfReport.upsert({
     where,
     update: { filename, entryCount: total },
-    create: { userId, cycleStart: from, cycleEnd: to, filename, entryCount: total },
+    create: { userId, cycleStart: writeFrom, cycleEnd: writeTo, filename, entryCount: total },
   })
   return { report: toReportItem(row) }
 }
@@ -131,4 +141,19 @@ export async function getReportFile(
     console.error('[reports] 读取 PDF 文件失败', error)
     return null
   }
+}
+
+/** 删除某个已生成的 PDF(仅限本人):删库 + 删文件。 */
+export async function deleteReport(userId: string, id: string): Promise<boolean> {
+  const row = await prisma.pdfReport.findFirst({ where: { id, userId } })
+  if (!row) {
+    return false
+  }
+  await prisma.pdfReport.delete({ where: { id: row.id } })
+  try {
+    await fs.unlink(path.join(STORAGE_DIR, row.filename))
+  } catch {
+    // 文件可能已不存在,忽略
+  }
+  return true
 }
