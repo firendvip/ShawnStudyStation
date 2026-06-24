@@ -59,6 +59,19 @@ body{
 .btn.ghost{background:transparent;color:var(--color-accent-strong);}
 .btn.ghost:hover{background:var(--color-accent-soft);}
 .btn.off{background:transparent;color:var(--color-ink-soft);border-color:var(--color-line-strong);}
+.btn.disabled,label.btn.disabled{opacity:.5;pointer-events:none;}
+.btn[disabled]{opacity:.5;pointer-events:none;cursor:not-allowed;}
+
+/* ---------- Custom upload block ---------- */
+.upload-field{flex:1 1 260px;min-width:220px;gap:.45rem;}
+.upload-field .up-row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;}
+textarea.select{height:auto;min-height:5rem;resize:vertical;font-weight:400;line-height:1.5;}
+input.select[type=text]{font-weight:600;}
+.up-check{display:inline-flex;align-items:center;gap:.35rem;font-size:.82rem;font-weight:600;color:var(--color-ink-soft);cursor:pointer;}
+.up-check input{cursor:pointer;}
+.up-note{font-size:.7rem;color:var(--color-ink-dim);line-height:1.4;}
+.up-msg{font-size:.78rem;font-weight:600;color:var(--color-accent-strong);min-height:1em;}
+.up-msg.err{color:#c0392b;}
 
 /* ---------- Article card ---------- */
 .card{background:var(--color-surface);border:1px solid var(--color-line);border-radius:var(--radius-lg);
@@ -168,6 +181,25 @@ body.noseg .en .en-line:not(:last-child):after{content:' ';white-space:pre;}
     <div class="field">
       <label for="essaySel">选择文章</label>
       <select id="essaySel" class="select"></select>
+      <div class="up-row" style="margin-top:.35rem;">
+        <button id="btnTogglePub" class="btn ghost" style="display:none;">设为不公开</button>
+        <button id="btnDel" class="btn off" style="display:none;">删除</button>
+      </div>
+    </div>
+    <div class="field upload-field">
+      <span class="lbl">自定义上传</span>
+      <div class="up-row">
+        <label class="btn ghost" id="upTxtLabel">上传 .txt 文件<input id="upTxt" type="file" accept=".txt" hidden></label>
+      </div>
+      <textarea id="upText" class="select" rows="4" placeholder="或在此粘贴英文短文…"></textarea>
+      <input id="upTitle" class="select" type="text" placeholder="标题（可选）">
+      <span class="up-note">≤3000 字，超出将自动截断</span>
+      <div class="up-row">
+        <label class="up-check"><input id="upPublic" type="checkbox" checked> 公开</label>
+        <button id="upSubmit" class="btn">解析并添加</button>
+      </div>
+      <span class="up-note">公开后其他用户也能在『公开』分组里看到</span>
+      <span id="upMsg" class="up-msg"></span>
     </div>
     <div class="ctrl-group">
       <span class="lbl">翻译模式</span>
@@ -248,19 +280,32 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   let loopMode='one';
   let speed=1, hlOn=true;
 
+  // ---- custom-upload state ----
+  let authToken='';            // '' = not logged in
+  let apiBase='';              // set from parent via postMessage
+  const customEssays={};       // id(string) -> essay item from API {id,title,essay,isPublic,mine}
+
+  // custom-upload DOM
+  const upTxt=document.getElementById('upTxt');
+  const upTxtLabel=document.getElementById('upTxtLabel');
+  const upText=document.getElementById('upText');
+  const upTitle=document.getElementById('upTitle');
+  const upPublic=document.getElementById('upPublic');
+  const upSubmit=document.getElementById('upSubmit');
+  const upMsg=document.getElementById('upMsg');
+  const btnDel=document.getElementById('btnDel');
+  const btnTogglePub=document.getElementById('btnTogglePub');
+
   ESSAYS.sort((a,b)=>a.id-b.id);
-  ESSAYS.forEach(e=>{
-    const o=document.createElement('option');
-    o.value=e.id; o.textContent=String(e.id).padStart(2,'0')+' · '+e.title;
-    sel.appendChild(o);
-  });
+  rebuildOptions();
 
   const NO_SPACE_BEFORE=/^[,.;:!?%)\]}…”’]/;
   function isWordTok(t){ return t.m!==null && t.m!==undefined && /[A-Za-z0-9]/.test(t.w||''); }
 
   function detok(tokens,asText){
+    const toks=Array.isArray(tokens)?tokens:[];
     const parts=[]; let quoteOpen=false,first=true,prevOpener=false;
-    tokens.forEach(t=>{
+    toks.forEach(t=>{
       const w=t.w; let isOpenQuote=false,noSpaceBefore=false;
       if(w==='"'){ if(quoteOpen){noSpaceBefore=true;quoteOpen=false;} else {quoteOpen=true;isOpenQuote=true;} }
       else if(NO_SPACE_BEFORE.test(w)){ noSpaceBefore=true; }
@@ -289,7 +334,7 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   const norm=s=>(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
   // group sentence tokens by 意群 (chunks) for line-by-line English display
   function groupByChunks(sentence){
-    const toks=sentence.tokens, chunks=sentence.chunks||[];
+    const toks=Array.isArray(sentence.tokens)?sentence.tokens:[], chunks=sentence.chunks||[];
     if(!chunks.length) return [toks];
     const groups=[]; let ti=0;
     for(let ci=0;ci<chunks.length;ci++){
@@ -331,11 +376,13 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   function render(essay){
     stopPlay();
     curEssayId=essay.id;
-    artNo.textContent=String(essay.id).padStart(2,'0');
-    artTitle.textContent=essay.title;
-    artCount.textContent=essay.sentences.length+' 句';
+    const idStr=String(essay.id);
+    artNo.textContent=/^\d+$/.test(idStr)?idStr.padStart(2,'0'):'✎';
+    artTitle.textContent=essay.title||'';
+    const sentences=Array.isArray(essay.sentences)?essay.sentences:[];
+    artCount.textContent=sentences.length+' 句';
     cont.innerHTML=''; rows=[];
-    essay.sentences.forEach((s,idx)=>{
+    sentences.forEach((s,idx)=>{
       const row=document.createElement('div'); row.className='sent';
       const body=document.createElement('div'); body.className='sent-body';
       const enWrap=document.createElement('div'); enWrap.className='en-wrap';
@@ -359,14 +406,174 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
 
       row.appendChild(body); row.appendChild(ctrl);
       cont.appendChild(row);
-      rows.push({row,text:detok(s.tokens,true),play:bPl});
+      rows.push({row,text:detok(Array.isArray(s.tokens)?s.tokens:[],true),play:bPl});
     });
     wholeText=rows.map(r=>r.text).join(' ');
   }
   function mkBtn(txt,title,fn){const b=document.createElement('button');b.className='cbtn';b.textContent=txt;b.title=title;b.addEventListener('click',fn);return b;}
 
-  function current(){return ESSAYS.find(e=>e.id==sel.value)||ESSAYS[0];}
-  sel.addEventListener('change',()=>render(current()));
+  // ---------- dropdown grouping + selection ----------
+  function makeOpt(value,text){
+    const o=document.createElement('option');
+    o.value=value; o.textContent=text; return o;
+  }
+  function rebuildOptions(){
+    const prev=sel.value;
+    sel.innerHTML='';
+    // group 1: built-in
+    if(ESSAYS.length){
+      const g=document.createElement('optgroup'); g.label='内置范文';
+      ESSAYS.forEach(e=>{ g.appendChild(makeOpt(String(e.id),String(e.id).padStart(2,'0')+' · '+e.title)); });
+      sel.appendChild(g);
+    }
+    // group 2: my custom (mine)
+    const mine=[], pub=[];
+    Object.keys(customEssays).forEach(k=>{ const it=customEssays[k]; (it.mine?mine:pub).push(it); });
+    if(mine.length){
+      const g=document.createElement('optgroup'); g.label='我的自定义';
+      mine.forEach(it=>{ g.appendChild(makeOpt('c'+it.id,'✎ '+(it.title||'未命名'))); });
+      sel.appendChild(g);
+    }
+    if(pub.length){
+      const g=document.createElement('optgroup'); g.label='公开';
+      pub.forEach(it=>{ g.appendChild(makeOpt('c'+it.id,'🌐 '+(it.title||'未命名'))); });
+      sel.appendChild(g);
+    }
+    // preserve selection if still present, else first built-in
+    const opts=Array.prototype.map.call(sel.options,o=>o.value);
+    if(prev && opts.indexOf(prev)>=0) sel.value=prev;
+    else if(ESSAYS.length) sel.value=String(ESSAYS[0].id);
+  }
+  function resolveSelected(){
+    const v=sel.value;
+    if(v && v.charAt(0)==='c'){
+      const it=customEssays[v.slice(1)];
+      return it&&it.essay?it.essay:(ESSAYS[0]||{id:'',title:'',sentences:[]});
+    }
+    return ESSAYS.find(e=>String(e.id)===v)||ESSAYS[0]||{id:'',title:'',sentences:[]};
+  }
+  function renderSelected(){ render(resolveSelected()); updateManageButtons(); }
+  function current(){ return resolveSelected(); }
+  sel.addEventListener('change',renderSelected);
+
+  // ---------- manage buttons (delete / toggle public) ----------
+  function selectedCustom(){
+    const v=sel.value;
+    if(v && v.charAt(0)==='c'){ return customEssays[v.slice(1)]||null; }
+    return null;
+  }
+  function updateManageButtons(){
+    const it=selectedCustom();
+    const show=!!(it && it.mine===true);
+    btnDel.style.display=show?'':'none';
+    btnTogglePub.style.display=show?'':'none';
+    if(show){
+      const isPub=Number(it.isPublic)===1;
+      btnTogglePub.textContent=isPub?'设为不公开':'设为公开';
+    }
+  }
+  btnDel.addEventListener('click',async()=>{
+    const it=selectedCustom(); if(!it||!authToken||!apiBase) return;
+    if(!confirm('确定删除这篇自定义作文？此操作不可恢复。')) return;
+    try{
+      const r=await fetch(apiBase+'/articles/'+it.id,{method:'DELETE',headers:{'Authorization':'Bearer '+authToken}});
+      if(!r.ok){ setMsg(r.status===404?'无权删除':'删除失败',true); return; }
+      delete customEssays[String(it.id)];
+      rebuildOptions();
+      if(ESSAYS.length) sel.value=String(ESSAYS[0].id);
+      renderSelected();
+      setMsg('已删除',false);
+    }catch(_){ setMsg('删除失败',true); }
+  });
+  btnTogglePub.addEventListener('click',async()=>{
+    const it=selectedCustom(); if(!it||!authToken||!apiBase) return;
+    const newVal=Number(it.isPublic)===1?0:1;
+    try{
+      const r=await fetch(apiBase+'/articles/'+it.id,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},body:JSON.stringify({isPublic:newVal})});
+      if(!r.ok){ setMsg(r.status===404?'无权修改':'修改失败',true); return; }
+      it.isPublic=newVal;
+      updateManageButtons();
+      setMsg(newVal===1?'已设为公开':'已设为不公开',false);
+    }catch(_){ setMsg('修改失败',true); }
+  });
+
+  // ---------- upload helpers ----------
+  function setMsg(text,isErr){ upMsg.textContent=text||''; upMsg.classList.toggle('err',!!isErr); }
+  const MAX_FILE_BYTES=1024*1024, MAX_TEXT_CHARS=3000;
+  upTxt&&upTxt.addEventListener('change',async()=>{
+    const file=upTxt.files&&upTxt.files[0]; if(!file) return;
+    if(file.size>MAX_FILE_BYTES){ setMsg('文件过大（上限 1MB）',true); upTxt.value=''; return; }
+    try{
+      const txt=file.text?await file.text():await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result||''));fr.onerror=()=>rej(fr.error);fr.readAsText(file);});
+      upText.value=txt; setMsg('已读取文件，可点击「解析并添加」',false);
+    }catch(_){ setMsg('文件读取失败',true); }
+    upTxt.value='';
+  });
+
+  upSubmit&&upSubmit.addEventListener('click',async()=>{
+    if(!authToken){ setMsg('请先登录后使用',true); return; }
+    let text=upText.value;
+    if(!text||!text.trim()){ setMsg('请输入或上传文本',true); return; }
+    let preTrunc=false;
+    if(text.length>MAX_TEXT_CHARS){ text=text.slice(0,MAX_TEXT_CHARS); preTrunc=true; }
+    upSubmit.disabled=true; upSubmit.textContent='解析中…'; setMsg('',false);
+    try{
+      const r=await fetch(apiBase+'/articles',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},body:JSON.stringify({title:upTitle.value.trim()||undefined,text,isPublic:upPublic.checked?1:0})});
+      if(!r.ok){
+        const m=r.status===401?'请先登录':r.status===429?'操作太频繁，请稍后再试':r.status===400?'文本不能为空':'解析失败，请重试';
+        setMsg(m,true); return;
+      }
+      const data=await r.json();
+      const article=data.article||{};
+      const truncated=data.truncated||preTrunc;
+      customEssays[String(article.id)]={id:article.id,title:article.title,essay:article.essay,isPublic:upPublic.checked?1:0,mine:true};
+      rebuildOptions();
+      sel.value='c'+article.id;
+      render(article.essay); updateManageButtons();
+      upText.value=''; upTitle.value='';
+      setMsg(truncated?'文本过长，已截断到 3000 字':'添加成功',false);
+    }catch(_){ setMsg('解析失败，请重试',true); }
+    finally{ upSubmit.disabled=false; upSubmit.textContent='解析并添加'; }
+  });
+
+  // ---------- auth state ----------
+  function applyAuthState(){
+    const loggedIn=!!authToken;
+    [upText,upTitle,upPublic,upSubmit,btnDel,btnTogglePub].forEach(el=>{ if(el) el.disabled=!loggedIn; });
+    upTxtLabel&&upTxtLabel.classList.toggle('disabled',!loggedIn);
+    if(!loggedIn){
+      // clear custom groups (GET-only data should not linger after logout)
+      for(const k in customEssays) delete customEssays[k];
+      rebuildOptions(); renderSelected();
+      setMsg('请先登录后使用',false);
+    } else if(upMsg.textContent==='请先登录后使用'){
+      setMsg('',false);
+    }
+  }
+
+  // ---------- load lists ----------
+  async function loadArticles(){
+    if(!authToken||!apiBase) return;
+    try{
+      const r=await fetch(apiBase+'/articles',{headers:{'Authorization':'Bearer '+authToken}});
+      if(!r.ok) return;
+      const data=await r.json();
+      for(const k in customEssays) delete customEssays[k];
+      (data.mine||[]).forEach(it=>{ customEssays[String(it.id)]={...it,mine:true}; });
+      (data.public||[]).forEach(it=>{ if(!customEssays[String(it.id)]) customEssays[String(it.id)]={...it,mine:false}; });
+      rebuildOptions(); updateManageButtons();
+    }catch(_){}
+  }
+
+  // ---------- parent config via postMessage ----------
+  window.addEventListener('message',e=>{
+    const d=e&&e.data; if(!d||d.type!=='composition-config') return;
+    const hadToken=!!authToken;
+    authToken=d.token||''; apiBase=d.apiBase||'';
+    applyAuthState();
+    if(authToken){ loadArticles(); }
+    else if(hadToken){ /* logout already handled by applyAuthState */ }
+  });
 
   document.getElementById('modeTabs').addEventListener('click',e=>{
     const b=e.target.closest('button'); if(!b)return;
@@ -593,15 +800,20 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   window.addEventListener('scroll',hidePop,{passive:true});
 
   document.addEventListener('keydown',e=>{
+    const ae=document.activeElement;
+    if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'))return;
     if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
-      const i=ESSAYS.findIndex(x=>x.id==sel.value);
-      let n=i+(e.key==='ArrowRight'?1:-1);
-      if(n<0)n=ESSAYS.length-1; if(n>=ESSAYS.length)n=0;
-      sel.value=ESSAYS[n].id; render(current());
+      const opts=Array.from(sel.options); if(!opts.length)return;
+      let i=opts.findIndex(o=>o.value===sel.value); if(i<0)i=0;
+      if(e.key==='ArrowRight')i=(i+1)%opts.length;
+      else i=(i-1+opts.length)%opts.length;
+      sel.value=opts[i].value; renderSelected();
     }
   });
 
-  render(current());
+  applyAuthState();
+  renderSelected();
+  try{ window.parent.postMessage({type:'composition-ready'},'*'); }catch(_){}
 })();
 </script>
 </body>

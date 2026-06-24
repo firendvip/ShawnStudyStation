@@ -813,7 +813,13 @@
         </div>
         <div class="cl-list">
           <div class="cl-item latest">
-            <div class="cl-ver-row"><span class="cl-ver">v1.56.1</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-24</span></div>
+            <div class="cl-ver-row"><span class="cl-ver">v1.57.0</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-24</span></div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>英语作文可上传自己的英文短文，自动生成背诵卡。</div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>上传可选公开/不公开（默认公开），公开的大家都能看。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>选择文章下拉分「内置/我的/公开」三组。（逐词释义/音标等待 AI 接入后补全）</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.56.1</span><span class="cl-date">2026-06-24</span></div>
             <div class="cl-line"><span class="cl-tag opt">优化</span>单词小测去掉顶部标题，页面更清爽。</div>
           </div>
           <div class="cl-item">
@@ -1498,6 +1504,7 @@
       currentUser = user;
       try { const s = await api('/settings', { auth: true }); userSettings = s.data || {}; } catch (_) { userSettings = {}; }
       renderAccount();
+      postCompositionConfig();
     }
     function renderAccount() {
       const nickname = userSettings.nickname || currentUser.email.split('@')[0];
@@ -1605,6 +1612,26 @@
       postWordquizConfig();
     });
 
+    /* 英语作文握手:子页面就绪后下发当前 JWT 与 API 基址,账号变化时重新下发。 */
+    function postCompositionConfig() {
+      const cf = document.getElementById('frame-composition');
+      if (cf && cf.contentWindow) {
+        try {
+          cf.contentWindow.postMessage({
+            type: 'composition-config',
+            token: (getToken() || ''),
+            apiBase: (IS_FILE ? 'http://localhost:4000' : '') + '/api/composition'
+          }, '*');
+        } catch (_) {}
+      }
+    }
+    window.addEventListener('message', e => {
+      if (!e.data || e.data.type !== 'composition-ready') return;
+      const cf = document.getElementById('frame-composition');
+      if (!cf || e.source !== cf.contentWindow) return;
+      postCompositionConfig();
+    });
+
     /* 错字练习「查看答案」密码校验:是否等于账号登录密码。
        仅响应错字练习 iframe(frame-cuozi),避免其它来源借此暴力尝试密码。 */
     window.addEventListener('message', async e => {
@@ -1651,6 +1678,7 @@
       applyPersonalization();
       avatarWrap.classList.remove('visible', 'open');
       btnLogin.style.display = '';
+      postCompositionConfig();
     });
 
     /* Account settings panel */
@@ -1744,6 +1772,7 @@
         postRetroConfig();
         postWordquizConfig();
         postDiaryConfig();
+        postCompositionConfig();
         document.getElementById('settings-saved').classList.add('visible');
         closeSettings();
       } catch (e) { showError(errEl, e.message); }
