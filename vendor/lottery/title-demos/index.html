@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>转盘标题动效 · 20 款选型</title>
+<style>
+  /* ============ 基础与布局 ============ */
+  :root{
+    --bg: #f4f5f7;
+    --card-bg: #ffffff;
+    --card-border: #eceef1;
+    --badge: #ff7aa2;
+    --title-color: #2b2f38;
+    --desc-color: #8a90a0;
+    --demo-size: clamp(22px, 5vw, 32px);
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin: 0;
+    padding: 28px 18px 60px;
+    background: var(--bg);
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    color: var(--title-color);
+    -webkit-font-smoothing: antialiased;
+  }
+  .page-head{ text-align: center; margin: 6px auto 30px; max-width: 900px; }
+  .page-head h1{
+    margin: 0 0 10px;
+    font-size: clamp(24px, 5vw, 38px);
+    font-weight: 800;
+    letter-spacing: 1px;
+    background: linear-gradient(90deg,#ff7aa2,#ffb86c,#7ad7ff,#a78bfa);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .page-head .hint{
+    display: inline-block;
+    font-size: 15px;
+    color: #6b7280;
+    background: #fff;
+    padding: 8px 18px;
+    border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.05);
+  }
+
+  .grid{
+    display: grid;
+    gap: 22px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    max-width: 1320px;
+    margin: 0 auto;
+  }
+  @media (max-width: 560px){
+    .grid{ grid-template-columns: 1fr; }
+  }
+
+  .card{
+    position: relative;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 26px 18px 30px;
+    box-shadow: 0 6px 20px rgba(40,50,80,.06);
+    text-align: center;
+    overflow: hidden;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .card:hover{ transform: translateY(-4px); box-shadow: 0 12px 30px rgba(40,50,80,.12); }
+  .badge{
+    position: absolute;
+    top: 12px; left: 14px;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--badge);
+    color: #fff;
+    font-size: 15px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 8px rgba(255,122,162,.4);
+  }
+  .card .name{ font-size: 17px; font-weight: 700; margin: 4px 0 4px; }
+  .card .desc{ font-size: 12.5px; color: var(--desc-color); margin: 0 0 22px; min-height: 18px; }
+  .demo{
+    font-size: var(--demo-size);
+    font-weight: 800;
+    line-height: 1.4;
+    min-height: 52px;
+    display: flex; align-items: center; justify-content: center;
+    letter-spacing: 1px;
+  }
+
+  /* ====================================================== */
+  /* 1. 渐变流动文字 */
+  .fx1{
+    background: linear-gradient(90deg,#ff6b9d,#ffa56b,#ffd86b,#6bd6ff,#a78bfa,#ff6b9d);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    animation: fx1-flow 5s linear infinite;
+  }
+  @keyframes fx1-flow{ to{ background-position: 300% 0; } }
+
+  /* 2. 彩虹滚动 */
+  .fx2{
+    background: repeating-linear-gradient(90deg,#ff0000,#ff8a00,#ffe600,#1fd655,#00b3ff,#7a3cff,#ff0000 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    animation: fx2-rainbow 3s linear infinite;
+  }
+  @keyframes fx2-rainbow{ to{ background-position: -200% 0; } }
+
+  /* 3. 霓虹发光闪烁 */
+  .fx3{
+    color: #fff;
+    animation: fx3-neon 1.6s ease-in-out infinite alternate;
+  }
+  @keyframes fx3-neon{
+    0%{ text-shadow: 0 0 4px #fff, 0 0 10px #ff3df0, 0 0 20px #ff3df0, 0 0 38px #ff3df0; }
+    50%{ text-shadow: 0 0 2px #fff, 0 0 5px #ff3df0, 0 0 10px #ff3df0; }
+    100%{ text-shadow: 0 0 6px #fff, 0 0 14px #38e1ff, 0 0 28px #38e1ff, 0 0 48px #38e1ff; }
+  }
+
+  /* 4. 文字描边光晕 */
+  .fx4{
+    color: transparent;
+    -webkit-text-stroke: 1.6px #ff6fae;
+    animation: fx4-glow 2s ease-in-out infinite;
+  }
+  @keyframes fx4-glow{
+    0%,100%{ filter: drop-shadow(0 0 3px #ff9ecb); -webkit-text-stroke-color:#ff6fae; }
+    50%{ filter: drop-shadow(0 0 14px #ffd1e6); -webkit-text-stroke-color:#ff3d8a; }
+  }
+
+  /* 5. 逐字弹跳/波浪 */
+  .fx5 span{ display: inline-block; color:#ff8a5b; animation: fx5-bounce 1.1s ease-in-out infinite; }
+  @keyframes fx5-bounce{ 0%,100%{ transform: translateY(0);} 30%{ transform: translateY(-14px);} }
+
+  /* 6. 打字机 (JS) */
+  .fx6{ color:#5b8def; font-family: "Courier New", monospace; }
+  .fx6 .cursor{ display:inline-block; width:3px; margin-left:2px; background:#5b8def; animation: fx6-blink .8s steps(1) infinite; }
+  @keyframes fx6-blink{ 50%{ opacity:0; } }
+
+  /* 7. 3D翻转/倾斜 */
+  .fx7-wrap{ perspective: 600px; }
+  .fx7{ display:inline-block; color:#7a5cff; animation: fx7-spin 4s ease-in-out infinite; transform-style: preserve-3d; }
+  @keyframes fx7-spin{
+    0%{ transform: rotateX(0) rotateY(0);}
+    25%{ transform: rotateY(35deg);}
+    50%{ transform: rotateX(30deg);}
+    75%{ transform: rotateY(-35deg);}
+    100%{ transform: rotateX(0) rotateY(0);}
+  }
+
+  /* 8. 金属质感 */
+  .fx8{
+    background: linear-gradient(180deg,#fff 0%,#cfd6e2 30%,#8a93a6 50%,#cfd6e2 70%,#fff 100%);
+    background-size: 100% 300%;
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    text-shadow: 0 1px 1px rgba(0,0,0,.15);
+    animation: fx8-metal 3s linear infinite;
+  }
+  @keyframes fx8-metal{ to{ background-position: 0 300%; } }
+
+  /* 9. 果冻/Q弹 */
+  .fx9{ display:inline-block; color:#ff5fa2; animation: fx9-jelly 1.4s ease-in-out infinite; }
+  @keyframes fx9-jelly{
+    0%,100%{ transform: scale(1,1);}
+    25%{ transform: scale(1.18,.82);}
+    50%{ transform: scale(.85,1.15);}
+    75%{ transform: scale(1.08,.92);}
+  }
+
+  /* 10. glitch故障风 */
+  .fx10{ position:relative; color:#222; }
+  .fx10::before,.fx10::after{
+    content: attr(data-text);
+    position:absolute; left:0; top:0; width:100%;
+  }
+  .fx10::before{ color:#ff3d6e; animation: fx10-a 2s infinite linear alternate; clip-path: inset(0 0 55% 0); }
+  .fx10::after{ color:#00e0ff; animation: fx10-b 1.6s infinite linear alternate; clip-path: inset(55% 0 0 0); }
+  @keyframes fx10-a{ 0%{ transform: translate(0);} 50%{ transform: translate(-3px,-2px);} 100%{ transform: translate(3px,1px);} }
+  @keyframes fx10-b{ 0%{ transform: translate(0);} 50%{ transform: translate(3px,2px);} 100%{ transform: translate(-3px,-1px);} }
+
+  /* 11. 粒子/星光点缀 (JS 注入 ✨) */
+  .fx11{ position:relative; color:#ffae3b; }
+  .fx11 .spark{ position:absolute; font-size:14px; pointer-events:none; animation: fx11-twinkle 1.6s ease-in-out infinite; }
+  @keyframes fx11-twinkle{ 0%,100%{ opacity:.2; transform: scale(.6) rotate(0);} 50%{ opacity:1; transform: scale(1.2) rotate(180deg);} }
+
+  /* 12. 呼吸缩放 */
+  .fx12{ display:inline-block; animation: fx12-breath 2.4s ease-in-out infinite; }
+  @keyframes fx12-breath{
+    0%,100%{ transform: scale(.92); color:#ff7aa2; }
+    50%{ transform: scale(1.1); color:#7a5cff; }
+  }
+
+  /* 13. 彩色阴影漂移 */
+  .fx13{ color:#fff; animation: fx13-shadow 3s ease-in-out infinite; }
+  @keyframes fx13-shadow{
+    0%,100%{ text-shadow: 3px 3px 0 #ff6b9d, -3px -3px 0 #6bd6ff; }
+    33%{ text-shadow: -3px 3px 0 #ffd86b, 3px -3px 0 #a78bfa; }
+    66%{ text-shadow: 3px -3px 0 #6bff9d, -3px 3px 0 #ff8a5b; }
+  }
+
+  /* 14. 镭射全息 */
+  .fx14{
+    background: linear-gradient(120deg,#ff00cc,#3333ff,#00ffcc,#ffff00,#ff00cc);
+    background-size: 300% 300%;
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    animation: fx14-holo 4s ease infinite;
+  }
+  @keyframes fx14-holo{ 0%{ background-position:0% 50%;} 50%{ background-position:100% 50%;} 100%{ background-position:0% 50%;} }
+
+  /* 15. 手写浮现 */
+  .fx15 span{ display:inline-block; opacity:0; color:#5cc1a0; animation: fx15-reveal 4s ease-in-out infinite; }
+  @keyframes fx15-reveal{
+    0%{ opacity:0; transform: translateY(12px) rotate(-8deg);}
+    25%,70%{ opacity:1; transform: translateY(0) rotate(0);}
+    100%{ opacity:0; transform: translateY(-6px); }
+  }
+
+  /* 16. emoji点缀 */
+  .fx16{ color:#ff6b9d; }
+  .fx16 .em{ display:inline-block; animation: fx16-emoji 1.8s ease-in-out infinite; }
+  .fx16 .em:nth-child(2){ animation-delay:.3s; }
+  @keyframes fx16-emoji{ 0%,100%{ transform: translateY(0) rotate(0);} 50%{ transform: translateY(-10px) rotate(20deg);} }
+
+  /* 17. 糖果色块背景滑动 */
+  .fx17{
+    position:relative; color:#fff; padding: 4px 14px; border-radius: 12px;
+    background: linear-gradient(90deg,#ff7aa2,#ffb86c,#7ad7ff,#a78bfa,#ff7aa2);
+    background-size: 300% 100%;
+    animation: fx17-candy 4s linear infinite;
+    box-shadow: 0 6px 16px rgba(0,0,0,.08);
+  }
+  @keyframes fx17-candy{ to{ background-position: 300% 0; } }
+
+  /* 18. 镜面反光扫光 */
+  .fx18{
+    position:relative; color:#3a3f4b;
+    background: linear-gradient(110deg, #3a3f4b 0%, #3a3f4b 40%, #fff 50%, #3a3f4b 60%, #3a3f4b 100%);
+    background-size: 250% 100%;
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    animation: fx18-shine 2.8s linear infinite;
+  }
+  @keyframes fx18-shine{ 0%{ background-position: 150% 0;} 100%{ background-position: -150% 0; } }
+
+  /* 19. 弹簧入场 */
+  .fx19{ display:inline-block; color:#ff8a5b; animation: fx19-spring 2.4s ease-in-out infinite; }
+  @keyframes fx19-spring{
+    0%{ transform: scale(0) rotate(-20deg); opacity:0;}
+    40%{ transform: scale(1.25) rotate(8deg); opacity:1;}
+    55%{ transform: scale(.9) rotate(-4deg);}
+    70%{ transform: scale(1.05) rotate(2deg);}
+    85%,100%{ transform: scale(1) rotate(0); opacity:1;}
+  }
+
+  /* 20. 色相循环 */
+  .fx20{ color:#ff4d6d; animation: fx20-hue 4s linear infinite; }
+  @keyframes fx20-hue{ to{ filter: hue-rotate(360deg); } }
+</style>
+</head>
+<body>
+
+  <header class="page-head">
+    <h1>转盘标题动效 · 20 款选型</h1>
+    <div class="hint">看中哪个，告诉我编号即可</div>
+  </header>
+
+  <main class="grid">
+
+    <!-- 1. 渐变流动文字 -->
+    <section class="card">
+      <div class="badge">①</div>
+      <div class="name">渐变流动文字</div>
+      <div class="desc">多彩渐变横向流动，柔和又活泼</div>
+      <div class="demo"><span class="fx1">小善专属转盘</span></div>
+    </section>
+
+    <!-- 2. 彩虹滚动 -->
+    <section class="card">
+      <div class="badge">②</div>
+      <div class="name">彩虹滚动</div>
+      <div class="desc">七彩条纹不停滚动，超级缤纷</div>
+      <div class="demo"><span class="fx2">小善专属转盘</span></div>
+    </section>
+
+    <!-- 3. 霓虹发光闪烁 -->
+    <section class="card" style="background:#1c1f2a;">
+      <div class="badge">③</div>
+      <div class="name" style="color:#fff;">霓虹发光闪烁</div>
+      <div class="desc" style="color:#aab;">夜店霓虹灯般忽明忽暗</div>
+      <div class="demo"><span class="fx3">小善专属转盘</span></div>
+    </section>
+
+    <!-- 4. 文字描边光晕 -->
+    <section class="card">
+      <div class="badge">④</div>
+      <div class="name">文字描边光晕</div>
+      <div class="desc">空心描边 + 粉色光晕呼吸</div>
+      <div class="demo"><span class="fx4">小善专属转盘</span></div>
+    </section>
+
+    <!-- 5. 逐字弹跳/波浪 -->
+    <section class="card">
+      <div class="badge">⑤</div>
+      <div class="name">逐字弹跳波浪</div>
+      <div class="desc">每个字依次蹦蹦跳，像波浪</div>
+      <div class="demo"><span class="fx5" data-stagger="bounce">小善专属转盘</span></div>
+    </section>
+
+    <!-- 6. 打字机 -->
+    <section class="card">
+      <div class="badge">⑥</div>
+      <div class="name">打字机</div>
+      <div class="desc">一个字一个字敲出来，带光标</div>
+      <div class="demo"><span class="fx6" data-typer="小善专属转盘"></span></div>
+    </section>
+
+    <!-- 7. 3D翻转倾斜 -->
+    <section class="card">
+      <div class="badge">⑦</div>
+      <div class="name">3D 翻转倾斜</div>
+      <div class="desc">立体空间里翻转摇摆</div>
+      <div class="demo fx7-wrap"><span class="fx7">小善专属转盘</span></div>
+    </section>
+
+    <!-- 8. 金属质感 -->
+    <section class="card">
+      <div class="badge">⑧</div>
+      <div class="name">金属质感</div>
+      <div class="desc">银亮金属反光缓缓流动</div>
+      <div class="demo"><span class="fx8">小善专属转盘</span></div>
+    </section>
+
+    <!-- 9. 果冻Q弹 -->
+    <section class="card">
+      <div class="badge">⑨</div>
+      <div class="name">果冻 Q 弹</div>
+      <div class="desc">像果冻一样捏一下弹一下</div>
+      <div class="demo"><span class="fx9">小善专属转盘</span></div>
+    </section>
+
+    <!-- 10. glitch故障风 -->
+    <section class="card">
+      <div class="badge">⑩</div>
+      <div class="name">Glitch 故障风</div>
+      <div class="desc">红蓝错位抖动的电子故障感</div>
+      <div class="demo"><span class="fx10" data-text="小善专属转盘">小善专属转盘</span></div>
+    </section>
+
+    <!-- 11. 粒子/星光点缀 -->
+    <section class="card">
+      <div class="badge">11</div>
+      <div class="name">粒子星光点缀</div>
+      <div class="desc">周围闪烁小星星 ✨</div>
+      <div class="demo"><span class="fx11" data-spark="1">小善专属转盘</span></div>
+    </section>
+
+    <!-- 12. 呼吸缩放 -->
+    <section class="card">
+      <div class="badge">12</div>
+      <div class="name">呼吸缩放</div>
+      <div class="desc">忽大忽小变色，像在呼吸</div>
+      <div class="demo"><span class="fx12">小善专属转盘</span></div>
+    </section>
+
+    <!-- 13. 彩色阴影漂移 -->
+    <section class="card">
+      <div class="badge">13</div>
+      <div class="name">彩色阴影漂移</div>
+      <div class="desc">多彩重影来回漂移</div>
+      <div class="demo"><span class="fx13">小善专属转盘</span></div>
+    </section>
+
+    <!-- 14. 镭射全息 -->
+    <section class="card">
+      <div class="badge">14</div>
+      <div class="name">镭射全息</div>
+      <div class="desc">全息镭射卡片般变色</div>
+      <div class="demo"><span class="fx14">小善专属转盘</span></div>
+    </section>
+
+    <!-- 15. 手写浮现 -->
+    <section class="card">
+      <div class="badge">15</div>
+      <div class="name">手写浮现</div>
+      <div class="desc">字逐个轻轻浮现又隐去</div>
+      <div class="demo"><span class="fx15" data-stagger="reveal">小善专属转盘</span></div>
+    </section>
+
+    <!-- 16. emoji点缀 -->
+    <section class="card">
+      <div class="badge">16</div>
+      <div class="name">Emoji 点缀</div>
+      <div class="desc">🎡✨🎉 蹦跳旋转更欢乐</div>
+      <div class="demo"><span class="fx16"><span class="em">🎡</span><span>小善专属转盘</span><span class="em">🎉</span></span></div>
+    </section>
+
+    <!-- 17. 糖果色块背景滑动 -->
+    <section class="card">
+      <div class="badge">17</div>
+      <div class="name">糖果色块滑动</div>
+      <div class="desc">背后糖果色块缓缓滑动</div>
+      <div class="demo"><span class="fx17">小善专属转盘</span></div>
+    </section>
+
+    <!-- 18. 镜面反光扫光 -->
+    <section class="card">
+      <div class="badge">18</div>
+      <div class="name">镜面反光扫光</div>
+      <div class="desc">一道高光从文字上扫过</div>
+      <div class="demo"><span class="fx18">小善专属转盘</span></div>
+    </section>
+
+    <!-- 19. 弹簧入场 -->
+    <section class="card">
+      <div class="badge">19</div>
+      <div class="name">弹簧入场</div>
+      <div class="desc">弹簧般 Q 弹蹦出来循环</div>
+      <div class="demo"><span class="fx19">小善专属转盘</span></div>
+    </section>
+
+    <!-- 20. 色相循环 -->
+    <section class="card">
+      <div class="badge">20</div>
+      <div class="name">色相循环</div>
+      <div class="desc">整段文字颜色不停轮转</div>
+      <div class="demo"><span class="fx20">小善专属转盘</span></div>
+    </section>
+
+  </main>
+
+<script>
+/* ===== 仅在确有必要处使用的极简 JS ===== */
+
+/* 通用：把一段文字拆成 <span> 逐字，供错峰动画使用（效果 5 / 15） */
+function splitChars(el, delayStep){
+  var text = el.textContent;
+  el.textContent = '';
+  text.split('').forEach(function(ch, i){
+    var s = document.createElement('span');
+    s.textContent = ch;
+    s.style.animationDelay = (i * delayStep) + 's';
+    el.appendChild(s);
+  });
+}
+document.querySelectorAll('.fx5').forEach(function(el){ splitChars(el, 0.09); });
+document.querySelectorAll('.fx15').forEach(function(el){ splitChars(el, 0.12); });
+
+/* 效果 6：打字机（含循环） */
+document.querySelectorAll('.fx6').forEach(function(el){
+  var full = el.getAttribute('data-typer') || '';
+  var i = 0, forward = true;
+  var textNode = document.createElement('span');
+  var cursor = document.createElement('span');
+  cursor.className = 'cursor';
+  cursor.innerHTML = '&nbsp;';
+  el.appendChild(textNode);
+  el.appendChild(cursor);
+  function tick(){
+    textNode.textContent = full.slice(0, i);
+    if(forward){
+      i++;
+      if(i > full.length){ forward = false; setTimeout(tick, 1200); return; }
+    }else{
+      i--;
+      if(i < 0){ i = 0; forward = true; setTimeout(tick, 600); return; }
+    }
+    setTimeout(tick, forward ? 220 : 110);
+  }
+  tick();
+});
+
+/* 效果 11：在文字周围撒几颗 ✨ 星星 */
+document.querySelectorAll('.fx11[data-spark]').forEach(function(el){
+  var positions = [
+    {l:'-6%',  t:'-30%'}, {l:'102%', t:'-10%'},
+    {l:'40%',  t:'-55%'}, {l:'-10%', t:'70%'},
+    {l:'105%', t:'60%'},  {l:'55%',  t:'90%'}
+  ];
+  positions.forEach(function(p, idx){
+    var s = document.createElement('span');
+    s.className = 'spark';
+    s.textContent = '✨';
+    s.style.left = p.l;
+    s.style.top = p.t;
+    s.style.animationDelay = (idx * 0.25) + 's';
+    el.appendChild(s);
+  });
+});
+</script>
+
+</body>
+</html>
