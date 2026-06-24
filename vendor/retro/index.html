@@ -48,7 +48,19 @@
     .today-btn { border: 1px solid var(--accent); background: transparent; color: var(--accent-strong);
                  border-radius: 999px; padding: 4px 10px; font-size: .72rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
     .today-btn:hover { background: var(--accent-soft); }
+    .help-btn { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--accent);
+                background: transparent; color: var(--accent-strong); font-size: .8rem; font-weight: 800;
+                line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+                flex: 0 0 auto; }
+    .help-btn:hover { background: var(--accent-soft); }
     .spacer { flex: 1; }
+
+    /* ── 复盘小提示说明块 ── */
+    .retro-help-list { display: flex; flex-direction: column; gap: 16px; text-align: left; margin-bottom: 20px; }
+    .retro-help-block { text-align: left; }
+    .retro-help-block .rh-title { font-weight: 800; color: var(--ink); font-size: .98rem; margin-bottom: 2px; }
+    .retro-help-block .rh-sub { color: var(--ink-soft); font-size: .88rem; line-height: 1.6; }
+    .retro-help-block .rh-eg { color: var(--ink-dim); font-size: .8rem; line-height: 1.6; margin-top: 4px; }
 
     .search { position: relative; width: 230px; max-width: 52%; }
     .search input { width: 100%; border: 1.5px solid var(--line); background: var(--paper); border-radius: 999px;
@@ -217,6 +229,7 @@
           <div class="bar">
             <button class="date-pill" id="date-pill" type="button"><span id="date-label">—</span><span class="chev">▾</span></button>
             <button class="today-btn" id="today-btn" type="button">今天</button>
+            <button class="help-btn" id="retro-help-btn" type="button" aria-label="复盘小提示">?</button>
             <span class="spacer"></span>
             <div class="search">
               <span class="icon">🔍</span>
@@ -229,20 +242,20 @@
 
         <div class="card-base card did">
           <div class="card-label"><span class="emoji">📝</span>今天主要做了哪几件事？</div>
-          <div class="hint-row"><span class="card-hint">把今天完成的事情，一件一件写下来</span><span class="saved">已自动保存 ✓</span></div>
-          <textarea id="did" placeholder="例如：1. 完成了数学作业&#10;2. 读了 20 分钟课外书&#10;3. 练了字帖"></textarea>
+          <div class="hint-row"><span class="saved">已自动保存 ✓</span></div>
+          <textarea id="did" placeholder=""></textarea>
         </div>
 
         <div class="card-base card well">
           <div class="card-label"><span class="emoji">👍</span>哪些做得很好？</div>
-          <div class="hint-row"><span class="card-hint">为自己点赞，记下今天表现棒的地方</span><span class="saved">已自动保存 ✓</span></div>
-          <textarea id="well" placeholder="例如：今天主动复习了错题，很专心"></textarea>
+          <div class="hint-row"><span class="saved">已自动保存 ✓</span></div>
+          <textarea id="well" placeholder=""></textarea>
         </div>
 
         <div class="card-base card improve">
           <div class="card-label"><span class="emoji">💪</span>哪些还可以做得更好？</div>
-          <div class="hint-row"><span class="card-hint">想想明天可以怎么做，会更进步</span><span class="saved">已自动保存 ✓</span></div>
-          <textarea id="improve" placeholder="例如：写作业时少分心，可以更快完成"></textarea>
+          <div class="hint-row"><span class="saved">已自动保存 ✓</span></div>
+          <textarea id="improve" placeholder=""></textarea>
         </div>
       </section>
     </div>
@@ -382,6 +395,51 @@
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
     }
+
+    /* ── 复盘小提示说明弹窗 ── */
+    function showRetroHelp() {
+      const overlay = document.createElement('div');
+      overlay.className = 'ui-overlay';
+      const panel = document.createElement('div');
+      panel.className = 'ui-panel';
+      const h = document.createElement('div'); h.className = 'ui-title'; h.textContent = '复盘小提示';
+      const list = document.createElement('div'); list.className = 'retro-help-list';
+      const blocks = [
+        { title: '📝 今天主要做了哪几件事？', sub: '把今天完成的事情，一件一件写下来', eg: '例如：1. 完成了数学作业 2. 读了 20 分钟课外书 3. 练了字帖' },
+        { title: '👍 哪些做得很好？', sub: '为自己点赞，记下今天表现棒的地方', eg: '例如：今天主动复习了错题，很专心' },
+        { title: '💪 哪些还可以做得更好？', sub: '想想明天可以怎么做，会更进步', eg: '例如：写作业时少分心，可以更快完成' }
+      ];
+      blocks.forEach(b => {
+        const block = document.createElement('div'); block.className = 'retro-help-block';
+        const t = document.createElement('div'); t.className = 'rh-title'; t.textContent = b.title;
+        const s = document.createElement('div'); s.className = 'rh-sub'; s.textContent = b.sub;
+        const e = document.createElement('div'); e.className = 'rh-eg'; e.textContent = b.eg;
+        block.appendChild(t); block.appendChild(s); block.appendChild(e);
+        list.appendChild(block);
+      });
+      const row = document.createElement('div'); row.className = 'ui-row';
+      const okBtn = document.createElement('button');
+      okBtn.type = 'button'; okBtn.className = 'btn'; okBtn.textContent = '知道啦';
+      row.appendChild(okBtn);
+      panel.appendChild(h); panel.appendChild(list); panel.appendChild(row);
+      overlay.appendChild(panel);
+      document.body.appendChild(overlay);
+      requestAnimationFrame(() => overlay.classList.add('show'));
+
+      let done = false;
+      function close() {
+        if (done) return; done = true;
+        document.removeEventListener('keydown', onKey);
+        overlay.classList.remove('show');
+        setTimeout(() => overlay.remove(), 200);
+      }
+      function onKey(e) { if (e.key === 'Escape') close(); }
+      okBtn.addEventListener('click', close);
+      overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+      document.addEventListener('keydown', onKey);
+      setTimeout(() => okBtn.focus(), 0);
+    }
+    $('retro-help-btn').addEventListener('click', showRetroHelp);
 
     /* ── 日历 ── */
     let viewY, viewM;
