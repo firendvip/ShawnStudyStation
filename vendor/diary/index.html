@@ -128,8 +128,8 @@
     /* ── 标签面板（容器固定高度，切换不跳动） ── */
     .panel-host { min-height: 60vh; }
     .panel { display: none; }
-    .panel.show { display: flex; flex-direction: column; gap: 16px; animation: fadeUp .35s cubic-bezier(.16,1,.3,1); }
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .panel.show { display: flex; flex-direction: column; gap: 16px; animation: fadeIn .28s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     /* ── 目录列表 ── */
     .toc-stat { color: var(--ink-soft); font-size: .9rem; }

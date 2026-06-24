@@ -54,55 +54,9 @@
         
         .header {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            cursor: pointer;
-            white-space: nowrap;
-            /* 加深的薄荷青柠渐变，缓慢横向流动，像水面波光；
-               回退色为饱和薄荷绿，clip 不生效时仍清晰可见 */
-            color: #2fa37a;
-            /* 轻柔 halo 提升可读性，不破坏清新感 */
-            filter: drop-shadow(0 1px 1px rgba(47,154,122,0.25));
-        }
-
-        /* 根因：标题字形被拆进逐字 inline-block <span>，而 background-clip:text 原本只设在父级 h1 上；
-           inline-block 子 span 自成绘制上下文，父级的 clip 填充无法作用到子 span 的字形 ——
-           叠加父级 -webkit-text-fill-color:transparent 继承下来，导致整段标题透明、看不见。
-           修法：把渐变 + clip 直接设在每个 .wave-char 上（各字 clip 到自身字形），
-           所有字用同一条加深的薄荷青柠渐变（stops 一致）且 flow 动画同步，
-           视觉上是一条连贯波光，颜色完整、不发淡不断裂；span 仍只用 transform 做海浪上下位移。
-           clip 失效时回退到饱和薄荷绿 #2fa37a，仍清晰可见。 */
-        h1 .wave-char {
-            display: inline-block;
-            color: #2fa37a;
-            background: linear-gradient(90deg, #2fa37a, #4fb84a, #2f9aad, #2fa37a);
-            background-size: 300% 100%;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: waveChar 2.4s ease-in-out infinite, titleFlow 6s linear infinite;
-            animation-delay: var(--wave-delay, 0s), 0s;
-            will-change: transform, background-position;
-        }
-
-        @keyframes titleFlow {
-            from { background-position: 0% 50%; }
-            to   { background-position: 300% 50%; }
-        }
-
-        @keyframes waveChar {
-            0%, 100% { transform: translateY(0); }
-            50%      { transform: translateY(-9px); }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            h1, h1 .wave-char { animation: none; }
+            margin-bottom: 16px;
         }
         
         .header-icons {
@@ -447,10 +401,6 @@
                 font-size: 12px;
             }
             
-            h1 {
-                font-size: 2rem;
-            }
-            
             .header {
                 flex-direction: column;
                 gap: 10px;
@@ -473,10 +423,6 @@
                 font-size: 10px;
             }
             
-            h1 {
-                font-size: 1.8rem;
-            }
-            
             .player {
                 width: 40px;
                 height: 40px;
@@ -488,7 +434,6 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1 id="game-title">小善走格子</h1>
             <div class="header-icons">
                 <button class="icon-btn" id="help-btn" title="获奖记录" aria-label="获奖记录">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -546,7 +491,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const gameTitle = document.getElementById('game-title');
             const playerElement = document.getElementById('player');
             const historyList = document.getElementById('history-list');
             const settingsBtn = document.getElementById('settings-btn');
@@ -581,8 +525,7 @@
             // 中奖历史记录
             let history = JSON.parse(localStorage.getItem('circleHistory')) || [];
             
-            // 标题与转球：来自账号（昵称 + 头像），由主站通过 postMessage 下发
-            let gameTitleText = "小善专属转盘";
+            // 转球：来自账号（昵称首字 + 头像），由主站通过 postMessage 下发
             let playerText = "善";
             let playerImage = "";
             
@@ -594,26 +537,8 @@
             let timer = null;
             let speed = 50; // 初始速度(ms)
             
-            // 把标题按字符拆成 <span>，逐字递增 animation-delay，形成行进的海浪波动
-            // 昵称变化时会随 initGame 重新渲染
-            function renderWaveTitle(text) {
-                gameTitle.textContent = '';
-                const chars = Array.from(text);
-                const STEP = 0.12; // 每个字相位延迟 (s)
-                chars.forEach((ch, i) => {
-                    const span = document.createElement('span');
-                    span.className = 'wave-char';
-                    span.style.setProperty('--wave-delay', (i * STEP) + 's');
-                    span.textContent = ch;
-                    gameTitle.appendChild(span);
-                });
-            }
-
             // 初始化游戏
             function initGame() {
-                // 设置标题和角色名称（逐字波浪渲染）
-                renderWaveTitle(gameTitleText);
-                
                 // 设置角色图片或文本
                 updatePlayerDisplay();
                 
@@ -865,10 +790,9 @@
                 }
             }
 
-            // 接收主站下发的账号信息：昵称 → 标题「{昵称}专属转盘」，头像 → 转球图案
+            // 接收主站下发的账号信息：昵称首字 → 转球文字，头像 → 转球图案
             function applyAccount(nickname, avatar) {
                 const nick = (nickname || '').trim();
-                gameTitleText = (nick || '小善') + '专属转盘';
                 playerText = (nick || '小善').charAt(0);
                 playerImage = avatar || '';
                 initGame();
