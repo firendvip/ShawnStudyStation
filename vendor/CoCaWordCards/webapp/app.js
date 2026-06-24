@@ -1,6 +1,35 @@
 // WordCards Web — vanilla JS port of HighFreqWordCards (full feature parity).
 "use strict";
 
+// ---- Site-styled custom dialogs (replace native alert/confirm) ----
+let __toastTimer = null;
+function showToast(message) {
+  let t = document.querySelector(".ui-toast");
+  if (!t) { t = document.createElement("div"); t.className = "ui-toast"; document.body.appendChild(t); }
+  t.innerHTML = '<span class="ui-toast-dot">✓</span>' + String(message).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  requestAnimationFrame(() => t.classList.add("show"));
+  clearTimeout(__toastTimer); __toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+function showConfirm({ title = "提示", message = "", confirmText = "确定", cancelText = "取消" } = {}) {
+  return new Promise(resolve => {
+    const o = document.createElement("div"); o.className = "ui-overlay";
+    const p = document.createElement("div"); p.className = "ui-panel";
+    const h = document.createElement("div"); h.className = "ui-title"; h.textContent = title;
+    const m = document.createElement("div"); m.className = "ui-msg"; m.textContent = message;
+    const row = document.createElement("div"); row.className = "ui-row";
+    const c = document.createElement("button"); c.type = "button"; c.className = "ui-btn ghost"; c.textContent = cancelText;
+    const k = document.createElement("button"); k.type = "button"; k.className = "ui-btn"; k.textContent = confirmText;
+    row.append(c, k); p.append(h, m, row); o.append(p); document.body.append(o);
+    requestAnimationFrame(() => o.classList.add("show"));
+    let done = false;
+    function close(r) { if (done) return; done = true; document.removeEventListener("keydown", onKey); o.classList.remove("show"); setTimeout(() => o.remove(), 200); resolve(r); }
+    function onKey(e) { if (e.key === "Escape") close(false); else if (e.key === "Enter") close(true); }
+    k.onclick = () => close(true); c.onclick = () => close(false);
+    o.addEventListener("click", e => { if (e.target === o) close(false); });
+    document.addEventListener("keydown", onKey); setTimeout(() => k.focus(), 0);
+  });
+}
+
 // ---- Single light-green theme (theme system removed) ----
 const THEME = { start: "#F4F7F3", mid: "#ECF2EA", end: "#DFE8DC", surface: "#fff", textPrimary: "#20302a", textSecondary: "#5a6b60", border: "#cfdcc9", accent: "#5B9E5B" };
 const REPEAT_CYCLE = [1, 2, 3, -1];
@@ -60,7 +89,7 @@ function loadJSON(key, fallback) {
 }
 function safeSet(key, value, label) {
   try { localStorage.setItem(key, JSON.stringify(value)); }
-  catch (e) { if (e && e.name === "QuotaExceededError") alert(`存储空间不足，${label || "数据"}无法保存。请删除部分自定义词包后重试。`); }
+  catch (e) { if (e && e.name === "QuotaExceededError") showToast(`存储空间不足，${label || "数据"}无法保存。请删除部分自定义词包后重试。`); }
 }
 const saveSettings = () => safeSet(LS_SETTINGS, settings, "设置");
 const savePositions = () => safeSet(LS_POS, positions, "进度");
@@ -429,7 +458,7 @@ async function loadPack(packId) {
     }
     loaded.id = meta.id;
   }
-  if (!Array.isArray(loaded.words) || !loaded.words.length) { alert("单词包为空"); return; }
+  if (!Array.isArray(loaded.words) || !loaded.words.length) { showToast("单词包为空"); return; }
   pack = loaded;
   settings.packId = pack.id;
   // If a saved range no longer fits this pack, fall back to showing all.
@@ -671,8 +700,8 @@ function buildLimitGroupSelect() {
   }
 }
 // Restore every setting (display, appearance, playback, layout, range, pack) to defaults.
-function resetSettings() {
-  if (!confirm("确定将所有设置恢复为默认？自定义词包不会被删除。")) return;
+async function resetSettings() {
+  if (!(await showConfirm({ title: "恢复默认设置", message: "确定将所有设置恢复为默认？自定义词包不会被删除。", confirmText: "恢复默认", cancelText: "取消" }))) return;
   stopAudio();
   Object.keys(settings).forEach((k) => delete settings[k]);
   Object.assign(settings, DEFAULTS, { moduleX: [0, 0, 0, 0, 0, 0], moduleY: [0, 0, 0, 0, 0, 0] });
@@ -740,15 +769,15 @@ function bindEvents() {
   $("uploadInput").addEventListener("change", async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 20 * 1024 * 1024) { alert("文件过大（上限 20 MB）"); e.target.value = ""; return; }
+    if (file.size > 20 * 1024 * 1024) { showToast("文件过大（上限 20 MB）"); e.target.value = ""; return; }
     try {
       const cp = parseCustomPack(file.name, await file.text());
       customPacks[cp.id] = cp; saveCustom();
       rebuildPackSelects(); renderCustomList();
       settings.packId = cp.id; saveSettings();
       await loadPack(cp.id);
-      alert(`已导入「${cp.name}」，共 ${cp.words.length} 个单词`);
-    } catch (err) { alert("解析失败：" + err.message); }
+      showToast(`已导入「${cp.name}」，共 ${cp.words.length} 个单词`);
+    } catch (err) { showToast("解析失败：" + err.message); }
     e.target.value = "";
   });
 

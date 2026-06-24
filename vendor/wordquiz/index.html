@@ -860,6 +860,30 @@
                 font-size: 1.4rem;
             }
         }
+
+        /* 站内风格提示（替代原生 alert） */
+        .ui-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 36px;
+            transform: translateX(-50%) translateY(16px);
+            z-index: 10000;
+            background: var(--surface, #fff);
+            color: var(--text-primary, #20302a);
+            border: 1px solid var(--border, #cfdcc9);
+            border-radius: 12px;
+            padding: 12px 18px;
+            font-size: .92rem;
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(20, 40, 30, .14);
+            max-width: 86vw;
+            text-align: center;
+            opacity: 0;
+            transition: opacity .2s ease, transform .2s ease;
+            pointer-events: none;
+        }
+        .ui-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .ui-toast .ui-toast-dot { color: var(--accent-strong, #4a8a4a); margin-right: 6px; }
     </style>
 </head>
 <body>
@@ -999,6 +1023,17 @@
     </div>
 
     <script>
+        // 站内风格提示（替代原生 alert）
+        let __toastTimer = null;
+        function showToast(message) {
+            let t = document.querySelector('.ui-toast');
+            if (!t) { t = document.createElement('div'); t.className = 'ui-toast'; document.body.appendChild(t); }
+            t.innerHTML = '<span class="ui-toast-dot">✓</span>' + String(message).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+            requestAnimationFrame(() => t.classList.add('show'));
+            clearTimeout(__toastTimer);
+            __toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+        }
+
         // 内置初始单词数据（包含音标）
         const initialWords = [
             ['apple', '苹果', '/ˈæpl/'],
@@ -1501,7 +1536,7 @@
         function goToNextGroup() { if (currentGroupIndex < groups.length - 1) { currentGroupIndex++; groupSelect.value = currentGroupIndex; renderCurrentGroup(); saveCurrentSettings(); } }
         function handleSelectAll() { if (!['e-review','c-review'].includes(currentTab)) return; const grid = currentTab === 'e-review' ? eReviewGrid : cReviewGrid; const cells = grid.querySelectorAll('.word-cell'); const allSelected = Array.from(cells).every(cell => cell.textContent !== '暂无复习单词' && cell.classList.contains('selected')); cells.forEach(cell => { if (cell.textContent !== '暂无复习单词') allSelected ? cell.classList.remove('selected') : cell.classList.add('selected'); }); }
         function handleDeleteSelected() { if (!['e-review','c-review'].includes(currentTab)) return; const grid = currentTab === 'e-review' ? eReviewGrid : cReviewGrid; const cells = grid.querySelectorAll('.word-cell'); const remaining = []; cells.forEach(cell => { if (!cell.classList.contains('selected') && cell.textContent !== '暂无复习单词') { const eng = cell.dataset.english, chi = cell.dataset.chinese, pho = cell.dataset.phonetic || ''; if (eng && chi) remaining.push({ english: eng, chinese: chi, phonetic: pho }); } }); reviewWords = remaining; saveCurrentSettings(); renderReviewGrid(currentTab === 'e-review' ? 'english' : 'chinese'); }
-        function handleCopyContent() { let content = ''; if (currentTab === 'english' || currentTab === 'chinese') { if (selectedCell) content = selectedCell.querySelector('.card-front')?.textContent || ''; else { const grid = currentTab === 'english' ? englishGrid : chineseGrid; const cells = grid.querySelectorAll('.word-cell'); cells.forEach(cell => { if (cell.textContent !== '暂无单词') { const txt = cell.querySelector('.card-front')?.textContent; if (txt) content += txt + '\n'; } }); } } else if (currentTab === 'e-review' || currentTab === 'c-review') { const grid = currentTab === 'e-review' ? eReviewGrid : cReviewGrid; const cells = grid.querySelectorAll('.word-cell'); const selected = Array.from(cells).filter(c => c.classList.contains('selected') && c.textContent !== '暂无复习单词'); if (selected.length) selected.forEach(cell => { const txt = cell.querySelector('.card-front')?.textContent; if (txt) content += txt + '\n'; }); else cells.forEach(cell => { if (cell.textContent !== '暂无复习单词') { const txt = cell.querySelector('.card-front')?.textContent; if (txt) content += txt + '\n'; } }); } if (!content.trim()) return alert('没有内容可复制'); navigator.clipboard.writeText(content.trim()).then(() => alert('复制成功！')).catch(() => alert('复制失败，请手动复制')); }
+        function handleCopyContent() { let content = ''; if (currentTab === 'english' || currentTab === 'chinese') { if (selectedCell) content = selectedCell.querySelector('.card-front')?.textContent || ''; else { const grid = currentTab === 'english' ? englishGrid : chineseGrid; const cells = grid.querySelectorAll('.word-cell'); cells.forEach(cell => { if (cell.textContent !== '暂无单词') { const txt = cell.querySelector('.card-front')?.textContent; if (txt) content += txt + '\n'; } }); } } else if (currentTab === 'e-review' || currentTab === 'c-review') { const grid = currentTab === 'e-review' ? eReviewGrid : cReviewGrid; const cells = grid.querySelectorAll('.word-cell'); const selected = Array.from(cells).filter(c => c.classList.contains('selected') && c.textContent !== '暂无复习单词'); if (selected.length) selected.forEach(cell => { const txt = cell.querySelector('.card-front')?.textContent; if (txt) content += txt + '\n'; }); else cells.forEach(cell => { if (cell.textContent !== '暂无复习单词') { const txt = cell.querySelector('.card-front')?.textContent; if (txt) content += txt + '\n'; } }); } if (!content.trim()) return showToast('没有内容可复制'); navigator.clipboard.writeText(content.trim()).then(() => showToast('复制成功！')).catch(() => showToast('复制失败，请手动复制')); }
         function shuffleArray(arr) { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
         function handleKeyNavigation(e) {
             if (e.key === 'Escape' && wordDetailModal.style.display === 'flex') { wordDetailModal.style.display = 'none'; return; }
