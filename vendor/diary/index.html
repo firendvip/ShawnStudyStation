@@ -113,6 +113,47 @@
             border-radius: 999px; padding: 4px 11px; font-size: .75rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
     .mini:hover { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
 
+    /* ── 页面标题 + 标签胶囊 ── */
+    .page-head { display: flex; flex-direction: column; gap: 12px; }
+    .page-head h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: .02em; }
+    .tabs { display: inline-flex; gap: 6px; padding: 6px; align-self: flex-start;
+            background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+            box-shadow: 0 1px 2px rgba(54,44,36,.04), 0 6px 16px rgba(54,44,36,.05); }
+    .tab-btn { appearance: none; border: none; background: transparent; color: var(--ink-soft);
+               font: inherit; font-size: .95rem; font-weight: 700; padding: .5rem 1.15rem;
+               border-radius: 999px; cursor: pointer; transition: background .22s ease, color .22s ease; }
+    .tab-btn:hover { background: var(--accent-soft); color: var(--accent-strong); }
+    .tab-btn.active { background: var(--accent); color: #fff; }
+
+    /* ── 标签面板（容器固定高度，切换不跳动） ── */
+    .panel-host { min-height: 60vh; }
+    .panel { display: none; }
+    .panel.show { display: flex; flex-direction: column; gap: 16px; animation: fadeUp .35s cubic-bezier(.16,1,.3,1); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── 目录列表 ── */
+    .toc-stat { color: var(--ink-soft); font-size: .9rem; }
+    .toc-note { color: var(--accent-strong); background: var(--accent-soft); display: inline-block;
+                font-size: .82rem; padding: .3rem .8rem; border-radius: 999px; align-self: flex-start; }
+    .entry-list { display: flex; flex-direction: column; gap: 12px; }
+    .entry { overflow: hidden; cursor: pointer; }
+    .entry-head { display: flex; align-items: center; gap: 10px; padding: 14px 18px; }
+    .entry-date { font-weight: 700; font-size: .95rem; color: var(--ink); white-space: nowrap; }
+    .entry-weather { font-size: .85rem; background: var(--accent-soft); color: var(--accent-strong);
+                     padding: .15rem .6rem; border-radius: 999px; white-space: nowrap; }
+    .entry-sum { color: var(--ink-soft); font-size: .9rem; flex: 1; overflow: hidden;
+                 text-overflow: ellipsis; white-space: nowrap; }
+    .badge-lock { font-size: .8rem; color: var(--ink-dim); background: var(--line);
+                  padding: .15rem .55rem; border-radius: 999px; white-space: nowrap; }
+    .entry-chev { color: var(--ink-dim); font-size: .75rem; transition: transform .25s ease; }
+    .entry.open .entry-chev { transform: rotate(180deg); }
+    .entry-body { max-height: 0; opacity: 0; transition: max-height .3s ease, opacity .25s ease; border-top: 0 solid var(--line); }
+    .entry.open .entry-body { max-height: 600px; opacity: 1; border-top: 1px solid var(--line); }
+    .entry-body-inner { padding: 14px 18px 18px; color: var(--ink); font-size: .95rem; line-height: 1.7;
+                        white-space: pre-wrap; word-break: break-word; }
+    .entry-locked-notice { color: var(--ink-soft); font-style: italic; }
+    .toc-empty { color: var(--ink-dim); text-align: center; padding: 40px 0; }
+
     /* ── 修改密码弹窗 ── */
     .overlay { position: fixed; inset: 0; background: rgba(54,44,36,.38); display: flex; align-items: center;
                justify-content: center; padding: 16px; z-index: 50; }
@@ -197,34 +238,54 @@
     <!-- 日记本 -->
     <div class="hidden" id="screen-app">
       <div class="wrap" style="gap:16px;">
-        <div class="card-base">
-          <div class="bar">
-            <button class="date-pill" id="date-pill" type="button"><span id="date-label">—</span><span class="chev">▾</span></button>
-            <span class="weather-label">天气：</span>
-            <select class="weather-sel" id="weather-sel" title="天气"></select>
-            <input type="text" id="weather-custom" class="weather-custom hidden" maxlength="20" placeholder="自定义天气" />
-            <span class="spacer"></span>
-            <div class="search">
-              <span class="icon">🔍</span>
-              <input type="text" id="search" placeholder="搜索日记…" autocomplete="off" />
-              <div class="card-base search-results hidden" id="search-results"></div>
-            </div>
+        <header class="page-head">
+          <h1 id="diary-title">我的日记</h1>
+          <div class="tabs" role="tablist">
+            <button class="tab-btn" data-tab="toc" type="button" role="tab" aria-selected="false">📖 目录</button>
+            <button class="tab-btn active" data-tab="write" type="button" role="tab" aria-selected="true">✍️ 写日记</button>
           </div>
-          <div class="cal hidden" id="cal"></div>
-        </div>
+        </header>
 
-        <div class="card-base editor">
-          <div class="ed-head">
-            <h2 id="editor-title">今天的日记</h2>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span class="saved" id="saved">已保存 ✓</span>
-              <button class="mini" id="set-pw-btn" type="button">设置密码</button>
-              <button class="mini hidden" id="change-pw-btn" type="button">修改密码</button>
-              <button class="mini hidden" id="remove-pw-btn" type="button">取消密码</button>
-              <button class="mini hidden" id="lock-btn" type="button">🔒 锁定</button>
+        <div class="panel-host">
+          <!-- 目录面板 -->
+          <section class="panel" id="panel-toc" role="tabpanel">
+            <p class="toc-stat" id="tocStat">共 0 篇日记</p>
+            <p class="toc-note" id="tocNote" style="display:none"></p>
+            <div class="entry-list" id="entryList"></div>
+          </section>
+
+          <!-- 写日记面板 -->
+          <section class="panel show" id="panel-write" role="tabpanel">
+            <div class="card-base">
+              <div class="bar">
+                <button class="date-pill" id="date-pill" type="button"><span id="date-label">—</span><span class="chev">▾</span></button>
+                <span class="weather-label">天气：</span>
+                <select class="weather-sel" id="weather-sel" title="天气"></select>
+                <input type="text" id="weather-custom" class="weather-custom hidden" maxlength="20" placeholder="自定义天气" />
+                <span class="spacer"></span>
+                <div class="search">
+                  <span class="icon">🔍</span>
+                  <input type="text" id="search" placeholder="搜索日记…" autocomplete="off" />
+                  <div class="card-base search-results hidden" id="search-results"></div>
+                </div>
+              </div>
+              <div class="cal hidden" id="cal"></div>
             </div>
-          </div>
-          <textarea id="entry" placeholder="写下今天的心情、故事或小秘密…只有你能看到 😊"></textarea>
+
+            <div class="card-base editor">
+              <div class="ed-head">
+                <h2 id="editor-title">今天的日记</h2>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="saved" id="saved">已保存 ✓</span>
+                  <button class="mini" id="set-pw-btn" type="button">设置密码</button>
+                  <button class="mini hidden" id="change-pw-btn" type="button">修改密码</button>
+                  <button class="mini hidden" id="remove-pw-btn" type="button">取消密码</button>
+                  <button class="mini hidden" id="lock-btn" type="button">🔒 锁定</button>
+                </div>
+              </div>
+              <textarea id="entry" placeholder="写下今天的心情、故事或小秘密…只有你能看到 😊"></textarea>
+            </div>
+          </section>
         </div>
       </div>
     </div>
@@ -694,6 +755,112 @@
     document.querySelectorAll('input[inputmode=numeric]').forEach(inp => {
       inp.addEventListener('input', () => { inp.value = inp.value.replace(/\D/g, '').slice(0, 6); });
     });
+
+    /* ────────── 标签切换：目录 / 写日记（默认写日记） ────────── */
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const panels = { toc: $('panel-toc'), write: $('panel-write') };
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.tab;
+        tabBtns.forEach(b => {
+          const active = b === btn;
+          b.classList.toggle('active', active);
+          b.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        Object.keys(panels).forEach(k => panels[k].classList.toggle('show', k === key));
+        if (key === 'toc') renderTOC(); // 每次进目录都刷新，反映最新保存
+      });
+    });
+
+    /* ────────── 目录：读取真实 localStorage 条目并渲染（加密项只显示锁，不解密） ────────── */
+    const SUMMARY_LEN = 40;
+    function firstLineSummary(text) {
+      let s = String(text || '').replace(/\r/g, '');
+      let line = s.split('\n')[0].trim();
+      if (!line) line = s.trim();
+      if (line.length > SUMMARY_LEN) line = line.slice(0, SUMMARY_LEN) + '…';
+      return line || '（空白日记）';
+    }
+    // 解析存储条目（明文对象 / 纯文本 / 加密结构），不抛异常
+    function parseStoredEntry(dateStr, rawValue) {
+      const entry = { date: dateStr, weather: '', text: '', encrypted: false };
+      let parsed = null, ok = false;
+      try { parsed = JSON.parse(rawValue); ok = true; } catch (_) { ok = false; }
+      if (!ok) { entry.text = String(rawValue); return entry; }
+      if (typeof parsed === 'string') { entry.text = parsed; return entry; }
+      if (parsed && typeof parsed === 'object') {
+        if (isEncryptedStruct(parsed)) { entry.encrypted = true; entry.weather = parsed.weather || '🔒'; return entry; }
+        entry.text = parsed.text != null ? String(parsed.text) : '';
+        entry.weather = parsed.weather != null ? String(parsed.weather) : '';
+        return entry;
+      }
+      entry.text = rawValue == null ? '' : String(rawValue);
+      return entry;
+    }
+    function loadFromStorage() {
+      const out = [];
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (!key || key.indexOf(ENTRY_PREFIX) !== 0 || key === META_KEY) continue;
+          const ds = key.slice(ENTRY_PREFIX.length);
+          let raw; try { raw = localStorage.getItem(key); } catch (_) { raw = null; }
+          if (raw == null) continue;
+          out.push(parseStoredEntry(ds, raw));
+        }
+      } catch (_) { return []; }
+      return out;
+    }
+    const tocStat = $('tocStat'), tocNote = $('tocNote'), entryList = $('entryList');
+    function renderTOC() {
+      const entries = loadFromStorage();
+      entries.sort((a, b) => (a.date < b.date ? 1 : (a.date > b.date ? -1 : 0)));
+      if (!entries.length) {
+        tocStat.textContent = '还没有日记';
+        tocNote.style.display = 'inline-block';
+        tocNote.textContent = '还没有日记，去写第一篇吧～';
+        entryList.innerHTML = '<div class="toc-empty">还没有日记，去「写日记」记录一篇吧 ✍️</div>';
+        return;
+      }
+      tocStat.textContent = '共 ' + entries.length + ' 篇日记';
+      tocNote.style.display = 'none';
+      entryList.innerHTML = entries.map((e, idx) => {
+        const dateLabel = fmt(e.date);
+        const weatherTag = (e.weather && e.weather !== '无')
+          ? '<span class="entry-weather">' + escapeHtml(e.weather) + '</span>' : '';
+        let summaryHtml, bodyHtml;
+        if (e.encrypted) {
+          summaryHtml = '<span class="badge-lock">🔒 已加密</span>';
+          bodyHtml = '<div class="entry-locked-notice">🔒 已加密（请回「写日记」解锁后查看）</div>';
+        } else {
+          summaryHtml = '<span class="entry-sum">' + escapeHtml(firstLineSummary(e.text)) + '</span>';
+          bodyHtml = escapeHtml(e.text || '（空白日记）');
+        }
+        return '<article class="entry card-base" data-idx="' + idx + '">' +
+            '<div class="entry-head">' +
+              '<span class="entry-date">' + escapeHtml(dateLabel) + '</span>' +
+              weatherTag + summaryHtml +
+              '<span class="entry-chev">▾</span>' +
+            '</div>' +
+            '<div class="entry-body"><div class="entry-body-inner">' + bodyHtml + '</div></div>' +
+          '</article>';
+      }).join('');
+    }
+    entryList.addEventListener('click', e => {
+      const art = e.target.closest('.entry');
+      if (art) art.classList.toggle('open');
+    });
+
+    /* ────────── 昵称握手：标题显示「{昵称}的日记」（缺省「我的日记」） ────────── */
+    const diaryTitleEl = $('diary-title');
+    function setDiaryTitle(nick) {
+      const n = (typeof nick === 'string') ? nick.trim() : '';
+      diaryTitleEl.textContent = n ? (n + '的日记') : '我的日记';
+    }
+    window.addEventListener('message', e => {
+      if (e.data && e.data.type === 'diary-config' && typeof e.data.nickname === 'string') setDiaryTitle(e.data.nickname);
+    });
+    try { if (window.parent && window.parent !== window) window.parent.postMessage({ type: 'diary-ready' }, '*'); } catch (_) {}
 
     bootScreen();
   </script>

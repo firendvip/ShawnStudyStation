@@ -813,7 +813,12 @@
         </div>
         <div class="cl-list">
           <div class="cl-item latest">
-            <div class="cl-ver-row"><span class="cl-ver">v1.51.0</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-24</span></div>
+            <div class="cl-ver-row"><span class="cl-ver">v1.52.0</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-24</span></div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>日记分「目录」「写日记」两个标签，目录能按日期回看以前写的日记。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>日记标题改成「你的昵称的日记」，切换标签时页面不再晃动。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.51.0</span><span class="cl-date">2026-06-24</span></div>
             <div class="cl-line"><span class="cl-tag opt">优化</span>转盘的标题换成清新的薄荷青柠渐变色，文字像海浪一样一个字一个字轻轻起伏，更活泼好看。</div>
             <div class="cl-line"><span class="cl-tag opt">优化</span>转盘的「获奖记录」和「设置」按钮换成更清晰好看的小图标，鼠标放上去会轻轻反馈。</div>
           </div>
@@ -1533,6 +1538,20 @@
       postRetroConfig();
     });
 
+    /* 日记昵称下发:子页面就绪后回传当前昵称,标题显示「{昵称}的日记」。 */
+    function postDiaryConfig() {
+      const df = document.getElementById('frame-diary');
+      if (df && df.contentWindow) {
+        try { df.contentWindow.postMessage({ type: 'diary-config', nickname: (userSettings.nickname || '') }, '*'); } catch (_) {}
+      }
+    }
+    window.addEventListener('message', e => {
+      if (!e.data || e.data.type !== 'diary-ready') return;
+      const df = document.getElementById('frame-diary');
+      if (!df || e.source !== df.contentWindow) return;
+      postDiaryConfig();
+    });
+
     /* 单词小测昵称下发:子页面就绪后回传当前昵称,标题显示「{昵称}单词小测」。 */
     function postWordquizConfig() {
       const wf = document.getElementById('frame-wordquiz');
@@ -1685,6 +1704,7 @@
         postPinpinConfig();
         postRetroConfig();
         postWordquizConfig();
+        postDiaryConfig();
         document.getElementById('settings-saved').classList.add('visible');
         closeSettings();
       } catch (e) { showError(errEl, e.message); }
