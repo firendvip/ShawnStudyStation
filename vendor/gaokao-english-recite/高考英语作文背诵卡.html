@@ -76,6 +76,7 @@ body{
 .dd-panel{position:absolute;z-index:60;top:calc(100% + .35rem);left:0;width:min(360px,86vw);
   background:var(--color-surface);border:1px solid var(--color-line);border-radius:var(--radius-md);
   box-shadow:var(--shadow-modal);padding:.55rem;display:flex;flex-direction:column;max-height:min(60vh,420px);}
+.dd-panel[hidden]{display:none;}
 .dd-search-wrap{flex:0 0 auto;margin-bottom:.45rem;}
 .dd-search{width:100%;font-family:inherit;font-size:.92rem;color:var(--color-ink);background:var(--color-paper);
   border:1.5px solid var(--color-line-strong);border-radius:var(--radius-sm);padding:.5rem .7rem;}
@@ -406,6 +407,7 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   const LEVELS=['小学','初中','高中','大学'];
   let items=[];                // unified dropdown list (built-in + remote)
   let selectedKey=null;        // currently-selected item key
+  const LAST_VIEW_KEY='composition_last_view';
 
   // dropdown DOM
   const essayDD=document.getElementById('essayDD');
@@ -584,6 +586,7 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
     const it=getItem(key);
     if(!it){ selectedKey=null; essayTriggerLabel.textContent='请选择文章'; return; }
     selectedKey=key;
+    try{ localStorage.setItem(LAST_VIEW_KEY, key); }catch(_){}
     essayTriggerLabel.textContent=it.level+' · '+(it.title||'未命名');
     if(doRender!==false) render(it.essay||{}, it.prompt||'');
     updateArtDelete();
@@ -699,6 +702,13 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
     else { render({},''); essayTriggerLabel.textContent='请选择文章'; }
   }
 
+  function selectLastOrFirst(){
+    let last=null;
+    try{ last=localStorage.getItem(LAST_VIEW_KEY); }catch(_){}
+    if(last && getItem(last)){ selectItem(last); return; }
+    selectFirst();
+  }
+
   // ---------- upload modal ----------
   function openModal(){
     if(!authToken){ showToast('请先登录后使用'); return; }
@@ -755,7 +765,7 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   // ---------- auth state ----------
   function applyAuthState(){
     const loggedIn=!!authToken;
-    btnOpenUpload.disabled=!loggedIn;
+    btnOpenUpload.disabled=false;
     if(!loggedIn){
       // drop remote data on logout; keep only built-in
       remoteItems=[];
@@ -778,7 +788,10 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
         level:normLevel(a.level), essay:a.essay||{}, builtin:false, isMine:a.isMine===true
       }));
       buildItems();
-      if(!getItem(selectedKey)) selectFirst();
+      let lastKey=null;
+      try{ lastKey=localStorage.getItem(LAST_VIEW_KEY); }catch(_){}
+      if(lastKey && getItem(lastKey) && selectedKey!==lastKey){ selectItem(lastKey); }
+      else if(!getItem(selectedKey)){ selectLastOrFirst(); }
       rebuildDropdown(); updateArtDelete();
     }catch(_){}
   }
@@ -1028,8 +1041,9 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
     } else if(e.key==='Escape'){ closePanel(); if(!upModal.hidden) closeModal(); }
   });
 
+  buildItems();
   applyAuthState();
-  selectFirst();
+  if(!getItem(selectedKey)) selectLastOrFirst();
   try{ window.parent.postMessage({type:'composition-ready'},'*'); }catch(_){}
 })();
 </script>
