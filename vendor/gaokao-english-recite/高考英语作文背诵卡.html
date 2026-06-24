@@ -114,6 +114,7 @@ body{
 /* ---------- Upload modal ---------- */
 .modal-overlay{position:fixed;inset:0;z-index:1000;background:var(--color-overlay,rgba(54,44,36,.4));
   display:flex;align-items:center;justify-content:center;padding:1rem;}
+.modal-overlay[hidden]{display:none;}
 .modal-card{width:min(520px,100%);max-height:90vh;overflow-y:auto;background:var(--color-surface);
   border-radius:var(--radius-lg);box-shadow:var(--shadow-modal);display:flex;flex-direction:column;}
 .modal-head{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.3rem .6rem;}
