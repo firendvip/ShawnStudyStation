@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>小善背单词</title>
+    <title>单词小测</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
@@ -60,32 +60,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 8px;
+            min-height: 40px;
+            margin-bottom: 4px;
             position: relative;
-        }
-
-        .title-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .title-char {
-            font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
-            font-size: 3.2rem;
-            font-weight: 700;
-            background: linear-gradient(90deg, #ffffff, #eef6ee);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            color: transparent;
-            position: relative;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            padding: 0 1px;
-            transition: transform 0.3s ease;
         }
 
         /* 承接文案提示条（设置弹窗内的低调说明） */
@@ -101,21 +78,6 @@
             letter-spacing: 0.01em;
         }
         
-        .title-container:hover .title-char {
-            animation: floatChar 0.8s ease-in-out infinite alternate;
-        }
-        
-        .title-container:hover .title-char:nth-child(1) { animation-delay: 0s; }
-        .title-container:hover .title-char:nth-child(2) { animation-delay: 0.1s; }
-        .title-container:hover .title-char:nth-child(3) { animation-delay: 0.2s; }
-        .title-container:hover .title-char:nth-child(4) { animation-delay: 0.3s; }
-        .title-container:hover .title-char:nth-child(5) { animation-delay: 0.4s; }
-        
-        @keyframes floatChar {
-            from { transform: translateY(0); }
-            to { transform: translateY(-5px); }
-        }
-
         .settings-icon {
             position: absolute;
             right: 14px;
@@ -805,10 +767,6 @@
         }
         
         @media (max-width: 768px) {
-            .title-char {
-                font-size: 2.8rem;
-            }
-            
             .controls-container {
                 flex-direction: column;
             }
@@ -893,18 +851,11 @@
     <div class="container">
         <header>
             <div class="header-top">
-                <div class="title-container" id="title-container">
-                    <span class="title-char">小</span>
-                    <span class="title-char">善</span>
-                    <span class="title-char">背</span>
-                    <span class="title-char">单</span>
-                    <span class="title-char">词</span>
-                </div>
                 <div class="settings-icon" id="settings-btn">
                     <i class="fas fa-cog"></i>
                 </div>
             </div>
-            
+
             <div class="controls-container">
                 <div class="tabs-container">
                     <button class="tab-btn active" data-tab="english">English</button>
@@ -1072,7 +1023,6 @@
         let columnsCount = 6;
         let reviewWords = [];
         let selectedCell = null;
-        let appTitle = '单词小测';
 
         // DOM元素
         const groupSelect = document.getElementById('group-select');
@@ -1102,7 +1052,6 @@
         const columnsCountInput = document.getElementById('columns-count');
         const prevGroupBtn = document.getElementById('prev-group-btn');
         const nextGroupBtn = document.getElementById('next-group-btn');
-        const titleContainer = document.getElementById('title-container');
 
         // 单词详情弹窗元素
         const wordDetailModal = document.getElementById('word-detail-modal');
@@ -1170,13 +1119,6 @@
             // 初始化时尝试用「单词速刷」共享词表覆盖(若存在)，不存在则保留上面加载的数据
             syncFromShared(false);
 
-            // 加载应用标题
-            const savedTitle = localStorage.getItem('appTitle');
-            if (savedTitle) {
-                appTitle = savedTitle;
-                updateTitleDisplay();
-            }
-            
             // 关键修复：每次打开时都要读取设置
             loadSettings();
             
@@ -1255,30 +1197,6 @@
             window.addEventListener('beforeunload', saveCurrentSettings);
         }
 
-        // 更新标题显示
-        function updateTitleDisplay() {
-            const titleChars = titleContainer.querySelectorAll('.title-char');
-            const chars = appTitle.split('');
-            
-            if (titleChars.length !== chars.length) {
-                titleContainer.innerHTML = '';
-                chars.forEach(char => {
-                    const span = document.createElement('span');
-                    span.className = 'title-char';
-                    span.textContent = char;
-                    titleContainer.appendChild(span);
-                });
-            } else {
-                titleChars.forEach((span, index) => {
-                    if (chars[index]) {
-                        span.textContent = chars[index];
-                    }
-                });
-            }
-            
-            document.title = appTitle + ' - 单词学习工具';
-        }
-
         // 加载设置
         function loadSettings() {
             // 分组大小不再由本页设置:跟随「单词速刷」共享值,持久化仅作回退,默认 10
@@ -1312,7 +1230,6 @@
             localStorage.setItem('columnsCount', columnsCount.toString());
             localStorage.setItem('currentTab', currentTab);
             localStorage.setItem('currentGroupIndex', currentGroupIndex.toString());
-            localStorage.setItem('appTitle', appTitle);
             localStorage.setItem('reviewWords', JSON.stringify(reviewWords));
             localStorage.setItem('wordData', JSON.stringify({
                 words: allWords,
@@ -1584,14 +1501,6 @@
             closeWordDetail.addEventListener('click', () => wordDetailModal.style.display = 'none');
             wordDetailModal.addEventListener('click', (e) => { if (e.target === wordDetailModal) wordDetailModal.style.display = 'none'; });
         }
-
-        // ===== 接收主站下发的昵称：标题 = {昵称}单词小测（昵称空时为「单词小测」）=====
-        window.addEventListener('message', e => {
-            if (e.data && e.data.type === 'wordquiz-config' && typeof e.data.nickname === 'string') {
-                appTitle = (e.data.nickname ? e.data.nickname : '') + '单词小测';
-                updateTitleDisplay();
-            }
-        });
 
         // 监听共享词表变化(跨标签页/跨 iframe 实时同步)
         window.addEventListener('storage', e => { if (e.key === '__shared_wordpack') syncFromShared(true); });
