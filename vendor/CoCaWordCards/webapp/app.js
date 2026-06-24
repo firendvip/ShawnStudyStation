@@ -448,6 +448,7 @@ function writeSharedWordpack() {
     if (!pack || !Array.isArray(pack.words)) return;
     localStorage.setItem('__shared_wordpack', JSON.stringify({
       name: pack.name,
+      groupSize: gsize(),
       words: pack.words.map((w) => ({ en: w.en, zh: w.zh, uk: w.uk, us: w.us })),
     }));
   } catch (_) {}
@@ -731,6 +732,7 @@ function bindEvents() {
     if (isNaN(n) || n < 1) n = 10;
     settings.groupSize = n; e.target.value = n; saveSettings();
     goTo(rangeLo()); syncDrawer();   // re-group from the first word of the range
+    writeSharedWordpack();           // 分组大小同步给「单词小测」
   });
 
   $("downloadSampleBtn").addEventListener("click", downloadSample);

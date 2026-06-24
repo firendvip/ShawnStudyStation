@@ -7,71 +7,96 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
+        /* ===== 设计令牌：对齐「单词速刷」(CoCaWordCards) ===== */
+        :root {
+            --bg-start: #F4F7F3;
+            --bg-mid:   #ECF2EA;
+            --bg-end:   #DFE8DC;
+            --surface:  #ffffff;
+            --text-primary:   #20302a;
+            --text-secondary: #5a6b60;
+            --border:   #cfdcc9;
+            --accent:   #5B9E5B;
+            --accent-strong: #4a8a4a;
+            --radius:   18px;
+            --shadow-card: 0 12px 30px rgba(20, 40, 30, 0.08), 0 4px 20px rgba(20, 40, 30, 0.04);
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
+            font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
         }
-        
+
         body {
-            background: linear-gradient(135deg, #fcfaf4, #f6f1e9, #efe8dd);
+            background: linear-gradient(135deg, var(--bg-start), var(--bg-mid), var(--bg-end));
             min-height: 100vh;
-            padding: 20px;
+            padding: 14px 18px;
         }
-        
+
         .container {
             width: 100%;
             max-width: 1400px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 24px;
-            box-shadow: 
-                0 12px 30px rgba(0, 0, 0, 0.08),
-                0 4px 20px rgba(0, 0, 0, 0.03);
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-card);
             overflow: hidden;
             position: relative;
-            border: 1px solid rgba(229, 225, 218, 0.7);
-            margin-top: 20px;
+            border: 1px solid var(--border);
+            margin-top: 0;
         }
-        
+
         header {
-            background: linear-gradient(90deg, #359658, #007c3a);
+            background: linear-gradient(90deg, var(--accent), var(--accent-strong));
             color: white;
             text-align: center;
-            padding: 20px;
+            padding: 10px 16px 12px;
             position: relative;
         }
-        
+
         .header-top {
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             position: relative;
         }
-        
+
         .title-container {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 14px;
+            gap: 6px;
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        
+
         .title-char {
-            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
-            font-size: 2.8rem;
-            font-weight: bold;
-            background: linear-gradient(90deg, #ffffff, #f6f1e9);
+            font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #ffffff, #eef6ee);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             color: transparent;
             position: relative;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 0 2px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            padding: 0 1px;
             transition: transform 0.3s ease;
+        }
+
+        /* 承接文案提示条 */
+        .sync-tip {
+            text-align: center;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+            border-bottom: 1px solid var(--border);
+            padding: 7px 16px;
+            letter-spacing: 0.01em;
         }
         
         .title-container:hover .title-char {
@@ -86,19 +111,19 @@
         
         @keyframes floatChar {
             from { transform: translateY(0); }
-            to { transform: translateY(-8px); }
+            to { transform: translateY(-5px); }
         }
-        
+
         .settings-icon {
             position: absolute;
-            right: 20px;
+            right: 14px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 1.8rem;
+            font-size: 1.3rem;
             cursor: pointer;
             color: rgba(255, 255, 255, 0.9);
             transition: all 0.3s;
-            padding: 8px;
+            padding: 6px;
         }
         
         .settings-icon:hover {
@@ -110,33 +135,33 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
+            padding: 4px 0 0;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 12px;
         }
-        
+
         .tabs-container {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
         }
-        
+
         .tab-btn {
-            padding: 10px 25px;
-            border-radius: 15px;
+            padding: 7px 18px;
+            border-radius: 999px;
             border: none;
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.22);
             color: white;
-            font-size: 1.2rem;
-            font-weight: 500;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
         }
-        
+
         .tab-btn.active {
             background: white;
-            color: #359658;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            color: var(--accent);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.12);
         }
         
         .tab-btn:hover {
@@ -260,15 +285,15 @@
         }
         
         .words-grid .word-cell {
-            background: #faf7f1;
+            background: color-mix(in srgb, var(--accent) 5%, var(--surface));
             padding: 12px;
             text-align: center;
             border-radius: 14px;
             font-weight: 500;
-            color: #362c24;
-            box-shadow: 
-                0 3px 10px rgba(0,0,0,0.05),
-                0 0 0 1px rgba(53, 150, 88, 0.1);
+            color: var(--text-primary);
+            box-shadow:
+                0 3px 10px rgba(20,40,30,0.05),
+                0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent);
             transition: all 0.3s;
             position: relative;
             overflow: hidden;
@@ -281,18 +306,18 @@
             min-height: 80px;
             height: auto;
         }
-        
+
         .words-grid .word-cell:hover {
-            box-shadow: 
-                0 5px 15px rgba(53, 150, 88, 0.2),
-                0 0 0 1px rgba(53, 150, 88, 0.3);
+            box-shadow:
+                0 5px 15px color-mix(in srgb, var(--accent) 20%, transparent),
+                0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
             transform: translateY(-3px);
         }
-        
+
         .words-grid .word-cell.memorized {
-            background: linear-gradient(135deg, #2f8f52, #007c3a);
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
             color: white;
-            border: 2px solid #2f8f52;
+            border: 2px solid var(--accent);
         }
         
         /* 修改：选中卡片样式（蓝色边框，无底色） */
@@ -562,16 +587,16 @@
         }
         
         .modal-header {
-            background: linear-gradient(90deg, #359658, #007c3a);
-            padding: 20px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+            padding: 18px 20px;
             color: white;
             text-align: center;
             position: relative;
         }
-        
+
         .modal-title {
-            font-size: 1.8rem;
-            font-weight: 600;
+            font-size: 1.5rem;
+            font-weight: 700;
         }
         
         .close-modal {
@@ -611,27 +636,68 @@
         .setting-group label {
             display: block;
             margin-bottom: 10px;
-            font-size: 1.2rem;
-            font-weight: 500;
-            color: #362c24;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
         }
-        
+
+        .setting-group label b {
+            color: var(--accent);
+            font-variant-numeric: tabular-nums;
+            margin-left: 4px;
+        }
+
         .setting-group input, .setting-group select {
             padding: 10px 15px;
             border-radius: 12px;
-            border: 1px solid #e5e1da;
-            background: #faf7f1;
-            font-size: 1.1rem;
+            border: 1px solid var(--border);
+            background: color-mix(in srgb, var(--accent) 4%, var(--surface));
+            font-size: 1.05rem;
             width: 100%;
+            color: var(--text-primary);
         }
-        
+
         .setting-group input[type="file"] {
             padding: 8px;
         }
-        
+
         .setting-group input[type="number"] {
             width: 120px;
             text-align: center;
+        }
+
+        /* ===== 字号滑块：对齐「单词速刷」range 样式 ===== */
+        .setting-group input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            padding: 0;
+            border: none;
+            border-radius: 999px;
+            background: var(--border);
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+        .setting-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(20,40,30,0.25);
+            cursor: pointer;
+        }
+        .setting-group input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid #fff;
+            box-shadow: 0 2px 6px rgba(20,40,30,0.25);
+            cursor: pointer;
         }
         
         .upload-group {
@@ -738,7 +804,7 @@
         
         @media (max-width: 768px) {
             .title-char {
-                font-size: 2.2rem;
+                font-size: 1.4rem;
             }
             
             .controls-container {
@@ -848,7 +914,9 @@
                 </div>
             </div>
         </header>
-        
+
+        <div class="sync-tip">词表已自动同步自「单词速刷」，继续来测一测吧 💚</div>
+
         <div class="main-content">
             <div class="words-container active" id="english-container">
                 <div class="words-grid" id="english-grid"></div>
@@ -906,20 +974,15 @@
             <div class="modal-body">
                 <div class="settings-row">
                     <div class="setting-group">
-                        <label for="modal-group-size">分组大小:</label>
-                        <input type="number" id="modal-group-size" min="10" max="1000" value="20">
+                        <label for="english-font-size">英文字体: <b id="english-font-val">2.0</b></label>
+                        <input type="range" id="english-font-size" min="1" max="10" step="0.1" value="2">
                     </div>
-                    
+
                     <div class="setting-group">
-                        <label for="english-font-size">英文字体:</label>
-                        <input type="number" id="english-font-size" min="1" max="10" step="0.1" value="2">
+                        <label for="chinese-font-size">中文字体: <b id="chinese-font-val">2.0</b></label>
+                        <input type="range" id="chinese-font-size" min="1" max="10" step="0.1" value="2">
                     </div>
-                    
-                    <div class="setting-group">
-                        <label for="chinese-font-size">中文字体:</label>
-                        <input type="number" id="chinese-font-size" min="1" max="10" step="0.1" value="2">
-                    </div>
-                    
+
                     <div class="setting-group">
                         <label for="columns-count">表格列数:</label>
                         <input type="number" id="columns-count" min="1" max="20" step="1" value="6">
@@ -989,7 +1052,6 @@
         const settingsBtn = document.getElementById('settings-btn');
         const modal = document.getElementById('settings-modal');
         const closeModal = document.getElementById('close-modal');
-        const modalGroupSize = document.getElementById('modal-group-size');
         const modalSaveBtn = document.getElementById('modal-save');
         const modalTotalWords = document.getElementById('modal-total-words');
         const modalTotalGroups = document.getElementById('modal-total-groups');
@@ -999,6 +1061,8 @@
         const selectAllBtn = document.getElementById('select-all-btn');
         const englishFontSizeInput = document.getElementById('english-font-size');
         const chineseFontSizeInput = document.getElementById('chinese-font-size');
+        const englishFontVal = document.getElementById('english-font-val');
+        const chineseFontVal = document.getElementById('chinese-font-val');
         const columnsCountInput = document.getElementById('columns-count');
         const prevGroupBtn = document.getElementById('prev-group-btn');
         const nextGroupBtn = document.getElementById('next-group-btn');
@@ -1026,6 +1090,9 @@
                 Array.prototype.push.apply(allWords, newWords);
                 Array.prototype.push.apply(allTranslations, newTranslations);
                 Array.prototype.push.apply(allPhonetics, newPhonetics);
+                // 分组大小跟随「单词速刷」:读共享 groupSize,无则默认 10
+                const sharedGroupSize = parseInt(p.groupSize, 10);
+                groupSize = (!isNaN(sharedGroupSize) && sharedGroupSize >= 1) ? sharedGroupSize : 10;
                 saveCurrentSettings();
                 if (refresh) {
                     createGroups();
@@ -1178,18 +1245,21 @@
 
         // 加载设置
         function loadSettings() {
+            // 分组大小不再由本页设置:跟随「单词速刷」共享值,持久化仅作回退,默认 10
             const savedGroupSize = localStorage.getItem('wordGroupSize');
             if (savedGroupSize) groupSize = parseInt(savedGroupSize);
-            modalGroupSize.value = groupSize;
-            
+            if (!groupSize || groupSize < 1) groupSize = 10;
+
             const savedEnglishFontSize = localStorage.getItem('englishFontSize');
             if (savedEnglishFontSize) englishFontSize = parseFloat(savedEnglishFontSize);
             englishFontSizeInput.value = englishFontSize;
-            
+            if (englishFontVal) englishFontVal.textContent = englishFontSize.toFixed(1);
+
             const savedChineseFontSize = localStorage.getItem('chineseFontSize');
             if (savedChineseFontSize) chineseFontSize = parseFloat(savedChineseFontSize);
             chineseFontSizeInput.value = chineseFontSize;
-            
+            if (chineseFontVal) chineseFontVal.textContent = chineseFontSize.toFixed(1);
+
             const savedColumnsCount = localStorage.getItem('columnsCount');
             if (savedColumnsCount !== null && savedColumnsCount !== undefined) {
                 columnsCount = parseInt(savedColumnsCount);
@@ -1446,8 +1516,6 @@
             modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
             // 修改即实时保存(无「保存」按钮):每个设置项改动后自动应用
             function applySettingsLive() {
-                const newSize = parseInt(modalGroupSize.value);
-                if (newSize >= 10 && newSize <= 1000) groupSize = newSize;
                 const ef = parseFloat(englishFontSizeInput.value); if (!isNaN(ef)) englishFontSize = ef;
                 const cf = parseFloat(chineseFontSizeInput.value); if (!isNaN(cf)) chineseFontSize = cf;
                 const newCols = parseInt(columnsCountInput.value);
@@ -1457,9 +1525,16 @@
                 if (currentGroupIndex >= groupCount) currentGroupIndex = 0;
                 renderCurrentGroup();
             }
+            // 滑块拖动时实时更新字号数值显示(预览)
+            function updateFontLabels() {
+                if (englishFontVal) englishFontVal.textContent = (parseFloat(englishFontSizeInput.value) || 0).toFixed(1);
+                if (chineseFontVal) chineseFontVal.textContent = (parseFloat(chineseFontSizeInput.value) || 0).toFixed(1);
+            }
+            englishFontSizeInput.addEventListener('input', updateFontLabels);
+            chineseFontSizeInput.addEventListener('input', updateFontLabels);
             let wqSettingsTimer = null;
             function scheduleApplySettings() { if (wqSettingsTimer) clearTimeout(wqSettingsTimer); wqSettingsTimer = setTimeout(applySettingsLive, 300); }
-            [modalGroupSize, englishFontSizeInput, chineseFontSizeInput, columnsCountInput].forEach((el) => {
+            [englishFontSizeInput, chineseFontSizeInput, columnsCountInput].forEach((el) => {
                 el.addEventListener('input', scheduleApplySettings);
                 el.addEventListener('change', scheduleApplySettings);
             });
