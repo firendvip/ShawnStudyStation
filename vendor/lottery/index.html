@@ -64,22 +64,31 @@
             font-weight: 800;
             cursor: pointer;
             white-space: nowrap;
-            /* 薄荷青柠渐变缓慢横向流动，像水面波光 */
-            background: linear-gradient(90deg, #5fc7a0, #7fd86a, #5fb7c4, #5fc7a0);
+            /* 加深的薄荷青柠渐变，缓慢横向流动，像水面波光；
+               回退色为饱和薄荷绿，clip 不生效时仍清晰可见 */
+            color: #2fa37a;
+            /* 轻柔 halo 提升可读性，不破坏清新感 */
+            filter: drop-shadow(0 1px 1px rgba(47,154,122,0.25));
+        }
+
+        /* 根因：标题字形被拆进逐字 inline-block <span>，而 background-clip:text 原本只设在父级 h1 上；
+           inline-block 子 span 自成绘制上下文，父级的 clip 填充无法作用到子 span 的字形 ——
+           叠加父级 -webkit-text-fill-color:transparent 继承下来，导致整段标题透明、看不见。
+           修法：把渐变 + clip 直接设在每个 .wave-char 上（各字 clip 到自身字形），
+           所有字用同一条加深的薄荷青柠渐变（stops 一致）且 flow 动画同步，
+           视觉上是一条连贯波光，颜色完整、不发淡不断裂；span 仍只用 transform 做海浪上下位移。
+           clip 失效时回退到饱和薄荷绿 #2fa37a，仍清晰可见。 */
+        h1 .wave-char {
+            display: inline-block;
+            color: #2fa37a;
+            background: linear-gradient(90deg, #2fa37a, #4fb84a, #2f9aad, #2fa37a);
             background-size: 300% 100%;
             -webkit-background-clip: text;
             background-clip: text;
-            color: transparent;
             -webkit-text-fill-color: transparent;
-            animation: titleFlow 6s linear infinite;
-        }
-
-        /* 逐字海浪：每个字独立上下正弦浮动，相位由 animation-delay 递增形成行进波 */
-        h1 .wave-char {
-            display: inline-block;
-            animation: waveChar 2.4s ease-in-out infinite;
-            animation-delay: var(--wave-delay, 0s);
-            will-change: transform;
+            animation: waveChar 2.4s ease-in-out infinite, titleFlow 6s linear infinite;
+            animation-delay: var(--wave-delay, 0s), 0s;
+            will-change: transform, background-position;
         }
 
         @keyframes titleFlow {
