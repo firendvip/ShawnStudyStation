@@ -36,3 +36,7 @@ server/storage/
 # 自然拼读视频(本地软链到另一份副本的 video/video_trim,体积大且为绝对路径,不提交)
 vendor/phonics-flashcards/video
 vendor/phonics-flashcards/video_trim
+
+# koudaa 音频原始备份与预览(不提交)
+vendor/koudaa/audio/_orig_backup/
+vendor/koudaa/audio/_preview_1.5x/

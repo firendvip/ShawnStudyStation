@@ -639,7 +639,7 @@
         function playNextToken() {
             if (numQi >= numQueue.length) { audioEnabled = true; return; }
             numAudio.src = tokenSrc(numQueue[numQi]);
-            numAudio.playbackRate = 1.25;
+            numAudio.playbackRate = 1.0;
             numAudio.play().then(() => { audioEnabled = true; }).catch(() => speakFallback(numFallbackText));
         }
         numAudio.addEventListener('ended', () => { numQi++; playNextToken(); });
