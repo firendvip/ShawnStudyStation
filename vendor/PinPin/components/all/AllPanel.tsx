@@ -7,6 +7,7 @@ import { todayLocalDate, formatCN } from '@/lib/date'
 import type { EntryItem, PracticeDay } from '@/lib/types'
 import { PracticeBoard } from '@/components/practice/PracticeBoard'
 import { PasswordModal } from '@/components/common/PasswordModal'
+import { useDialog } from '@/components/common/DialogProvider'
 import styles from './AllPanel.module.css'
 
 type Props = {
@@ -36,6 +37,7 @@ export function AllPanel({ pinyinFontSize, answerFontSize, revealed = false }: P
   const [showPassword, setShowPassword] = useState(false)
   const [addText, setAddText] = useState('')
   const [recordDate, setRecordDate] = useState(todayLocalDate())
+  const { confirm, alert } = useDialog()
 
   const load = useCallback(async () => {
     setEntries(await fetchAllEntries())
@@ -60,7 +62,7 @@ export function AllPanel({ pinyinFontSize, answerFontSize, revealed = false }: P
       await updateEntry(id, text)
       await load()
     } catch (error) {
-      alert(error instanceof Error ? error.message : '修改失败')
+      await alert({ message: error instanceof Error ? error.message : '修改失败' })
     }
   }
 
@@ -72,9 +74,10 @@ export function AllPanel({ pinyinFontSize, answerFontSize, revealed = false }: P
   /** 删除某一天的全部字词(先弹确认框)。 */
   const handleDeleteDay = async (day: PracticeDay) => {
     if (day.entries.length === 0) return
-    const ok = window.confirm(
-      `确定删除「${dayLabel(day.date)}」这一天的全部 ${day.entries.length} 个字词吗?\n删除后无法恢复。`,
-    )
+    const ok = await confirm({
+      message: `确定删除「${dayLabel(day.date)}」这一天的全部 ${day.entries.length} 个字词吗?\n删除后无法恢复。`,
+      tone: 'danger',
+    })
     if (!ok) return
     try {
       for (const entry of day.entries) {
@@ -82,7 +85,7 @@ export function AllPanel({ pinyinFontSize, answerFontSize, revealed = false }: P
       }
       await load()
     } catch (error) {
-      alert(error instanceof Error ? error.message : '删除失败')
+      await alert({ message: error instanceof Error ? error.message : '删除失败' })
     }
   }
 
@@ -97,7 +100,7 @@ export function AllPanel({ pinyinFontSize, answerFontSize, revealed = false }: P
       setAddText('')
       await load()
     } catch (error) {
-      alert(error instanceof Error ? error.message : '添加失败')
+      await alert({ message: error instanceof Error ? error.message : '添加失败' })
     }
   }
 

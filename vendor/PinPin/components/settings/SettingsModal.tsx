@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { buildDefaultSettings, MAX_FONT_SIZE, MIN_FONT_SIZE, type AppSettings } from '@/lib/types'
+import { useDialog } from '@/components/common/DialogProvider'
 import styles from './SettingsModal.module.css'
 
 type Props = {
@@ -15,6 +16,7 @@ export function SettingsModal({ settings, onClose, onSave }: Props) {
   const [form, setForm] = useState<AppSettings>(settings)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const downOnOverlay = useRef(false)
+  const { confirm } = useDialog()
 
   const set = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) =>
     setForm((prev) => {
@@ -25,8 +27,12 @@ export function SettingsModal({ settings, onClose, onSave }: Props) {
       return next
     })
 
-  const handleRestoreDefaults = () => {
-    if (!window.confirm('确定要恢复默认设置吗?当前设置将被覆盖。')) {
+  const handleRestoreDefaults = async () => {
+    const ok = await confirm({
+      message: '确定要恢复默认设置吗?当前设置将被覆盖。',
+      tone: 'danger',
+    })
+    if (!ok) {
       return
     }
     const defaults = buildDefaultSettings(form.cycleStartDate)

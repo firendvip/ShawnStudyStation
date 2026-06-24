@@ -1,0 +1,9 @@
+/* 危险操作:确认按钮用主题红色,覆盖 Modal.module.css 的 .primary。 */
+.danger {
+  background: var(--color-danger);
+}
+
+.danger:hover {
+  background: var(--color-danger);
+  filter: brightness(0.92);
+}

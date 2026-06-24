@@ -6,6 +6,7 @@ import { addDays, formatCN, todayLocalDate } from '@/lib/date'
 import { evenlyDistribute, sequentialByRecordDay } from '@/lib/distribute'
 import { FitText } from '@/components/common/FitText'
 import { PasswordModal } from '@/components/common/PasswordModal'
+import { useDialog } from '@/components/common/DialogProvider'
 import type { AppSettings, EntryItem, PdfReportItem } from '@/lib/types'
 import styles from './PrintPanel.module.css'
 
@@ -51,6 +52,7 @@ export function PrintPanel({ settings }: Props) {
   const [reports, setReports] = useState<PdfReportItem[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { confirm } = useDialog()
   const [pwResolver, setPwResolver] = useState<((ok: boolean) => void) | null>(null)
   const verifyPassword = () => new Promise<boolean>((resolve) => setPwResolver(() => resolve))
   const requireAnswerPassword = async (report: PdfReportItem) =>
@@ -101,7 +103,7 @@ export function PrintPanel({ settings }: Props) {
 
   const handleDeleteReport = async (report: PdfReportItem) => {
     if (!(await requireAnswerPassword(report))) return
-    if (!window.confirm('确定删除这个 PDF 吗?删除后无法恢复。')) return
+    if (!(await confirm({ message: '确定删除这个 PDF 吗?删除后无法恢复。', tone: 'danger' }))) return
     try {
       await deleteReport(report.id)
       await loadReports()
