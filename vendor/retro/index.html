@@ -188,7 +188,7 @@
     }
     calEl.addEventListener('click', e => {
       const nav = e.target.closest('[data-nav]');
-      if (nav) { viewM += Number(nav.dataset.nav); if (viewM < 0) { viewM = 11; viewY--; } if (viewM > 11) { viewM = 0; viewY++; } renderCal(); return; }
+      if (nav) { viewM += Number(nav.dataset.nav); if (viewM < 0) { viewM = 11; viewY--; } if (viewM > 11) { viewM = 0; viewY++; } renderCal(); e.stopPropagation(); return; }
       const day = e.target.closest('[data-date]');
       if (day && !day.disabled) { selectDate(day.dataset.date); calEl.classList.add('hidden'); pill.classList.remove('open'); }
     });
@@ -226,7 +226,14 @@
       }, 350);
     }
     Object.values(fields).forEach(t => t.addEventListener('input', scheduleSave));
-    $('today-btn').addEventListener('click', () => selectDate(todayStr()));
+    $('today-btn').addEventListener('click', (e) => {
+      const ts = todayStr();
+      selectDate(ts);
+      const [y, m] = ts.split('-').map(Number);
+      viewY = y; viewM = m - 1;
+      renderCal();
+      e.stopPropagation();
+    });
 
     /* ── 搜索 ── */
     const searchInput = $('search'), searchResults = $('search-results');

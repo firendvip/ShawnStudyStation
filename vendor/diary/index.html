@@ -192,9 +192,11 @@
           <div class="ed-head">
             <h2 id="editor-title">今天的日记</h2>
             <div style="display:flex; align-items:center; gap:8px;">
-              <span class="saved" id="saved">已加密保存 ✓</span>
-              <button class="mini" id="change-pw-btn" type="button">修改密码</button>
-              <button class="mini" id="lock-btn" type="button">🔒 锁定</button>
+              <span class="saved" id="saved">已保存 ✓</span>
+              <button class="mini" id="set-pw-btn" type="button">设置密码</button>
+              <button class="mini hidden" id="change-pw-btn" type="button">修改密码</button>
+              <button class="mini hidden" id="remove-pw-btn" type="button">取消密码</button>
+              <button class="mini hidden" id="lock-btn" type="button">🔒 锁定</button>
             </div>
           </div>
           <textarea id="entry" placeholder="写下今天的心情、故事或小秘密…只有你能看到 😊"></textarea>
@@ -323,27 +325,39 @@
       for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(ENTRY_PREFIX)) set.add(k.slice(ENTRY_PREFIX.length)); }
       return set;
     }
-    async function loadEntry(dateStr) {
+    function isEncryptedStruct(p) { return p && typeof p === 'object' && typeof p.iv === 'string' && typeof p.data === 'string'; }
+    async function readEntry(dateStr) {
       const raw = localStorage.getItem(ENTRY_PREFIX + dateStr);
       if (!raw) return { text: '', weather: '无' };
-      try {
-        const dt = await decryptText(cryptoKey, JSON.parse(raw));
-        try { const o = JSON.parse(dt); if (o && typeof o === 'object' && 'text' in o) return { text: o.text || '', weather: o.weather || '无' }; } catch (_) {}
-        return { text: dt, weather: '无' };
-      } catch (e) { return { text: '', weather: '无' }; }
+      let parsed; try { parsed = JSON.parse(raw); } catch (_) { parsed = null; }
+      if (isEncryptedStruct(parsed)) {
+        if (!cryptoKey) { console.warn('日记已加密但当前未解锁，跳过：' + dateStr); return { text: '', weather: '无', _locked: true }; }
+        try {
+          const dt = await decryptText(cryptoKey, parsed);
+          try { const o = JSON.parse(dt); if (o && typeof o === 'object' && 'text' in o) return { text: o.text || '', weather: o.weather || '无' }; } catch (_) {}
+          return { text: dt, weather: '无' };
+        } catch (e) { console.warn('解密失败，跳过：' + dateStr); return { text: '', weather: '无', _locked: true }; }
+      }
+      if (parsed && typeof parsed === 'object' && 'text' in parsed) return { text: parsed.text || '', weather: parsed.weather || '无' };
+      return { text: (typeof parsed === 'string' ? parsed : raw), weather: '无' };
     }
-    async function saveEntry(dateStr, text, weather) {
+    async function writeEntry(dateStr, text, weather) {
       if (!text && (!weather || weather === '无')) { localStorage.removeItem(ENTRY_PREFIX + dateStr); return; }
-      localStorage.setItem(ENTRY_PREFIX + dateStr, JSON.stringify(await encryptText(cryptoKey, JSON.stringify({ text, weather }))));
+      const encrypted = hasDiary() && cryptoKey;
+      if (encrypted) localStorage.setItem(ENTRY_PREFIX + dateStr, JSON.stringify(await encryptText(cryptoKey, JSON.stringify({ text, weather }))));
+      else localStorage.setItem(ENTRY_PREFIX + dateStr, JSON.stringify({ text, weather }));
     }
+    // 兼容旧调用名
+    const loadEntry = readEntry;
+    async function saveEntry(dateStr, text, weather) { return writeEntry(dateStr, text, weather); }
 
     /* ────────── 屏幕切换 ────────── */
     const screens = { setup: $('screen-setup'), unlock: $('screen-unlock'), reset: $('screen-reset'), app: $('screen-app') };
     function show(name) { Object.entries(screens).forEach(([k, el]) => el.classList.toggle('hidden', k !== name)); }
     function bootScreen() {
-      if (!subtle) { screens.setup.classList.remove('hidden'); screens.setup.innerHTML = '<div class="icon">⚠️</div><h1>无法加密</h1><p>当前环境不支持安全加密（需在 https 或本地打开），暂无法使用日记。</p>'; return; }
-      show(hasDiary() ? 'unlock' : 'setup');
-      if (!hasDiary()) {} else $('unlock-pw').focus();
+      if (hasDiary() && subtle) { show('unlock'); $('unlock-pw').focus(); return; }
+      // 无密码（或环境不支持加密）：直接进入日记本，明文模式
+      enterApp();
     }
 
     /* 设置密码 */
@@ -437,7 +451,17 @@
       const e = await loadEntry(dateStr);
       entry.value = e.text; setWeatherUI(e.weather);
     }
-    async function enterApp() { show('app'); await openDate(todayStr()); }
+    async function enterApp() { show('app'); updateToolbar(); await openDate(todayStr()); }
+
+    // 根据当前是否有密码，切换工具栏按钮与保存提示文案
+    function updateToolbar() {
+      const encrypted = hasDiary() && !!cryptoKey;
+      $('set-pw-btn').classList.toggle('hidden', encrypted);
+      $('change-pw-btn').classList.toggle('hidden', !encrypted);
+      $('remove-pw-btn').classList.toggle('hidden', !encrypted);
+      $('lock-btn').classList.toggle('hidden', !encrypted);
+      savedTag.textContent = encrypted ? '已加密保存 ✓' : '已保存 ✓';
+    }
 
     let viewY, viewM;
     function renderCal() {
@@ -463,7 +487,7 @@
     }
     calEl.addEventListener('click', e => {
       const nav = e.target.closest('[data-nav]');
-      if (nav) { viewM += Number(nav.dataset.nav); if (viewM < 0) { viewM = 11; viewY--; } if (viewM > 11) { viewM = 0; viewY++; } renderCal(); return; }
+      if (nav) { e.stopPropagation(); viewM += Number(nav.dataset.nav); if (viewM < 0) { viewM = 11; viewY--; } if (viewM > 11) { viewM = 0; viewY++; } renderCal(); return; }
       const day = e.target.closest('[data-date]');
       if (day && !day.disabled) { openDate(day.dataset.date); calEl.classList.add('hidden'); pill.classList.remove('open'); }
     });
@@ -499,7 +523,7 @@
     let searchSeq = 0;
     async function runSearch() {
       const q = searchInput.value.trim().toLowerCase();
-      if (!q || !cryptoKey) { searchResults.classList.add('hidden'); return; }
+      if (!q) { searchResults.classList.add('hidden'); return; }
       const seq = ++searchSeq;
       const dates = [...markedDates()].sort((a, b) => b.localeCompare(a));
       const out = [];
@@ -536,6 +560,58 @@
       if (nw !== nw2) { err.textContent = '两次输入的新密码不一致'; return; }
       if (!(await changePasswordKeepData(cur, nw))) { err.textContent = '当前密码不正确'; return; }
       closeChange(); flashSaved();
+    });
+
+    /* 设置密码（明文 → 加密，保留数据） */
+    $('set-pw-btn').addEventListener('click', async () => {
+      if (!subtle) { alert('此环境不支持加密'); return; }
+      const pw = prompt('设置 4–6 位数字密码：');
+      if (pw == null) return;
+      if (!PW_RE.test(pw)) { alert('密码必须是 4–6 位数字'); return; }
+      const pw2 = prompt('请再次输入密码：');
+      if (pw2 == null) return;
+      if (pw !== pw2) { alert('两次输入的密码不一致'); return; }
+      // 1) 建立密码与主密钥
+      await setupPassword(pw);
+      // 2) 把所有现有明文条目重新加密
+      for (const k of Object.keys(localStorage)) {
+        if (!k.startsWith(ENTRY_PREFIX)) continue;
+        const raw = localStorage.getItem(k);
+        let parsed; try { parsed = JSON.parse(raw); } catch (_) { parsed = null; }
+        if (isEncryptedStruct(parsed)) continue; // 已加密，跳过
+        let text, weather;
+        if (parsed && typeof parsed === 'object' && 'text' in parsed) { text = parsed.text || ''; weather = parsed.weather || '无'; }
+        else { text = (typeof parsed === 'string' ? parsed : raw); weather = '无'; }
+        const ds = k.slice(ENTRY_PREFIX.length);
+        await writeEntry(ds, text, weather);
+      }
+      updateToolbar();
+      await openDate(selected);
+      flashSaved();
+      alert('已设置密码，日记现已加密。');
+    });
+
+    /* 取消密码（加密 → 明文，保留数据） */
+    $('remove-pw-btn').addEventListener('click', async () => {
+      if (!cryptoKey) return;
+      if (!confirm('取消密码后，日记将不再加密，确定吗？')) return;
+      // 1) 趁密钥有效先解密收集所有条目
+      const entries = [];
+      for (const k of Object.keys(localStorage)) {
+        if (!k.startsWith(ENTRY_PREFIX)) continue;
+        const ds = k.slice(ENTRY_PREFIX.length);
+        const e = await readEntry(ds);
+        entries.push({ ds, text: e.text || '', weather: e.weather || '无' });
+      }
+      // 2) 切换到明文模式（mkey 仅存于 meta，删 meta 即可）
+      localStorage.removeItem(META_KEY);
+      cryptoKey = null;
+      // 3) 明文写回
+      for (const e of entries) await writeEntry(e.ds, e.text, e.weather);
+      updateToolbar();
+      await openDate(selected);
+      flashSaved();
+      alert('已取消密码，日记现以明文保存。');
     });
 
     /* 仅允许数字输入（密码/验证码） */
