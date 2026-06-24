@@ -75,7 +75,7 @@
 
         .title-char {
             font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
-            font-size: 1.6rem;
+            font-size: 3.2rem;
             font-weight: 700;
             background: linear-gradient(90deg, #ffffff, #eef6ee);
             -webkit-background-clip: text;
@@ -88,14 +88,16 @@
             transition: transform 0.3s ease;
         }
 
-        /* 承接文案提示条 */
+        /* 承接文案提示条（设置弹窗内的低调说明） */
         .sync-tip {
             text-align: center;
-            font-size: 0.82rem;
+            font-size: 0.9rem;
             color: var(--text-secondary);
-            background: color-mix(in srgb, var(--accent) 9%, var(--surface));
-            border-bottom: 1px solid var(--border);
-            padding: 7px 16px;
+            background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 20px;
             letter-spacing: 0.01em;
         }
         
@@ -804,7 +806,7 @@
         
         @media (max-width: 768px) {
             .title-char {
-                font-size: 1.4rem;
+                font-size: 2.8rem;
             }
             
             .controls-container {
@@ -915,8 +917,6 @@
             </div>
         </header>
 
-        <div class="sync-tip">词表已自动同步自「单词速刷」，继续来测一测吧 💚</div>
-
         <div class="main-content">
             <div class="words-container active" id="english-container">
                 <div class="words-grid" id="english-grid"></div>
@@ -972,6 +972,7 @@
                 </div>
             </div>
             <div class="modal-body">
+                <div class="sync-tip">词表已自动同步自「单词速刷」，继续来测一测吧 💚</div>
                 <div class="settings-row">
                     <div class="setting-group">
                         <label for="english-font-size">英文字体: <b id="english-font-val">2.0</b></label>
