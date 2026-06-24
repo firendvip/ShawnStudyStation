@@ -5,6 +5,7 @@ import { fetchReports, fetchAllEntries, generateManualReport, reportUrl, deleteR
 import { addDays, formatCN, todayLocalDate } from '@/lib/date'
 import { evenlyDistribute, sequentialByRecordDay } from '@/lib/distribute'
 import { FitText } from '@/components/common/FitText'
+import { PasswordModal } from '@/components/common/PasswordModal'
 import type { AppSettings, EntryItem, PdfReportItem } from '@/lib/types'
 import styles from './PrintPanel.module.css'
 
@@ -50,6 +51,10 @@ export function PrintPanel({ settings }: Props) {
   const [reports, setReports] = useState<PdfReportItem[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [pwResolver, setPwResolver] = useState<((ok: boolean) => void) | null>(null)
+  const verifyPassword = () => new Promise<boolean>((resolve) => setPwResolver(() => resolve))
+  const requireAnswerPassword = async (report: PdfReportItem) =>
+    report.withAnswer ? await verifyPassword() : true
 
   const title = settings.printShowTitle
     ? settings.printTitle + (settings.printAppendDate ? ` ${formatCN(writeFrom)}-${formatCN(writeTo)}` : '')
@@ -94,10 +99,11 @@ export function PrintPanel({ settings }: Props) {
       ? `${Math.min(...counts)}`
       : `${Math.min(...counts)}-${Math.max(...counts)}`
 
-  const handleDeleteReport = async (id: string) => {
+  const handleDeleteReport = async (report: PdfReportItem) => {
+    if (!(await requireAnswerPassword(report))) return
     if (!window.confirm('确定删除这个 PDF 吗?删除后无法恢复。')) return
     try {
-      await deleteReport(id)
+      await deleteReport(report.id)
       await loadReports()
     } catch (err) {
       setError(err instanceof Error ? err.message : '删除失败')
@@ -253,19 +259,34 @@ export function PrintPanel({ settings }: Props) {
                   target="_blank"
                   rel="noopener noreferrer"
                   download
+                  onClick={async (e) => {
+                    e.preventDefault()
+                    if (!(await requireAnswerPassword(report))) return
+                    const a = document.createElement('a')
+                    a.href = reportUrl(report.id)
+                    a.target = '_blank'
+                    a.rel = 'noopener noreferrer'
+                    a.download = ''
+                    document.body.appendChild(a)
+                    a.click()
+                    a.remove()
+                  }}
                 >
                   下载
                 </a>
                 <button
                   type="button"
                   className={styles.printBtn}
-                  onClick={() => printPdf(reportUrl(report.id))}
+                  onClick={async () => {
+                    if (!(await requireAnswerPassword(report))) return
+                    printPdf(reportUrl(report.id))
+                  }}
                 >
                   打印
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleDeleteReport(report.id)}
+                  onClick={() => handleDeleteReport(report)}
                   style={{
                     border: '1px solid #c0392b',
                     color: '#c0392b',
@@ -284,6 +305,13 @@ export function PrintPanel({ settings }: Props) {
           </ul>
         )}
       </div>
+
+      {pwResolver && (
+        <PasswordModal
+          onClose={() => { pwResolver(false); setPwResolver(null) }}
+          onSuccess={() => { pwResolver(true); setPwResolver(null) }}
+        />
+      )}
     </section>
   )
 }
