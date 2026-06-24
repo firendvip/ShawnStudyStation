@@ -62,16 +62,88 @@ body{
 .btn.disabled,label.btn.disabled{opacity:.5;pointer-events:none;}
 .btn[disabled]{opacity:.5;pointer-events:none;cursor:not-allowed;}
 
-/* ---------- Custom upload block ---------- */
-.upload-field{flex:1 1 260px;min-width:220px;gap:.45rem;}
-.upload-field .up-row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;}
-textarea.select{height:auto;min-height:5rem;resize:vertical;font-weight:400;line-height:1.5;}
-input.select[type=text]{font-weight:600;}
-.up-check{display:inline-flex;align-items:center;gap:.35rem;font-size:.82rem;font-weight:600;color:var(--color-ink-soft);cursor:pointer;}
-.up-check input{cursor:pointer;}
-.up-note{font-size:.7rem;color:var(--color-ink-dim);line-height:1.4;}
-.up-msg{font-size:.78rem;font-weight:600;color:var(--color-accent-strong);min-height:1em;}
-.up-msg.err{color:#c0392b;}
+/* ---------- Custom searchable dropdown ---------- */
+.dd{position:relative;width:100%;}
+.dd-trigger{display:flex;align-items:center;gap:.5rem;width:100%;font-family:inherit;font-size:1rem;font-weight:600;
+  color:var(--color-ink);background:var(--color-paper);border:1.5px solid var(--color-line-strong);
+  border-radius:var(--radius-md);padding:.65rem .9rem;cursor:pointer;text-align:left;
+  transition:border-color .2s var(--ease-out);}
+.dd-trigger:hover{border-color:var(--color-accent);}
+.dd.open .dd-trigger{border-color:var(--color-accent);}
+.dd-trigger-label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dd-caret{flex:0 0 auto;color:var(--color-accent);transition:transform .2s var(--ease-out);}
+.dd.open .dd-caret{transform:rotate(180deg);}
+.dd-panel{position:absolute;z-index:60;top:calc(100% + .35rem);left:0;width:min(360px,86vw);
+  background:var(--color-surface);border:1px solid var(--color-line);border-radius:var(--radius-md);
+  box-shadow:var(--shadow-modal);padding:.55rem;display:flex;flex-direction:column;max-height:min(60vh,420px);}
+.dd-search-wrap{flex:0 0 auto;margin-bottom:.45rem;}
+.dd-search{width:100%;font-family:inherit;font-size:.92rem;color:var(--color-ink);background:var(--color-paper);
+  border:1.5px solid var(--color-line-strong);border-radius:var(--radius-sm);padding:.5rem .7rem;}
+.dd-search:focus{outline:none;border-color:var(--color-accent);}
+.dd-list{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.dd-group{margin-bottom:.2rem;}
+.dd-group-head{display:flex;align-items:center;gap:.4rem;width:100%;font-family:inherit;font-size:.72rem;
+  font-weight:800;letter-spacing:.06em;color:var(--color-ink-dim);text-transform:uppercase;background:transparent;
+  border:none;padding:.4rem .5rem;cursor:pointer;border-radius:var(--radius-sm);text-align:left;}
+.dd-group-head:hover{background:var(--color-paper);}
+.dd-group-arrow{display:inline-block;transition:transform .18s var(--ease-out);font-size:.7rem;color:var(--color-accent);}
+.dd-group.collapsed .dd-group-arrow{transform:rotate(-90deg);}
+.dd-group-count{margin-left:auto;font-weight:700;color:var(--color-ink-dim);}
+.dd-group.collapsed .dd-group-items{display:none;}
+.dd-item{display:flex;align-items:center;gap:.5rem;width:100%;font-family:inherit;font-size:.95rem;font-weight:600;
+  color:var(--color-ink);background:transparent;border:none;border-radius:var(--radius-sm);padding:.5rem .6rem;
+  cursor:pointer;text-align:left;transition:background .15s var(--ease-out);}
+.dd-item:hover,.dd-item.active{background:var(--color-accent-soft);}
+.dd-item.selected{color:var(--color-accent-strong);}
+.dd-item.selected:before{content:'✓';color:var(--color-accent);font-weight:800;}
+.dd-item-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dd-item-del{flex:0 0 auto;font-size:.78rem;font-weight:700;color:var(--color-ink-dim);background:transparent;
+  border:1px solid var(--color-line-strong);border-radius:.5rem;padding:.12rem .4rem;cursor:pointer;}
+.dd-item-del:hover{color:#c0392b;border-color:#c0392b;}
+.dd-empty{padding:.8rem .6rem;font-size:.85rem;color:var(--color-ink-dim);text-align:center;}
+
+/* ---------- 作文考题 block ---------- */
+.art-del{margin-left:.6rem;font-size:.78rem;padding:.3rem .6rem;}
+.art-prompt{display:flex;flex-direction:column;gap:.35rem;background:var(--color-paper);
+  border:1px solid var(--color-line);border-left:3px solid var(--color-accent);border-radius:var(--radius-md);
+  padding:.7rem .9rem;margin:.6rem 0 .2rem;}
+.art-prompt-tag{align-self:flex-start;font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--color-accent-strong);background:var(--color-accent-soft);padding:.16rem .5rem;border-radius:999px;}
+.art-prompt-text{margin:0;font-size:.95rem;line-height:1.6;color:var(--color-ink-soft);white-space:pre-wrap;}
+
+/* ---------- Upload modal ---------- */
+.modal-overlay{position:fixed;inset:0;z-index:1000;background:var(--color-overlay,rgba(54,44,36,.4));
+  display:flex;align-items:center;justify-content:center;padding:1rem;}
+.modal-card{width:min(520px,100%);max-height:90vh;overflow-y:auto;background:var(--color-surface);
+  border-radius:var(--radius-lg);box-shadow:var(--shadow-modal);display:flex;flex-direction:column;}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.3rem .6rem;}
+.modal-title{margin:0;font-size:1.2rem;font-weight:800;}
+.modal-close{font-size:1.5rem;line-height:1;color:var(--color-ink-dim);background:transparent;border:none;
+  cursor:pointer;width:2rem;height:2rem;border-radius:50%;transition:all .18s var(--ease-out);}
+.modal-close:hover{background:var(--color-paper);color:var(--color-ink);}
+.modal-body{display:flex;flex-direction:column;gap:.95rem;padding:.4rem 1.3rem 1rem;}
+.m-field{display:flex;flex-direction:column;gap:.3rem;}
+.m-label-row{display:flex;align-items:baseline;justify-content:space-between;}
+.m-label{font-size:.74rem;font-weight:800;letter-spacing:.05em;color:var(--color-ink-dim);text-transform:uppercase;}
+.m-counter{font-size:.72rem;font-weight:700;color:var(--color-ink-dim);}
+.m-input{width:100%;font-family:inherit;font-size:1rem;color:var(--color-ink);background:var(--color-paper);
+  border:1.5px solid var(--color-line-strong);border-radius:var(--radius-md);padding:.6rem .8rem;}
+.m-input:focus{outline:none;border-color:var(--color-accent);}
+.m-area{resize:vertical;min-height:3.2rem;line-height:1.5;font-weight:400;}
+.m-select{appearance:none;cursor:pointer;font-weight:600;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23359658' stroke-width='3' stroke-linecap='round'><path d='M6 9l6 6 6-6'/></svg>");
+  background-repeat:no-repeat;background-position:right .8rem center;padding-right:2.2rem;}
+.m-help{font-size:.72rem;color:var(--color-ink-dim);line-height:1.4;}
+.m-err{font-size:.82rem;font-weight:600;color:#c0392b;min-height:1em;}
+.modal-foot{display:flex;justify-content:flex-end;padding:.6rem 1.3rem 1.2rem;border-top:1px solid var(--color-line);}
+.modal-foot .btn{padding:.6rem 1.6rem;}
+
+/* ---------- Toast ---------- */
+.toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(8px);z-index:1200;
+  background:var(--color-ink);color:#fff;font-size:.88rem;font-weight:600;padding:.65rem 1.1rem;
+  border-radius:999px;box-shadow:var(--shadow-modal);opacity:0;transition:opacity .25s var(--ease-out),transform .25s var(--ease-out);
+  max-width:88vw;text-align:center;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
 /* ---------- Article card ---------- */
 .card{background:var(--color-surface);border:1px solid var(--color-line);border-radius:var(--radius-lg);
@@ -179,27 +251,23 @@ body.noseg .en .en-line:not(:last-child):after{content:' ';white-space:pre;}
 <div class="wrap">
   <div class="toolbar">
     <div class="field">
-      <label for="essaySel">选择文章</label>
-      <select id="essaySel" class="select"></select>
-      <div class="up-row" style="margin-top:.35rem;">
-        <button id="btnTogglePub" class="btn ghost" style="display:none;">设为不公开</button>
-        <button id="btnDel" class="btn off" style="display:none;">删除</button>
+      <span class="lbl">选择文章</span>
+      <div class="dd" id="essayDD">
+        <button type="button" class="dd-trigger" id="essayTrigger" aria-haspopup="listbox" aria-expanded="false">
+          <span class="dd-trigger-label" id="essayTriggerLabel">请选择文章</span>
+          <svg class="dd-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="dd-panel" id="essayPanel" hidden>
+          <div class="dd-search-wrap">
+            <input type="text" class="dd-search" id="essaySearch" placeholder="搜索标题…" autocomplete="off">
+          </div>
+          <div class="dd-list" id="essayList" role="listbox"></div>
+        </div>
       </div>
     </div>
-    <div class="field upload-field">
-      <span class="lbl">自定义上传</span>
-      <div class="up-row">
-        <label class="btn ghost" id="upTxtLabel">上传 .txt 文件<input id="upTxt" type="file" accept=".txt" hidden></label>
-      </div>
-      <textarea id="upText" class="select" rows="4" placeholder="或在此粘贴英文短文…"></textarea>
-      <input id="upTitle" class="select" type="text" placeholder="标题（可选）">
-      <span class="up-note">≤3000 字，超出将自动截断</span>
-      <div class="up-row">
-        <label class="up-check"><input id="upPublic" type="checkbox" checked> 公开</label>
-        <button id="upSubmit" class="btn">解析并添加</button>
-      </div>
-      <span class="up-note">公开后其他用户也能在『公开』分组里看到</span>
-      <span id="upMsg" class="up-msg"></span>
+    <div class="ctrl-group">
+      <span class="lbl">作文管理</span>
+      <button type="button" class="btn" id="btnOpenUpload">文章上传</button>
     </div>
     <div class="ctrl-group">
       <span class="lbl">翻译模式</span>
@@ -257,10 +325,59 @@ body.noseg .en .en-line:not(:last-child):after{content:' ';white-space:pre;}
       <span class="art-no" id="artNo">01</span>
       <h2 class="art-title" id="artTitle"></h2>
       <span class="art-count" id="artCount"></span>
+      <button type="button" class="btn off art-del" id="artDel" hidden>删除</button>
+    </div>
+    <div class="art-prompt" id="artPrompt" hidden>
+      <span class="art-prompt-tag">作文考题</span>
+      <p class="art-prompt-text" id="artPromptText"></p>
     </div>
     <div id="sentences"></div>
   </main>
 </div>
+
+<!-- ===== 上传作文 弹窗 ===== -->
+<div class="modal-overlay" id="upModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="upModalTitle">
+    <div class="modal-head">
+      <h3 class="modal-title" id="upModalTitle">上传作文</h3>
+      <button type="button" class="modal-close" id="mClose" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="m-field">
+        <div class="m-label-row">
+          <label class="m-label" for="mTitle">标题</label>
+          <span class="m-counter" id="mTitleCount">0/40</span>
+        </div>
+        <input type="text" class="m-input" id="mTitle" maxlength="40" placeholder="给这篇作文起个标题">
+        <span class="m-help">将显示在下拉选项里</span>
+      </div>
+      <div class="m-field">
+        <label class="m-label" for="mPrompt">作文考题</label>
+        <textarea class="m-input m-area" id="mPrompt" rows="3" placeholder="粘贴作文题目（可空）"></textarea>
+      </div>
+      <div class="m-field">
+        <label class="m-label" for="mText">作文</label>
+        <textarea class="m-input m-area" id="mText" rows="6" placeholder="粘贴英文作文…"></textarea>
+        <span class="m-help">≤3000 字，超出自动截断</span>
+      </div>
+      <div class="m-field">
+        <label class="m-label" for="mLevel">学段</label>
+        <select class="m-input m-select" id="mLevel">
+          <option value="" disabled selected>请选择学段</option>
+          <option value="小学">小学</option>
+          <option value="初中">初中</option>
+          <option value="高中">高中</option>
+          <option value="大学">大学</option>
+        </select>
+      </div>
+      <span class="m-err" id="mErr"></span>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn" id="mSubmit">提交</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
 
 <div class="pop" id="pop"></div>
 
@@ -270,10 +387,12 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
 </script>
 <script>
 (function(){
-  const sel=document.getElementById('essaySel');
   const artNo=document.getElementById('artNo');
   const artTitle=document.getElementById('artTitle');
   const artCount=document.getElementById('artCount');
+  const artDel=document.getElementById('artDel');
+  const artPrompt=document.getElementById('artPrompt');
+  const artPromptText=document.getElementById('artPromptText');
   const cont=document.getElementById('sentences');
   const pop=document.getElementById('pop');
   let accent='uk';
@@ -283,21 +402,35 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   // ---- custom-upload state ----
   let authToken='';            // '' = not logged in
   let apiBase='';              // set from parent via postMessage
-  const customEssays={};       // id(string) -> essay item from API {id,title,essay,isPublic,mine}
+  const LEVELS=['小学','初中','高中','大学'];
+  let items=[];                // unified dropdown list (built-in + remote)
+  let selectedKey=null;        // currently-selected item key
 
-  // custom-upload DOM
-  const upTxt=document.getElementById('upTxt');
-  const upTxtLabel=document.getElementById('upTxtLabel');
-  const upText=document.getElementById('upText');
-  const upTitle=document.getElementById('upTitle');
-  const upPublic=document.getElementById('upPublic');
-  const upSubmit=document.getElementById('upSubmit');
-  const upMsg=document.getElementById('upMsg');
-  const btnDel=document.getElementById('btnDel');
-  const btnTogglePub=document.getElementById('btnTogglePub');
+  // dropdown DOM
+  const essayDD=document.getElementById('essayDD');
+  const essayTrigger=document.getElementById('essayTrigger');
+  const essayTriggerLabel=document.getElementById('essayTriggerLabel');
+  const essayPanel=document.getElementById('essayPanel');
+  const essaySearch=document.getElementById('essaySearch');
+  const essayList=document.getElementById('essayList');
+  const collapsed={};          // level -> bool (collapsed groups)
+
+  // upload-modal DOM
+  const btnOpenUpload=document.getElementById('btnOpenUpload');
+  const upModal=document.getElementById('upModal');
+  const mClose=document.getElementById('mClose');
+  const mTitle=document.getElementById('mTitle');
+  const mTitleCount=document.getElementById('mTitleCount');
+  const mPrompt=document.getElementById('mPrompt');
+  const mText=document.getElementById('mText');
+  const mLevel=document.getElementById('mLevel');
+  const mErr=document.getElementById('mErr');
+  const mSubmit=document.getElementById('mSubmit');
+  const toastEl=document.getElementById('toast');
 
   ESSAYS.sort((a,b)=>a.id-b.id);
-  rebuildOptions();
+  buildItems();
+  rebuildDropdown();
 
   const NO_SPACE_BEFORE=/^[,.;:!?%)\]}…”’]/;
   function isWordTok(t){ return t.m!==null && t.m!==undefined && /[A-Za-z0-9]/.test(t.w||''); }
@@ -369,16 +502,26 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
     (s.chunks||[]).forEach(c=>{const p=document.createElement('span');p.className='chunk';p.textContent=c.zh;p.title=c.en;box.appendChild(p);});
     return box;
   }
-  function buildNormal(s){const d=document.createElement('div');d.className='trans-normal';d.textContent=s.normal||'';return d;}
+  function buildNormal(s){
+    const d=document.createElement('div');d.className='trans-normal';
+    const hasLiteral=Array.isArray(s.chunks)&&s.chunks.length>0;
+    const normal=(s.normal||'').trim();
+    d.textContent=normal||(hasLiteral?'':'（暂无翻译）');
+    return d;
+  }
 
   let rows=[]; // {row, text}
   let curEssayId=null, wholeText='';
-  function render(essay){
+  function render(essay,prompt){
     stopPlay();
+    essay=essay||{};
     curEssayId=essay.id;
-    const idStr=String(essay.id);
+    const idStr=String(essay.id==null?'':essay.id);
     artNo.textContent=/^\d+$/.test(idStr)?idStr.padStart(2,'0'):'✎';
     artTitle.textContent=essay.title||'';
+    const p=(prompt||'').trim();
+    if(p){ artPromptText.textContent=p; artPrompt.hidden=false; }
+    else { artPromptText.textContent=''; artPrompt.hidden=true; }
     const sentences=Array.isArray(essay.sentences)?essay.sentences:[];
     artCount.textContent=sentences.length+' 句';
     cont.innerHTML=''; rows=[];
@@ -412,143 +555,214 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   }
   function mkBtn(txt,title,fn){const b=document.createElement('button');b.className='cbtn';b.textContent=txt;b.title=title;b.addEventListener('click',fn);return b;}
 
-  // ---------- dropdown grouping + selection ----------
-  function makeOpt(value,text){
-    const o=document.createElement('option');
-    o.value=value; o.textContent=text; return o;
+  // ---------- toast ----------
+  let toastTimer=0;
+  function showToast(text){
+    if(!toastEl) return;
+    toastEl.textContent=text||'';
+    toastEl.hidden=false;
+    requestAnimationFrame(()=>toastEl.classList.add('show'));
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer=setTimeout(()=>{
+      toastEl.classList.remove('show');
+      setTimeout(()=>{ toastEl.hidden=true; },300);
+    },2200);
   }
-  function rebuildOptions(){
-    const prev=sel.value;
-    sel.innerHTML='';
-    // group 1: built-in
-    if(ESSAYS.length){
-      const g=document.createElement('optgroup'); g.label='内置范文';
-      ESSAYS.forEach(e=>{ g.appendChild(makeOpt(String(e.id),String(e.id).padStart(2,'0')+' · '+e.title)); });
-      sel.appendChild(g);
-    }
-    // group 2: my custom (mine)
-    const mine=[], pub=[];
-    Object.keys(customEssays).forEach(k=>{ const it=customEssays[k]; (it.mine?mine:pub).push(it); });
-    if(mine.length){
-      const g=document.createElement('optgroup'); g.label='我的自定义';
-      mine.forEach(it=>{ g.appendChild(makeOpt('c'+it.id,'✎ '+(it.title||'未命名'))); });
-      sel.appendChild(g);
-    }
-    if(pub.length){
-      const g=document.createElement('optgroup'); g.label='公开';
-      pub.forEach(it=>{ g.appendChild(makeOpt('c'+it.id,'🌐 '+(it.title||'未命名'))); });
-      sel.appendChild(g);
-    }
-    // preserve selection if still present, else first built-in
-    const opts=Array.prototype.map.call(sel.options,o=>o.value);
-    if(prev && opts.indexOf(prev)>=0) sel.value=prev;
-    else if(ESSAYS.length) sel.value=String(ESSAYS[0].id);
-  }
-  function resolveSelected(){
-    const v=sel.value;
-    if(v && v.charAt(0)==='c'){
-      const it=customEssays[v.slice(1)];
-      return it&&it.essay?it.essay:(ESSAYS[0]||{id:'',title:'',sentences:[]});
-    }
-    return ESSAYS.find(e=>String(e.id)===v)||ESSAYS[0]||{id:'',title:'',sentences:[]};
-  }
-  function renderSelected(){ render(resolveSelected()); updateManageButtons(); }
-  function current(){ return resolveSelected(); }
-  sel.addEventListener('change',renderSelected);
 
-  // ---------- manage buttons (delete / toggle public) ----------
-  function selectedCustom(){
-    const v=sel.value;
-    if(v && v.charAt(0)==='c'){ return customEssays[v.slice(1)]||null; }
-    return null;
+  // ---------- unified items + dropdown ----------
+  const MAX_TEXT_CHARS=3000;
+  let remoteItems=[];          // from GET /articles
+  function normLevel(lv){ return LEVELS.indexOf(lv)>=0?lv:'高中'; }
+  function buildItems(){
+    const builtin=ESSAYS.map(e=>({key:'b'+e.id,id:e.id,title:e.title||'',prompt:'',level:'高中',essay:e,builtin:true,isMine:false}));
+    items=builtin.concat(remoteItems);
   }
-  function updateManageButtons(){
-    const it=selectedCustom();
-    const show=!!(it && it.mine===true);
-    btnDel.style.display=show?'':'none';
-    btnTogglePub.style.display=show?'':'none';
-    if(show){
-      const isPub=Number(it.isPublic)===1;
-      btnTogglePub.textContent=isPub?'设为不公开':'设为公开';
+  function getItem(key){ return items.find(it=>it.key===key)||null; }
+
+  function selectItem(key,doRender){
+    const it=getItem(key);
+    if(!it){ selectedKey=null; essayTriggerLabel.textContent='请选择文章'; return; }
+    selectedKey=key;
+    essayTriggerLabel.textContent=it.level+' · '+(it.title||'未命名');
+    if(doRender!==false) render(it.essay||{}, it.prompt||'');
+    updateArtDelete();
+    // refresh selected highlight without rebuilding fully
+    Array.prototype.forEach.call(essayList.querySelectorAll('.dd-item'),el=>{
+      el.classList.toggle('selected',el.dataset.key===key);
+    });
+  }
+
+  function updateArtDelete(){
+    const it=getItem(selectedKey);
+    const canDel=!!(it && it.isMine===true && !it.builtin && authToken && apiBase);
+    artDel.hidden=!canDel;
+  }
+
+  function rebuildDropdown(){
+    const q=(essaySearch.value||'').trim().toLowerCase();
+    essayList.innerHTML='';
+    const byLevel={}; LEVELS.forEach(l=>byLevel[l]=[]);
+    items.forEach(it=>{ byLevel[normLevel(it.level)].push(it); });
+    let anyShown=false;
+    LEVELS.forEach(level=>{
+      let list=byLevel[level];
+      if(q){
+        list=list.filter(it=>(it.title||'').toLowerCase().includes(q) || (it.prompt||'').toLowerCase().includes(q));
+        if(!list.length) return; // hide empty groups while searching
+      }
+      anyShown=true;
+      const group=document.createElement('div');
+      group.className='dd-group';
+      const isCollapsed=!q && collapsed[level]===true;
+      if(isCollapsed) group.classList.add('collapsed');
+      const head=document.createElement('button');
+      head.type='button'; head.className='dd-group-head';
+      const arrow=document.createElement('span'); arrow.className='dd-group-arrow'; arrow.textContent='▾';
+      const name=document.createElement('span'); name.textContent=level;
+      const count=document.createElement('span'); count.className='dd-group-count'; count.textContent=String(list.length);
+      head.appendChild(arrow); head.appendChild(name); head.appendChild(count);
+      head.addEventListener('click',()=>{ collapsed[level]=!collapsed[level]; rebuildDropdown(); });
+      group.appendChild(head);
+      const itemsWrap=document.createElement('div'); itemsWrap.className='dd-group-items';
+      list.forEach(it=>{ itemsWrap.appendChild(buildDDItem(it)); });
+      group.appendChild(itemsWrap);
+      essayList.appendChild(group);
+    });
+    if(!anyShown){
+      const empty=document.createElement('div'); empty.className='dd-empty';
+      empty.textContent=q?'没有匹配的文章':'暂无文章';
+      essayList.appendChild(empty);
     }
   }
-  btnDel.addEventListener('click',async()=>{
-    const it=selectedCustom(); if(!it||!authToken||!apiBase) return;
-    if(!confirm('确定删除这篇自定义作文？此操作不可恢复。')) return;
+  function buildDDItem(it){
+    const btn=document.createElement('button');
+    btn.type='button'; btn.className='dd-item'; btn.dataset.key=it.key;
+    if(it.key===selectedKey) btn.classList.add('selected');
+    btn.setAttribute('role','option');
+    const title=document.createElement('span'); title.className='dd-item-title';
+    title.textContent=it.title||'未命名';
+    btn.appendChild(title);
+    if(it.isMine===true && !it.builtin){
+      const del=document.createElement('span');
+      del.className='dd-item-del'; del.textContent='删除'; del.setAttribute('role','button');
+      del.addEventListener('click',ev=>{ ev.stopPropagation(); deleteItem(it.key); });
+      btn.appendChild(del);
+    }
+    btn.addEventListener('click',()=>{ selectItem(it.key); closePanel(); });
+    return btn;
+  }
+
+  // ---------- panel open/close ----------
+  function openPanel(){
+    essayDD.classList.add('open');
+    essayPanel.hidden=false;
+    essayTrigger.setAttribute('aria-expanded','true');
+    rebuildDropdown();
+    setTimeout(()=>{ try{ essaySearch.focus(); }catch(_){} },0);
+  }
+  function closePanel(){
+    essayDD.classList.remove('open');
+    essayPanel.hidden=true;
+    essayTrigger.setAttribute('aria-expanded','false');
+  }
+  function togglePanel(){ essayPanel.hidden?openPanel():closePanel(); }
+  essayTrigger.addEventListener('click',e=>{ e.stopPropagation(); togglePanel(); });
+  essaySearch.addEventListener('input',rebuildDropdown);
+  essaySearch.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      const first=essayList.querySelector('.dd-item');
+      if(first){ selectItem(first.dataset.key); closePanel(); }
+    } else if(e.key==='Escape'){ closePanel(); }
+  });
+  document.addEventListener('click',e=>{ if(!essayDD.contains(e.target)) closePanel(); });
+
+  // ---------- delete (custom, mine only) ----------
+  async function deleteItem(key){
+    const it=getItem(key);
+    if(!it||it.builtin||it.isMine!==true||!authToken||!apiBase) return;
+    if(!confirm('确定删除这篇作文？此操作不可恢复。')) return;
     try{
       const r=await fetch(apiBase+'/articles/'+it.id,{method:'DELETE',headers:{'Authorization':'Bearer '+authToken}});
-      if(!r.ok){ setMsg(r.status===404?'无权删除':'删除失败',true); return; }
-      delete customEssays[String(it.id)];
-      rebuildOptions();
-      if(ESSAYS.length) sel.value=String(ESSAYS[0].id);
-      renderSelected();
-      setMsg('已删除',false);
-    }catch(_){ setMsg('删除失败',true); }
-  });
-  btnTogglePub.addEventListener('click',async()=>{
-    const it=selectedCustom(); if(!it||!authToken||!apiBase) return;
-    const newVal=Number(it.isPublic)===1?0:1;
-    try{
-      const r=await fetch(apiBase+'/articles/'+it.id,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},body:JSON.stringify({isPublic:newVal})});
-      if(!r.ok){ setMsg(r.status===404?'无权修改':'修改失败',true); return; }
-      it.isPublic=newVal;
-      updateManageButtons();
-      setMsg(newVal===1?'已设为公开':'已设为不公开',false);
-    }catch(_){ setMsg('修改失败',true); }
-  });
+      if(!r.ok){ showToast(r.status===404?'无权删除':'删除失败'); return; }
+      remoteItems=remoteItems.filter(x=>x.key!==key);
+      buildItems();
+      if(selectedKey===key){ selectedKey=null; selectFirst(); }
+      rebuildDropdown(); updateArtDelete();
+      showToast('已删除');
+    }catch(_){ showToast('删除失败'); }
+  }
+  artDel.addEventListener('click',()=>{ if(selectedKey) deleteItem(selectedKey); });
 
-  // ---------- upload helpers ----------
-  function setMsg(text,isErr){ upMsg.textContent=text||''; upMsg.classList.toggle('err',!!isErr); }
-  const MAX_FILE_BYTES=1024*1024, MAX_TEXT_CHARS=3000;
-  upTxt&&upTxt.addEventListener('change',async()=>{
-    const file=upTxt.files&&upTxt.files[0]; if(!file) return;
-    if(file.size>MAX_FILE_BYTES){ setMsg('文件过大（上限 1MB）',true); upTxt.value=''; return; }
-    try{
-      const txt=file.text?await file.text():await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result||''));fr.onerror=()=>rej(fr.error);fr.readAsText(file);});
-      upText.value=txt; setMsg('已读取文件，可点击「解析并添加」',false);
-    }catch(_){ setMsg('文件读取失败',true); }
-    upTxt.value='';
-  });
+  function selectFirst(){
+    if(items.length){ selectItem(items[0].key); }
+    else { render({},''); essayTriggerLabel.textContent='请选择文章'; }
+  }
 
-  upSubmit&&upSubmit.addEventListener('click',async()=>{
-    if(!authToken){ setMsg('请先登录后使用',true); return; }
-    let text=upText.value;
-    if(!text||!text.trim()){ setMsg('请输入或上传文本',true); return; }
-    let preTrunc=false;
-    if(text.length>MAX_TEXT_CHARS){ text=text.slice(0,MAX_TEXT_CHARS); preTrunc=true; }
-    upSubmit.disabled=true; upSubmit.textContent='解析中…'; setMsg('',false);
+  // ---------- upload modal ----------
+  function openModal(){
+    if(!authToken){ showToast('请先登录后使用'); return; }
+    mTitle.value=''; mPrompt.value=''; mText.value=''; mLevel.value='';
+    mErr.textContent=''; mTitleCount.textContent='0/40';
+    mSubmit.disabled=false; mSubmit.textContent='提交';
+    upModal.hidden=false;
+    setTimeout(()=>{ try{ mTitle.focus(); }catch(_){} },0);
+  }
+  function closeModal(){ upModal.hidden=true; }
+  btnOpenUpload.addEventListener('click',openModal);
+  mClose.addEventListener('click',closeModal);
+  upModal.addEventListener('click',e=>{ if(e.target===upModal) closeModal(); });
+  mTitle.addEventListener('input',()=>{ mTitleCount.textContent=(mTitle.value.length)+'/40'; });
+
+  mSubmit.addEventListener('click',async()=>{
+    const title=mTitle.value.trim();
+    const prompt=mPrompt.value.trim();
+    const level=mLevel.value;
+    let text=mText.value;
+    if(!authToken){ mErr.textContent='请先登录'; return; }
+    if(!title){ mErr.textContent='请填写标题'; return; }
+    if(!level){ mErr.textContent='请选择学段'; return; }
+    if(!text||!text.trim()){ mErr.textContent='请粘贴作文'; return; }
+    if(text.length>MAX_TEXT_CHARS) text=text.slice(0,MAX_TEXT_CHARS);
+    mErr.textContent='';
+    mSubmit.disabled=true; mSubmit.textContent='提交中…';
     try{
-      const r=await fetch(apiBase+'/articles',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},body:JSON.stringify({title:upTitle.value.trim()||undefined,text,isPublic:upPublic.checked?1:0})});
+      const r=await fetch(apiBase+'/articles',{method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+        body:JSON.stringify({title,prompt:prompt||undefined,text,level})});
       if(!r.ok){
-        const m=r.status===401?'请先登录':r.status===429?'操作太频繁，请稍后再试':r.status===400?'文本不能为空':'解析失败，请重试';
-        setMsg(m,true); return;
+        mErr.textContent=r.status===401?'请先登录':r.status===429?'太频繁稍后再试':r.status===400?'请检查填写内容':'失败';
+        return;
       }
       const data=await r.json();
       const article=data.article||{};
-      const truncated=data.truncated||preTrunc;
-      customEssays[String(article.id)]={id:article.id,title:article.title,essay:article.essay,isPublic:upPublic.checked?1:0,mine:true};
-      rebuildOptions();
-      sel.value='c'+article.id;
-      render(article.essay); updateManageButtons();
-      upText.value=''; upTitle.value='';
-      setMsg(truncated?'文本过长，已截断到 3000 字':'添加成功',false);
-    }catch(_){ setMsg('解析失败，请重试',true); }
-    finally{ upSubmit.disabled=false; upSubmit.textContent='解析并添加'; }
+      const it={
+        key:'c'+article.id, id:article.id,
+        title:article.title||title, prompt:article.prompt||prompt||'',
+        level:normLevel(article.level||level), essay:article.essay||{},
+        builtin:false, isMine:true
+      };
+      remoteItems=remoteItems.filter(x=>x.key!==it.key); remoteItems.push(it);
+      buildItems(); rebuildDropdown();
+      selectItem(it.key);
+      closeModal();
+      if(data.truncated) showToast('作文过长已截断到3000字');
+      else showToast('上传成功');
+    }catch(_){ mErr.textContent='失败'; }
+    finally{ mSubmit.disabled=false; mSubmit.textContent='提交'; }
   });
 
   // ---------- auth state ----------
   function applyAuthState(){
     const loggedIn=!!authToken;
-    [upText,upTitle,upPublic,upSubmit,btnDel,btnTogglePub].forEach(el=>{ if(el) el.disabled=!loggedIn; });
-    upTxtLabel&&upTxtLabel.classList.toggle('disabled',!loggedIn);
+    btnOpenUpload.disabled=!loggedIn;
     if(!loggedIn){
-      // clear custom groups (GET-only data should not linger after logout)
-      for(const k in customEssays) delete customEssays[k];
-      rebuildOptions(); renderSelected();
-      setMsg('请先登录后使用',false);
-    } else if(upMsg.textContent==='请先登录后使用'){
-      setMsg('',false);
+      // drop remote data on logout; keep only built-in
+      remoteItems=[];
+      buildItems();
+      if(!getItem(selectedKey)) selectFirst();
+      rebuildDropdown();
     }
+    updateArtDelete();
   }
 
   // ---------- load lists ----------
@@ -558,21 +772,22 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
       const r=await fetch(apiBase+'/articles',{headers:{'Authorization':'Bearer '+authToken}});
       if(!r.ok) return;
       const data=await r.json();
-      for(const k in customEssays) delete customEssays[k];
-      (data.mine||[]).forEach(it=>{ customEssays[String(it.id)]={...it,mine:true}; });
-      (data.public||[]).forEach(it=>{ if(!customEssays[String(it.id)]) customEssays[String(it.id)]={...it,mine:false}; });
-      rebuildOptions(); updateManageButtons();
+      remoteItems=(Array.isArray(data.articles)?data.articles:[]).map(a=>({
+        key:'c'+a.id, id:a.id, title:a.title||'', prompt:a.prompt||'',
+        level:normLevel(a.level), essay:a.essay||{}, builtin:false, isMine:a.isMine===true
+      }));
+      buildItems();
+      if(!getItem(selectedKey)) selectFirst();
+      rebuildDropdown(); updateArtDelete();
     }catch(_){}
   }
 
   // ---------- parent config via postMessage ----------
   window.addEventListener('message',e=>{
     const d=e&&e.data; if(!d||d.type!=='composition-config') return;
-    const hadToken=!!authToken;
     authToken=d.token||''; apiBase=d.apiBase||'';
     applyAuthState();
     if(authToken){ loadArticles(); }
-    else if(hadToken){ /* logout already handled by applyAuthState */ }
   });
 
   document.getElementById('modeTabs').addEventListener('click',e=>{
@@ -801,18 +1016,19 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
 
   document.addEventListener('keydown',e=>{
     const ae=document.activeElement;
-    if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'))return;
+    if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.tagName==='SELECT'))return;
+    if(!upModal.hidden) return;
     if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
-      const opts=Array.from(sel.options); if(!opts.length)return;
-      let i=opts.findIndex(o=>o.value===sel.value); if(i<0)i=0;
-      if(e.key==='ArrowRight')i=(i+1)%opts.length;
-      else i=(i-1+opts.length)%opts.length;
-      sel.value=opts[i].value; renderSelected();
-    }
+      if(!items.length) return;
+      let i=items.findIndex(it=>it.key===selectedKey); if(i<0)i=0;
+      if(e.key==='ArrowRight')i=(i+1)%items.length;
+      else i=(i-1+items.length)%items.length;
+      selectItem(items[i].key);
+    } else if(e.key==='Escape'){ closePanel(); if(!upModal.hidden) closeModal(); }
   });
 
   applyAuthState();
-  renderSelected();
+  selectFirst();
   try{ window.parent.postMessage({type:'composition-ready'},'*'); }catch(_){}
 })();
 </script>
