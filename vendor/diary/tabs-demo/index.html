@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>日记 · Tabs Demo</title>
+<style>
+  :root {
+    --paper:#fcfaf4; --surface:#ffffff; --ink:#362c24; --ink-soft:#71675d; --ink-dim:#a09890;
+    --accent:#359658; --accent-strong:#007c3a; --accent-soft:#dcf7e2;
+    --line:#e5e1da; --line-strong:#d2cdc5; --danger:#c0392b;
+    --radius:1.25rem; --radius-sm:.75rem;
+    --font: -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC","Segoe UI",system-ui,sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin:0; padding:0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 24px 16px 64px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .card-base {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px -16px rgba(54,44,36,.25), 0 2px 6px -4px rgba(54,44,36,.15);
+  }
+
+  /* ---------- Header / Tabs ---------- */
+  .app-head {
+    margin-bottom: 18px;
+  }
+  .app-head h1 {
+    font-size: 1.35rem;
+    margin: 0 0 14px;
+    letter-spacing: .02em;
+  }
+  .app-head .sub {
+    color: var(--ink-soft);
+    font-size: .85rem;
+    margin: -8px 0 14px;
+  }
+
+  .tabs {
+    display: inline-flex;
+    gap: 6px;
+    padding: 6px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    box-shadow: 0 4px 14px -10px rgba(54,44,36,.3);
+  }
+  .tab-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--ink-soft);
+    font: inherit;
+    font-size: .95rem;
+    font-weight: 600;
+    padding: .55rem 1.15rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .22s ease, color .22s ease, transform .1s ease;
+  }
+  .tab-btn:hover { background: var(--accent-soft); color: var(--accent-strong); }
+  .tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab-btn:active { transform: translateY(1px); }
+  .tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 12px -6px rgba(0,124,58,.6);
+  }
+
+  /* ---------- Panels ---------- */
+  .panel { display: none; }
+  .panel.show {
+    display: block;
+    animation: fadeUp .35s cubic-bezier(.16,1,.3,1);
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---------- Bar (toolbar) ---------- */
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .bar .label { color: var(--ink-soft); font-size: .9rem; }
+
+  .pill {
+    appearance: none;
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    font-size: .9rem;
+    padding: .5rem .9rem;
+    border-radius: 999px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    transition: border-color .2s ease, background .2s ease;
+  }
+  .pill:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .pill .arrow { font-size: .7rem; color: var(--ink-dim); transition: transform .2s ease; }
+  .pill.open .arrow { transform: rotate(180deg); }
+
+  select.input, input.input {
+    appearance: none;
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    font-size: .9rem;
+    padding: .5rem .8rem;
+    border-radius: var(--radius-sm);
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  select.input:focus, input.input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  input.input.small { width: 120px; }
+  input.input.search { flex: 1 1 160px; min-width: 140px; }
+
+  /* ---------- Calendar popover ---------- */
+  .cal-anchor { position: relative; }
+  .calendar {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 30;
+    width: 280px;
+    padding: 14px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 16px 36px -18px rgba(54,44,36,.4);
+    display: none;
+  }
+  .calendar.show {
+    display: block;
+    animation: fadeUp .22s ease;
+  }
+  .cal-head {
+    text-align: center;
+    font-weight: 600;
+    font-size: .95rem;
+    margin-bottom: 10px;
+    color: var(--ink);
+  }
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .cal-wd {
+    text-align: center;
+    font-size: .72rem;
+    color: var(--ink-dim);
+    padding: 4px 0;
+    font-weight: 600;
+  }
+  .cal-day {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: .82rem;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s ease, color .15s ease;
+  }
+  .cal-day.empty { cursor: default; }
+  .cal-day:not(.empty):hover { background: var(--accent-soft); color: var(--accent-strong); }
+  .cal-day.today {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+  }
+  .cal-day.selected:not(.today) {
+    border: 1px solid var(--accent);
+    color: var(--accent-strong);
+  }
+
+  /* ---------- Editor ---------- */
+  .editor { padding: 22px; }
+  .editor h2 {
+    margin: 0 0 4px;
+    font-size: 1.15rem;
+  }
+  .editor .saved {
+    color: var(--accent);
+    font-size: .82rem;
+    margin: 0 0 14px;
+    font-weight: 600;
+  }
+  .editor textarea {
+    width: 100%;
+    min-height: 220px;
+    resize: vertical;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font: inherit;
+    font-size: 1rem;
+    color: var(--ink);
+    background: var(--paper);
+    line-height: 1.7;
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  .editor textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+    background: var(--surface);
+  }
+
+  /* ---------- List (TOC) ---------- */
+  .stat {
+    color: var(--ink-soft);
+    font-size: .9rem;
+    margin: 0 0 6px;
+  }
+  .note {
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    display: inline-block;
+    font-size: .78rem;
+    padding: .25rem .7rem;
+    border-radius: 999px;
+    margin: 0 0 14px;
+  }
+  .entry-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .entry {
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .entry-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+  }
+  .entry-date {
+    font-weight: 600;
+    font-size: .95rem;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .entry-weather {
+    font-size: .85rem;
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    padding: .15rem .6rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .entry-sum {
+    color: var(--ink-soft);
+    font-size: .9rem;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .badge-lock {
+    font-size: .8rem;
+    color: var(--ink-dim);
+    background: var(--line);
+    padding: .15rem .55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .entry-chev {
+    color: var(--ink-dim);
+    font-size: .75rem;
+    transition: transform .25s ease;
+  }
+  .entry.open .entry-chev { transform: rotate(180deg); }
+
+  .entry-body {
+    max-height: 0;
+    opacity: 0;
+    transition: max-height .3s ease, opacity .25s ease;
+    border-top: 0 solid var(--line);
+  }
+  .entry.open .entry-body {
+    max-height: 600px;
+    opacity: 1;
+    border-top: 1px solid var(--line);
+  }
+  .entry-body-inner {
+    padding: 14px 18px 18px;
+    color: var(--ink);
+    font-size: .95rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .entry-locked-notice {
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+  .empty-state {
+    color: var(--ink-dim);
+    text-align: center;
+    padding: 40px 0;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="app-head">
+      <h1>🌱 我的日记</h1>
+      <p class="sub">离线演示 · 仅本地展示，不做真实保存与加密</p>
+      <div class="tabs" role="tablist">
+        <button class="tab-btn active" data-tab="write" role="tab" aria-selected="true">✍️ 写日记</button>
+        <button class="tab-btn" data-tab="toc" role="tab" aria-selected="false">📖 目录</button>
+      </div>
+    </header>
+
+    <!-- ============ Tab 1: Write ============ -->
+    <section class="panel show" id="panel-write" role="tabpanel">
+      <div class="bar">
+        <div class="cal-anchor">
+          <button class="pill" id="datePill" type="button">
+            <span id="datePillText">日期</span>
+            <span class="arrow">▾</span>
+          </button>
+          <div class="calendar" id="calendar"></div>
+        </div>
+
+        <span class="label">天气：</span>
+        <select class="input" id="weatherSelect"></select>
+        <input class="input small" id="weatherCustom" type="text" placeholder="自定义天气" />
+
+        <input class="input search" id="searchBox" type="text" placeholder="搜索日记…" />
+      </div>
+
+      <div class="editor card-base">
+        <h2>今天的日记</h2>
+        <p class="saved">已保存 ✓</p>
+        <textarea id="diaryText" placeholder="写下今天的心情、故事或小秘密…只有你能看到 😊"></textarea>
+      </div>
+    </section>
+
+    <!-- ============ Tab 2: TOC ============ -->
+    <section class="panel" id="panel-toc" role="tabpanel">
+      <p class="stat" id="tocStat">共 0 篇日记</p>
+      <p class="note" id="tocNote" style="display:none">当前为示例数据</p>
+      <div class="entry-list" id="entryList"></div>
+    </section>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- Constants ---------- */
+  var ENTRY_PREFIX = "diary_entry_";
+  var META_KEY = "diary_meta";
+  var PRESET_WEATHERS = ['无','☀️ 晴','🌤️ 晴间多云','⛅ 多云','☁️ 阴','🌦️ 阵雨','🌧️ 雨','⛈️ 雷阵雨','🌨️ 雪','🌫️ 雾','💨 大风'];
+  var WEEK = ['日','一','二','三','四','五','六'];
+  var SUMMARY_LEN = 40;
+
+  /* ---------- Sample fallback data (date descending) ---------- */
+  var SAMPLE_ENTRIES = [
+    { date: "2026-06-21", weather: "☀️ 晴", text: "今天爸爸妈妈带我去公园放风筝。风筝飞得好高好高，像一只在天上跑的小燕子。我跑啊跑，笑得肚子都疼了。中午还吃了草莓味的冰淇淋，真是开心的一天！" },
+    { date: "2026-06-18", weather: "🌧️ 雨", text: "下了一整天的雨。放学的时候没带伞，是同桌小美和我一起打一把伞回家的。雨点打在伞上滴答滴答，像在唱歌。谢谢小美，她真是我的好朋友。" },
+    { date: "2026-06-15", weather: "⛅ 多云", text: "明天就要数学考试了。我把错题本又复习了一遍，妈妈说不要紧张，只要认真就好。我深呼吸，告诉自己：我可以的！加油，明天的我！" },
+    { date: "2026-06-12", weather: "🌤️ 晴间多云", text: "今天读完了《夏洛的网》。夏洛为了救小猪威尔伯织了好多字，我读到最后偷偷哭了。原来友谊可以这么伟大。我也想做一个像夏洛一样善良的人。" },
+    { date: "2026-06-09", weather: "🔒", encrypted: true },
+    { date: "2026-06-05", weather: "💨 大风", text: "今天风特别大，把我的帽子吹跑了！我追着帽子跑了大半个操场，最后是体育老师帮我捡回来的。虽然有点狼狈，但想想还挺好笑的，哈哈。" }
+  ];
+
+  /* ---------- Helpers ---------- */
+  function escapeHtml(s) {
+    if (s === null || s === undefined) return "";
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function pad2(n) { return n < 10 ? "0" + n : "" + n; }
+
+  // date string 'YYYY-MM-DD' -> 'YYYY年M月D日 星期X'
+  function formatDateCN(dateStr) {
+    var parts = String(dateStr).split("-");
+    var y = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10);
+    var d = parseInt(parts[2], 10);
+    if (isNaN(y) || isNaN(m) || isNaN(d)) return escapeHtml(dateStr);
+    var wd = new Date(y, m - 1, d).getDay();
+    return y + "年" + m + "月" + d + "日 星期" + WEEK[wd];
+  }
+
+  function todayStr() {
+    var t = new Date();
+    return t.getFullYear() + "-" + pad2(t.getMonth() + 1) + "-" + pad2(t.getDate());
+  }
+
+  function firstLineSummary(text) {
+    var s = String(text || "").replace(/\r/g, "");
+    var line = s.split("\n")[0].trim();
+    if (!line) line = s.trim();
+    if (line.length > SUMMARY_LEN) line = line.slice(0, SUMMARY_LEN) + "…";
+    return line || "（空白日记）";
+  }
+
+  /* ---------- DOM refs ---------- */
+  var tabBtns = document.querySelectorAll(".tab-btn");
+  var panels = {
+    write: document.getElementById("panel-write"),
+    toc: document.getElementById("panel-toc")
+  };
+
+  /* ---------- Tab switching ---------- */
+  tabBtns.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var key = btn.getAttribute("data-tab");
+      tabBtns.forEach(function (b) {
+        var active = b === btn;
+        b.classList.toggle("active", active);
+        b.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      Object.keys(panels).forEach(function (k) {
+        panels[k].classList.toggle("show", k === key);
+      });
+      if (key === "toc") renderTOC();
+    });
+  });
+
+  /* ---------- Weather select ---------- */
+  var weatherSelect = document.getElementById("weatherSelect");
+  PRESET_WEATHERS.forEach(function (w) {
+    var opt = document.createElement("option");
+    opt.value = w;
+    opt.textContent = w;
+    weatherSelect.appendChild(opt);
+  });
+
+  /* ---------- Date pill + calendar ---------- */
+  var datePill = document.getElementById("datePill");
+  var datePillText = document.getElementById("datePillText");
+  var calendar = document.getElementById("calendar");
+  var selectedDate = todayStr();
+
+  function refreshPillText() {
+    datePillText.textContent = formatDateCN(selectedDate);
+  }
+
+  function buildCalendar() {
+    var now = new Date();
+    var y = now.getFullYear();
+    var m = now.getMonth(); // 0-based
+    var tStr = todayStr();
+
+    var firstDay = new Date(y, m, 1).getDay();
+    var daysInMonth = new Date(y, m + 1, 0).getDate();
+
+    var html = '<div class="cal-head">' + y + "年" + (m + 1) + "月</div>";
+    html += '<div class="cal-grid">';
+    WEEK.forEach(function (w) {
+      html += '<div class="cal-wd">' + w + "</div>";
+    });
+    for (var i = 0; i < firstDay; i++) {
+      html += '<div class="cal-day empty"></div>';
+    }
+    for (var d = 1; d <= daysInMonth; d++) {
+      var ds = y + "-" + pad2(m + 1) + "-" + pad2(d);
+      var cls = "cal-day";
+      if (ds === tStr) cls += " today";
+      if (ds === selectedDate) cls += " selected";
+      html += '<button type="button" class="' + cls + '" data-date="' + ds + '">' + d + "</button>";
+    }
+    html += "</div>";
+    calendar.innerHTML = html;
+  }
+
+  function openCalendar() {
+    buildCalendar();
+    calendar.classList.add("show");
+    datePill.classList.add("open");
+  }
+  function closeCalendar() {
+    calendar.classList.remove("show");
+    datePill.classList.remove("open");
+  }
+
+  datePill.addEventListener("click", function (e) {
+    e.stopPropagation();
+    if (calendar.classList.contains("show")) closeCalendar();
+    else openCalendar();
+  });
+
+  calendar.addEventListener("click", function (e) {
+    e.stopPropagation();
+    var btn = e.target.closest(".cal-day");
+    if (!btn || btn.classList.contains("empty")) return;
+    selectedDate = btn.getAttribute("data-date");
+    refreshPillText();
+    closeCalendar();
+  });
+
+  document.addEventListener("click", function () {
+    if (calendar.classList.contains("show")) closeCalendar();
+  });
+
+  refreshPillText();
+
+  /* ---------- Parse stored entries (3 formats, no throw) ---------- */
+  function parseStoredEntry(dateStr, rawValue) {
+    var entry = { date: dateStr, weather: "", text: "", encrypted: false };
+
+    var parsed = null;
+    var parseOk = false;
+    try {
+      parsed = JSON.parse(rawValue);
+      parseOk = true;
+    } catch (err) {
+      parseOk = false;
+    }
+
+    if (!parseOk) {
+      // Format 2: raw plain text string that isn't valid JSON
+      entry.text = String(rawValue);
+      return entry;
+    }
+
+    if (typeof parsed === "string") {
+      // Format 2: JSON.parse produced a plain string
+      entry.text = parsed;
+      return entry;
+    }
+
+    if (parsed && typeof parsed === "object") {
+      // Format 3: encrypted struct {iv, data}
+      if (parsed.iv !== undefined && parsed.data !== undefined) {
+        entry.encrypted = true;
+        entry.weather = parsed.weather || "🔒";
+        return entry;
+      }
+      // Format 1: plaintext object {text, weather}
+      entry.text = parsed.text !== undefined ? String(parsed.text) : "";
+      entry.weather = parsed.weather !== undefined ? String(parsed.weather) : "";
+      return entry;
+    }
+
+    // Fallback: stringify whatever it was
+    entry.text = rawValue == null ? "" : String(rawValue);
+    return entry;
+  }
+
+  function loadFromStorage() {
+    var entries = [];
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        if (!key || key.indexOf(ENTRY_PREFIX) !== 0) continue;
+        if (key === META_KEY) continue;
+        var dateStr = key.slice(ENTRY_PREFIX.length);
+        var raw;
+        try { raw = localStorage.getItem(key); } catch (e) { raw = null; }
+        if (raw == null) continue;
+        entries.push(parseStoredEntry(dateStr, raw));
+      }
+    } catch (e) {
+      // localStorage may be unavailable under file:// in some browsers
+      entries = [];
+    }
+    return entries;
+  }
+
+  function normalizeSamples() {
+    return SAMPLE_ENTRIES.map(function (s) {
+      return {
+        date: s.date,
+        weather: s.weather || "",
+        text: s.text || "",
+        encrypted: !!s.encrypted
+      };
+    });
+  }
+
+  /* ---------- Render TOC ---------- */
+  var tocStat = document.getElementById("tocStat");
+  var tocNote = document.getElementById("tocNote");
+  var entryList = document.getElementById("entryList");
+
+  function renderTOC() {
+    var entries = loadFromStorage();
+    var usingSamples = false;
+    if (!entries.length) {
+      entries = normalizeSamples();
+      usingSamples = true;
+    }
+
+    // Sort by date descending
+    entries.sort(function (a, b) {
+      return a.date < b.date ? 1 : (a.date > b.date ? -1 : 0);
+    });
+
+    tocStat.textContent = "共 " + entries.length + " 篇日记";
+    tocNote.style.display = usingSamples ? "inline-block" : "none";
+
+    if (!entries.length) {
+      entryList.innerHTML = '<div class="empty-state">还没有日记，去「写日记」记录一篇吧 ✍️</div>';
+      return;
+    }
+
+    var html = "";
+    entries.forEach(function (e, idx) {
+      var dateLabel = formatDateCN(e.date);
+      var weatherTag = e.weather && e.weather !== "无"
+        ? '<span class="entry-weather">' + escapeHtml(e.weather) + "</span>"
+        : "";
+
+      var summaryHtml, bodyHtml;
+      if (e.encrypted) {
+        summaryHtml = '<span class="badge-lock">🔒 已加密</span>';
+        bodyHtml = '<div class="entry-locked-notice">🔒 已加密（需在真实页解锁后查看）</div>';
+      } else {
+        summaryHtml = '<span class="entry-sum">' + escapeHtml(firstLineSummary(e.text)) + "</span>";
+        bodyHtml = escapeHtml(e.text || "（空白日记）");
+      }
+
+      html +=
+        '<article class="entry card-base" data-idx="' + idx + '">' +
+          '<div class="entry-head">' +
+            '<span class="entry-date">' + escapeHtml(dateLabel) + "</span>" +
+            weatherTag +
+            summaryHtml +
+            '<span class="entry-chev">▾</span>' +
+          "</div>" +
+          '<div class="entry-body"><div class="entry-body-inner">' + bodyHtml + "</div></div>" +
+        "</article>";
+    });
+    entryList.innerHTML = html;
+  }
+
+  // Accordion (event delegation)
+  entryList.addEventListener("click", function (e) {
+    var art = e.target.closest(".entry");
+    if (!art) return;
+    art.classList.toggle("open");
+  });
+
+  /* ---------- Initial render ---------- */
+  renderTOC();
+})();
+</script>
+</body>
+</html>
