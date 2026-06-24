@@ -22,11 +22,14 @@ const router = express.Router();
 // --- Constants ---
 
 const MAX_TEXT_LEN = 3000; // hard cap on stored text (DoS guard + product limit)
-const TITLE_FALLBACK_LEN = 20; // chars taken from body when no title supplied
-const DEFAULT_TITLE = '我的作文';
-const PUBLIC_LIST_LIMIT = 100;
+const MAX_TITLE_LEN = 40; // hard cap on title (truncated if longer)
+const MAX_PROMPT_LEN = 1000; // hard cap on 作文考题 (truncated if longer)
+const PUBLIC_LIST_LIMIT = 200;
 const RATE_WINDOW_MS = 60 * 1000; // 1 minute
 const POST_MAX_PER_WINDOW = 10; // ≤10 uploads per user per minute
+
+// Allowed 学段 (level) values. Upload is rejected if level is not one of these.
+const VALID_LEVELS = Object.freeze(['小学', '初中', '高中', '大学']);
 
 /**
  * Wrap an async route handler so any rejected promise reaches Express's error
@@ -99,28 +102,6 @@ function aiEnrich(essay, _text) {
 
 // --- Helpers ---------------------------------------------------------------
 
-/**
- * Derive a non-empty title: explicit title if provided, else the first chunk
- * of the body text, else a constant fallback.
- * @param {string|undefined} rawTitle
- * @param {string} text already-trimmed body text
- * @returns {string}
- */
-function deriveTitle(rawTitle, text) {
-  if (typeof rawTitle === 'string' && rawTitle.trim()) {
-    return rawTitle.trim().slice(0, 200);
-  }
-  const snippet = text.slice(0, TITLE_FALLBACK_LEN).trim();
-  return snippet || DEFAULT_TITLE;
-}
-
-/** Coerce an isPublic input to the stored SMALLINT (1 public default, 0 private). */
-function normalizeIsPublic(value) {
-  if (value === undefined || value === null) return 1; // default public
-  if (value === false || value === 0 || value === '0' || value === 'false') return 0;
-  return 1;
-}
-
 /** Parse a stored parsed_data blob back into an essay object, tolerating bad data. */
 function parseEssay(parsedData) {
   try {
@@ -130,15 +111,22 @@ function parseEssay(parsedData) {
   }
 }
 
-/** Map a DB row to the wire shape returned to the client. */
-function rowToItem(row) {
+/**
+ * Map a DB row to the flat wire shape returned to the client.
+ * `currentUserId` is used to compute `isMine`.
+ * @param {object} row
+ * @param {number} currentUserId
+ */
+function rowToItem(row, currentUserId) {
   return {
     id: Number(row.id),
     title: row.title,
-    isPublic: Number(row.is_public),
+    prompt: row.prompt || '',
+    level: row.level || '',
     essay: parseEssay(row.parsed_data),
     ownerId: Number(row.user_id),
     createdAt: Number(row.created_at),
+    isMine: Number(row.user_id) === Number(currentUserId),
   };
 }
 
@@ -171,37 +159,60 @@ router.use(requireAuth);
 
 /**
  * POST /api/composition/articles
- * Body: { title?, text, isPublic? }
- * Creates an article from raw text. Text is required, trimmed, and truncated to
- * MAX_TEXT_LEN (truncation reported via `truncated`). Returns the parsed essay.
+ * Body: { title, prompt?, text, level }
+ *   title  — required; trimmed; empty => 400; capped at MAX_TITLE_LEN chars.
+ *   level  — required; must be one of VALID_LEVELS, else 400.
+ *   prompt — optional 作文考题; capped at MAX_PROMPT_LEN chars.
+ *   text   — required 正文; trimmed; capped at MAX_TEXT_LEN (truncation reported
+ *            via `truncated`).
+ * All uploads are public (is_public always stored as 1). Any client isPublic is
+ * ignored. Returns { ok, article:{ id, title, prompt, level, isPublic, essay,
+ * createdAt }, truncated }.
  */
 router.post(
   '/articles',
   postLimiter,
   asyncHandler(async (req, res) => {
     const body = req.body || {};
-    const rawText = body.text;
 
+    // title (required, capped at 40 chars).
+    const rawTitle = body.title;
+    if (typeof rawTitle !== 'string' || !rawTitle.trim()) {
+      throw httpError(400, '请填写标题');
+    }
+    const title = rawTitle.trim().slice(0, MAX_TITLE_LEN);
+
+    // level (required, must be a known 学段).
+    const level = typeof body.level === 'string' ? body.level.trim() : '';
+    if (!VALID_LEVELS.includes(level)) {
+      throw httpError(400, '请选择学段');
+    }
+
+    // text (required 正文, capped at 3000 chars).
+    const rawText = body.text;
     if (typeof rawText !== 'string' || !rawText.trim()) {
       throw httpError(400, '正文不能为空');
     }
-
     const trimmed = rawText.trim();
     const truncated = trimmed.length > MAX_TEXT_LEN;
     const text = truncated ? trimmed.slice(0, MAX_TEXT_LEN) : trimmed;
 
-    const title = deriveTitle(body.title, text);
-    const isPublic = normalizeIsPublic(body.isPublic);
+    // prompt (optional 作文考题, capped at 1000 chars).
+    const prompt =
+      typeof body.prompt === 'string' ? body.prompt.trim().slice(0, MAX_PROMPT_LEN) : '';
+
+    // Unified public storage: ignore any client-supplied isPublic.
+    const isPublic = 1;
     const essay = parseTextToEssay(text, title);
     const parsedData = JSON.stringify(essay);
 
     const now = Date.now();
     const { rows } = await query(
       `INSERT INTO composition_articles
-         (user_id, title, original_text, parsed_data, is_public, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $6)
+         (user_id, title, prompt, level, original_text, parsed_data, is_public, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)
        RETURNING id, created_at`,
-      [req.user.id, title, text, parsedData, isPublic, now]
+      [req.user.id, title, prompt, level, text, parsedData, isPublic, now]
     );
 
     const created = rows[0];
@@ -210,6 +221,8 @@ router.post(
       article: {
         id: Number(created.id),
         title,
+        prompt,
+        level,
         isPublic,
         essay,
         createdAt: Number(created.created_at),
@@ -221,10 +234,12 @@ router.post(
 
 /**
  * GET /api/composition/articles
- * Returns { mine, public }:
- *   mine   = all of the caller's own articles (public + private)
- *   public = OTHER users' public articles (caller's own are excluded to avoid
- *            duplication), newest first, capped at PUBLIC_LIST_LIMIT.
+ * Returns a flat, de-duplicated, newest-first list under `articles`:
+ *   articles = the caller's own articles (all) + OTHER users' public articles,
+ *              each item { id, title, prompt, level, essay, ownerId, createdAt,
+ *              isMine }. The public portion is capped at PUBLIC_LIST_LIMIT.
+ * `mine`/`public` are retained for backward compatibility but the client now
+ * uses `articles`.
  */
 router.get(
   '/articles',
@@ -232,7 +247,7 @@ router.get(
     const userId = req.user.id;
 
     const mineResult = await query(
-      `SELECT id, user_id, title, parsed_data, is_public, created_at
+      `SELECT id, user_id, title, prompt, level, parsed_data, is_public, created_at
          FROM composition_articles
         WHERE user_id = $1
         ORDER BY created_at DESC`,
@@ -240,7 +255,7 @@ router.get(
     );
 
     const publicResult = await query(
-      `SELECT id, user_id, title, parsed_data, is_public, created_at
+      `SELECT id, user_id, title, prompt, level, parsed_data, is_public, created_at
          FROM composition_articles
         WHERE is_public = 1 AND user_id <> $1
         ORDER BY created_at DESC
@@ -248,37 +263,31 @@ router.get(
       [userId, PUBLIC_LIST_LIMIT]
     );
 
+    const mine = mineResult.rows.map((row) => rowToItem(row, userId));
+    const publicItems = publicResult.rows.map((row) => rowToItem(row, userId));
+
+    // Flat list: own first, then others' public, sorted newest-first overall.
+    const articles = [...mine, ...publicItems].sort((a, b) => b.createdAt - a.createdAt);
+
     res.json({
-      mine: mineResult.rows.map(rowToItem),
-      public: publicResult.rows.map(rowToItem),
+      articles,
+      // Backward-compatible fields (deprecated).
+      mine,
+      public: publicItems,
     });
   })
 );
 
 /**
- * PUT /api/composition/articles/:id
- * Body: { isPublic }
- * Updates only the caller's own article's public flag. Returns the updated item.
+ * PUT /api/composition/articles/:id — DEPRECATED.
+ * Public/private toggling no longer exists: every upload is public. The endpoint
+ * is retained only to return a clear, stable response; it performs no mutation.
  */
 router.put(
   '/articles/:id',
   asyncHandler(async (req, res) => {
-    const id = parseId(req.params.id);
-    const isPublic = normalizeIsPublic((req.body || {}).isPublic);
-    const now = Date.now();
-
-    const { rows } = await query(
-      `UPDATE composition_articles
-          SET is_public = $1, updated_at = $2
-        WHERE id = $3 AND user_id = $4
-        RETURNING id, user_id, title, parsed_data, is_public, created_at`,
-      [isPublic, now, id, req.user.id]
-    );
-
-    if (!rows[0]) {
-      throw httpError(404, '文章不存在或无权限');
-    }
-    res.json({ ok: true, article: rowToItem(rows[0]) });
+    parseId(req.params.id); // still validates the id shape (400 on garbage)
+    throw httpError(410, '公开设置已统一，无需切换');
   })
 );
 
