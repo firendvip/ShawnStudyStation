@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小善走格子</title>
+    <style>
+        :root {
+          --color-paper:#fcfaf4;
+          --color-surface:#ffffff;
+          --color-ink:#362c24;
+          --color-ink-soft:#71675d;
+          --color-ink-dim:#a09890;
+          --color-accent:#359658;
+          --color-accent-strong:#007c3a;
+          --color-accent-soft:#dcf7e2;
+          --color-line:#e5e1da;
+          --color-line-strong:#d2cdc5;
+          --color-overlay:rgba(54,44,36,0.38);
+          --color-danger:#c0392b;
+          --color-danger-soft:#fdecea;
+          --radius-sm:0.5rem;
+          --radius-md:0.875rem;
+          --radius-lg:1.25rem;
+          --ease-out:cubic-bezier(0.16,1,0.3,1);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            background: var(--color-paper);
+            padding: 24px 20px 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            box-shadow: 0 1px 2px rgba(54,44,36,.05), 0 8px 24px rgba(54,44,36,.06);
+            border: 1px solid var(--color-line);
+            position: relative;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--color-ink);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        h1:hover {
+            animation: float 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        /* 渐变流动标题引擎 */
+        @keyframes flow {
+            to { background-position: 300% 0; }
+        }
+        #game-title {
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            animation: flow 5s linear infinite;
+        }
+        #game-title.theme-1 {
+            background: linear-gradient(90deg,#5fc7a0,#7fd86a,#5fb7c4,#5fc7a0);
+            background-size: 300% 100%;
+        }
+        #game-title.theme-7 {
+            background: linear-gradient(90deg,#4fb8bf,#5fa8e0,#62cbb0,#4fb8bf);
+            background-size: 300% 100%;
+        }
+        /* 主题切换小按钮 */
+        .title-theme-toggle {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+        .title-theme-toggle button {
+            padding: 3px 10px;
+            font-size: 0.72rem;
+            border-radius: 999px;
+            border: 1px solid rgba(0,0,0,0.12);
+            background: rgba(255,255,255,0.6);
+            color: var(--color-ink, #333);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .title-theme-toggle button:hover {
+            border-color: rgba(0,0,0,0.25);
+        }
+        .title-theme-toggle button.active {
+            border-color: #5fc7a0;
+            box-shadow: 0 0 0 1px #5fc7a0 inset;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .icon-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: var(--radius-sm);
+            background: var(--color-paper);
+            color: var(--color-ink-soft);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid var(--color-line);
+            box-shadow: 0 1px 2px rgba(54,44,36,.05);
+        }
+
+        .icon-btn:hover {
+            background: var(--color-accent-soft);
+            color: var(--color-accent-strong);
+            transform: scale(1.1);
+        }
+        
+        .game-board {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 500px;
+            margin: 0 auto 30px;
+            border-radius: 50%;
+            overflow: visible;
+        }
+        
+        .circle-path {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+        }
+        
+        .cell {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+            padding: 8px;
+            word-break: break-word;
+            overflow: hidden;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            transform: translate(-50%, -50%);
+        }
+        
+        .cell.selected {
+            box-shadow:
+                0 0 0 4px var(--color-accent),
+                0 0 0 6px var(--color-accent-soft),
+                0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 5;
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow:
+                    0 0 0 3px var(--color-accent),
+                    0 0 0 5px var(--color-accent-soft),
+                    0 4px 15px rgba(0, 0, 0, 0.3);
+            }
+            100% {
+                box-shadow:
+                    0 0 0 5px var(--color-accent),
+                    0 0 0 8px var(--color-accent-soft),
+                    0 4px 20px rgba(0, 0, 0, 0.4);
+            }
+        }
+        
+        .player {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: var(--color-accent);
+            border-radius: 50%;
+            z-index: 10;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .player:hover {
+            animation: bounce 0.5s ease infinite alternate;
+        }
+        
+        @keyframes bounce {
+            from { transform: translate(-50%, -50%); }
+            to { transform: translate(-50%, -60%); }
+        }
+        
+        .player.final-position {
+            animation: vertical-bounce 1s ease-in-out infinite;
+        }
+        
+        @keyframes vertical-bounce {
+            0%, 100% { transform: translate(-50%, -50%); }
+            50% { transform: translate(-50%, -55%); }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--color-overlay);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            position: relative;
+            background-color: var(--color-surface);
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 24px rgba(54,44,36,.12);
+        }
+
+        .modal h2 {
+            margin-bottom: 4px;
+            text-align: center;
+            color: var(--color-ink);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .modal .modal-sub {
+            text-align: center;
+            color: var(--color-ink-soft);
+            font-size: .9rem;
+            margin-bottom: 22px;
+        }
+
+        .modal .setting-hint {
+            color: var(--color-ink-dim);
+            font-size: .82rem;
+            margin-bottom: 10px;
+        }
+
+        .modal-close-x {
+            position: absolute;
+            top: 16px;
+            right: 18px;
+            width: 30px;
+            height: 30px;
+            border: none;
+            background: transparent;
+            color: var(--color-ink-dim);
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            transition: background .2s, color .2s;
+        }
+        .modal-close-x:hover {
+            background: var(--color-accent-soft);
+            color: var(--color-accent-strong);
+        }
+        
+        .setting-group {
+            margin-bottom: 15px;
+        }
+        
+        .setting-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--color-ink-soft);
+        }
+        
+        .prize-input, .title-input, .player-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: var(--color-surface);
+            border: 1.5px solid var(--color-line-strong);
+            border-radius: var(--radius-sm);
+            color: var(--color-ink);
+        }
+
+        .prize-input:focus, .title-input:focus, .player-input:focus {
+            border-color: var(--color-accent);
+            outline: none;
+        }
+        
+        .image-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .image-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: var(--color-paper);
+            margin-bottom: 10px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .image-preview span {
+            color: var(--color-ink-dim);
+        }
+        
+        .image-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .cancel-btn {
+            background: var(--color-paper);
+            color: var(--color-ink-soft);
+            border: 1.5px solid var(--color-line-strong);
+        }
+        .cancel-btn:hover {
+            background: var(--color-accent-soft);
+            color: var(--color-accent-strong);
+            border-color: var(--color-accent);
+        }
+        
+        .delete-btn {
+            background: var(--color-danger-soft);
+            color: var(--color-danger);
+            border: 1.5px solid var(--color-danger);
+        }
+        .delete-btn:hover {
+            background: var(--color-danger);
+            color: #fff;
+        }
+        
+        .upload-btn {
+            background: var(--color-accent);
+            color: #fff;
+        }
+        .upload-btn:hover {
+            background: var(--color-accent-strong);
+        }
+        
+        .history-modal .modal-content {
+            max-width: 600px;
+            overflow: hidden; /* 只让内部记录列表滚动，避免出现两个滚动条 */
+        }
+        
+        .history-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid var(--color-line);
+            text-align: left;
+        }
+        
+        .size-warning {
+            color: var(--color-danger);
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .game-board {
+                height: 400px;
+                max-width: 400px;
+            }
+            
+            .cell {
+                width: 70px;
+                height: 70px;
+                font-size: 12px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .game-board {
+                height: 300px;
+                max-width: 300px;
+            }
+            
+            .cell {
+                width: 60px;
+                height: 60px;
+                font-size: 10px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .player {
+                width: 40px;
+                height: 40px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title-theme-toggle">
+            <button id="theme-btn-1" class="active" data-theme="theme-1">1 号 薄荷青柠</button>
+            <button id="theme-btn-7" data-theme="theme-7">7 号 海盐微风</button>
+        </div>
+        <div class="header">
+            <h1 id="game-title" class="theme-1">小善走格子</h1>
+            <div class="header-icons">
+                <button class="icon-btn" id="help-btn">📄</button>
+                <button class="icon-btn" id="settings-btn">⚙</button>
+            </div>
+        </div>
+        
+        <div class="game-board">
+            <div class="circle-path" id="circle-path">
+                <!-- 格子将通过JavaScript动态生成 -->
+            </div>
+            <div class="player" id="player">小善</div>
+        </div>
+    </div>
+
+    <!-- 设置模态框 -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <button class="modal-close-x" id="cancel-btn" aria-label="关闭">✕</button>
+            <h2>设置</h2>
+            <p class="modal-sub">修改即自动保存</p>
+
+            <div class="setting-group">
+                <label class="setting-label">奖品设置</label>
+                <p class="setting-hint">最多可设置 10 个奖品，每个奖品对应一个格子，概率均分</p>
+                <div id="prize-inputs">
+                    <!-- 奖品输入框将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 历史记录模态框 -->
+    <div class="modal history-modal" id="history-modal">
+        <div class="modal-content">
+            <h2>获奖记录</h2>
+            <div class="history-list" id="history-list">
+                <!-- 历史记录将通过JavaScript动态生成 -->
+            </div>
+            <div class="modal-buttons" style="justify-content: center; margin-top: 20px;">
+                <button class="modal-btn cancel-btn" id="close-history-btn">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const gameTitle = document.getElementById('game-title');
+
+            // 标题渐变主题切换（仅改 class，不动 textContent）
+            const themeBtn1 = document.getElementById('theme-btn-1');
+            const themeBtn7 = document.getElementById('theme-btn-7');
+            function setTitleTheme(theme, activeBtn) {
+                gameTitle.classList.remove('theme-1', 'theme-7');
+                gameTitle.classList.add(theme);
+                themeBtn1.classList.remove('active');
+                themeBtn7.classList.remove('active');
+                activeBtn.classList.add('active');
+            }
+            themeBtn1.addEventListener('click', function() { setTitleTheme('theme-1', themeBtn1); });
+            themeBtn7.addEventListener('click', function() { setTitleTheme('theme-7', themeBtn7); });
+
+            const playerElement = document.getElementById('player');
+            const historyList = document.getElementById('history-list');
+            const settingsBtn = document.getElementById('settings-btn');
+            const helpBtn = document.getElementById('help-btn');
+            const settingsModal = document.getElementById('settings-modal');
+            const historyModal = document.getElementById('history-modal');
+            const cancelBtn = document.getElementById('cancel-btn');
+            const closeHistoryBtn = document.getElementById('close-history-btn');
+            const prizeInputs = document.getElementById('prize-inputs');
+            const circlePath = document.getElementById('circle-path');
+            
+            // 默认奖品列表
+            let prizes = [
+                "免罚一次",
+                "数学计算",
+                "中文字帖",
+                "英文字帖",
+                "跳绳30次",
+                "字词默写",
+                "奶茶饮料",
+                "英语练习",
+                "语文练习",
+                "大声朗读"
+            ];
+            
+            // 协调的彩色色环 — 同明度/饱和度的多色相，白字+阴影下清晰好看
+            const colors = [
+                "#3AA76D", "#2E9E8E", "#3E8FB0", "#5B7FC4", "#7E73C0",
+                "#A86FB0", "#C76B92", "#D9826A", "#CDA24A", "#6FA84C"
+            ];
+            
+            // 中奖历史记录
+            let history = JSON.parse(localStorage.getItem('circleHistory')) || [];
+            
+            // 标题与转球：来自账号（昵称 + 头像），由主站通过 postMessage 下发
+            let gameTitleText = "小善专属转盘";
+            let playerText = "善";
+            let playerImage = "";
+            
+            // 当前游戏状态
+            let isPlaying = false;
+            let currentPosition = 0;
+            let totalSteps = 0;
+            let stepsTaken = 0;
+            let timer = null;
+            let speed = 50; // 初始速度(ms)
+            
+            // 初始化游戏
+            function initGame() {
+                // 设置标题和角色名称
+                gameTitle.textContent = gameTitleText;
+                
+                // 设置角色图片或文本
+                updatePlayerDisplay();
+                
+                // 创建圆形格子路径
+                createCirclePath();
+                
+                // 更新历史记录显示
+                updateHistoryDisplay();
+            }
+            
+            // 更新玩家显示
+            function updatePlayerDisplay() {
+                if (playerImage) {
+                    playerElement.style.backgroundImage = `url(${playerImage})`;
+                    playerElement.textContent = "";
+                } else {
+                    playerElement.style.backgroundImage = "none";
+                    playerElement.textContent = playerText;
+                }
+            }
+            
+            // 创建圆形格子路径
+            function createCirclePath() {
+                circlePath.innerHTML = '';
+                const gameBoard = document.querySelector('.game-board');
+                const boardWidth = gameBoard.offsetWidth;
+                const boardHeight = gameBoard.offsetHeight;
+                const centerX = boardWidth / 2;
+                const centerY = boardHeight / 2;
+                const radius = Math.min(boardWidth, boardHeight) * 0.4; // 使用相对尺寸
+                
+                // 生成圆形路径上的格子位置
+                const positions = [];
+                const angleStep = (2 * Math.PI) / prizes.length;
+                
+                for (let i = 0; i < prizes.length; i++) {
+                    const angle = i * angleStep;
+                    const x = centerX + radius * Math.cos(angle);
+                    const y = centerY + radius * Math.sin(angle);
+                    
+                    positions.push({
+                        x: x,
+                        y: y
+                    });
+                }
+                
+                // 创建格子
+                prizes.forEach((prize, index) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.textContent = prize;
+                    cell.style.backgroundColor = colors[index % colors.length];
+                    cell.style.left = `${positions[index].x}px`;
+                    cell.style.top = `${positions[index].y}px`;
+                    cell.dataset.index = index;
+                    
+                    circlePath.appendChild(cell);
+                });
+                
+                // 放置玩家在起点
+                if (positions.length > 0) {
+                    // 开始时玩家在格子中心
+                    playerElement.style.left = `${positions[0].x}px`;
+                    playerElement.style.top = `${positions[0].y}px`;
+                    playerElement.classList.remove('final-position');
+                }
+            }
+            
+            // 开始游戏
+            function startGame() {
+                if (isPlaying) return;
+                
+                isPlaying = true;
+                
+                // 移除所有格子的选中状态
+                document.querySelectorAll('.cell').forEach(cell => {
+                    cell.classList.remove('selected');
+                });
+                
+                // 随机决定走多少步（走三圈加上随机步数）
+                const circles = 3;
+                totalSteps = circles * prizes.length + Math.floor(Math.random() * prizes.length);
+                stepsTaken = 0;
+                currentPosition = 0;
+                speed = 50; // 重置速度
+                
+                // 开始移动
+                movePlayer();
+            }
+            
+            // 移动玩家
+            function movePlayer() {
+                if (stepsTaken >= totalSteps) {
+                    // 游戏结束
+                    isPlaying = false;
+                    
+                    // 选中当前格子
+                    const cells = document.querySelectorAll('.cell');
+                    cells[currentPosition].classList.add('selected');
+                    
+                    // 将玩家移动到右下角（增加偏移量，避免遮挡文字）
+                    const offset = 35; // 增加偏移量，使玩家更靠近右下角
+                    const currentCell = cells[currentPosition];
+                    const cellX = parseInt(currentCell.style.left);
+                    const cellY = parseInt(currentCell.style.top);
+                    
+                    playerElement.style.left = `${cellX + offset}px`;
+                    playerElement.style.top = `${cellY + offset}px`;
+                    
+                    // 添加最终位置动画
+                    playerElement.classList.add('final-position');
+                    
+                    // 显示中奖结果
+                    const prize = prizes[currentPosition];
+                    
+                    // 添加到历史记录
+                    addToHistory(prize);
+                    
+                    return;
+                }
+                
+                // 移动到下一个位置
+                currentPosition = (currentPosition + 1) % prizes.length;
+                
+                // 获取下一个格子的位置
+                const cells = document.querySelectorAll('.cell');
+                const nextCell = cells[currentPosition];
+                
+                // 更新玩家位置（在格子中心）
+                playerElement.style.left = `${nextCell.style.left}`;
+                playerElement.style.top = `${nextCell.style.top}`;
+                
+                stepsTaken++;
+                
+                // 计算速度（由极快到极慢）
+                const progress = stepsTaken / totalSteps;
+                
+                // 动态调整缓动函数 - 逐步减少回弹效果
+                let easingFunction;
+                if (progress < 0.3) {
+                    // 快速阶段 - 有回弹
+                    easingFunction = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+                } else if (progress < 0.7) {
+                    // 中速阶段 - 轻微回弹
+                    easingFunction = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                } else {
+                    // 慢速阶段 - 无回弹
+                    easingFunction = 'cubic-bezier(0.55, 0.055, 0.675, 0.19)';
+                }
+                
+                playerElement.style.transition = `all ${speed}ms ${easingFunction}`;
+                
+                speed = 50 + 800 * Math.pow(progress, 3); // 从50ms增加到850ms
+                
+                // 设置下一次移动
+                timer = setTimeout(movePlayer, speed);
+            }
+            
+            // 添加到历史记录
+            function addToHistory(prize) {
+                const now = new Date();
+                const timeString = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+                
+                history.unshift({ prize, time: timeString });
+                
+                // 限制历史记录数量
+                if (history.length > 50) {
+                    history = history.slice(0, 50);
+                }
+                
+                // 保存到本地存储
+                localStorage.setItem('circleHistory', JSON.stringify(history));
+                
+                // 更新历史记录显示
+                updateHistoryDisplay();
+            }
+            
+            // 更新历史记录显示
+            function updateHistoryDisplay() {
+                historyList.innerHTML = '';
+                
+                if (history.length === 0) {
+                    const emptyMsg = document.createElement('div');
+                    emptyMsg.className = 'history-item';
+                    emptyMsg.textContent = '暂无中奖记录';
+                    emptyMsg.style.textAlign = 'center';
+                    emptyMsg.style.color = '#a09890';
+                    historyList.appendChild(emptyMsg);
+                    return;
+                }
+                
+                history.forEach(item => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    historyItem.textContent = `${item.time} - ${item.prize}`;
+                    historyList.appendChild(historyItem);
+                });
+            }
+            
+            // 打开设置模态框
+            function openSettings() {
+                prizeInputs.innerHTML = '';
+                
+                prizes.forEach((prize, index) => {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'prize-input';
+                    input.value = prize;
+                    input.placeholder = `奖品 ${index + 1}`;
+                    input.dataset.index = index;
+                    prizeInputs.appendChild(input);
+                });
+                
+                // 添加额外的输入框，最多10个
+                for (let i = prizes.length; i < 10; i++) {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'prize-input';
+                    input.placeholder = `奖品 ${i + 1}`;
+                    input.dataset.index = i;
+                    prizeInputs.appendChild(input);
+                }
+                
+                settingsModal.style.display = 'flex';
+            }
+            
+            // 修改即自动保存：实时把奖品写入本地存储并应用，无需点保存按钮
+            function applySettingsLive() {
+                // 奖品列表：仅当至少有一个非空奖品时才更新，避免清空过程中渲染空盘
+                const inputs = prizeInputs.querySelectorAll('.prize-input');
+                const newPrizes = [];
+                inputs.forEach(input => {
+                    if (input.value.trim() !== '') newPrizes.push(input.value.trim());
+                });
+                if (newPrizes.length > 0) {
+                    prizes = newPrizes;
+                    localStorage.setItem('prizes', JSON.stringify(prizes));
+                }
+
+                // 重新渲染（不关闭弹窗）
+                initGame();
+            }
+            
+            // 从本地存储加载数据（仅奖品；标题/转球来自账号）
+            function loadFromLocalStorage() {
+                const savedPrizes = localStorage.getItem('prizes');
+                if (savedPrizes) {
+                    prizes = JSON.parse(savedPrizes);
+                }
+            }
+
+            // 接收主站下发的账号信息：昵称 → 标题「{昵称}专属转盘」，头像 → 转球图案
+            function applyAccount(nickname, avatar) {
+                const nick = (nickname || '').trim();
+                gameTitleText = (nick || '小善') + '专属转盘';
+                playerText = (nick || '小善').charAt(0);
+                playerImage = avatar || '';
+                initGame();
+            }
+            window.addEventListener('message', function(e) {
+                const d = e.data;
+                if (d && d.type === 'lottery-config') applyAccount(d.nickname, d.avatar);
+            });
+            // 通知主站：转盘已就绪，请下发账号信息
+            try { if (window.parent && window.parent !== window) window.parent.postMessage({ type: 'lottery-ready' }, '*'); } catch (_) {}
+
+            // 初始化游戏
+            loadFromLocalStorage();
+            initGame();
+            
+            // 添加玩家点击事件
+            playerElement.addEventListener('click', function() {
+                if (!isPlaying) {
+                    startGame();
+                }
+            });
+            
+            // 添加设置按钮点击事件
+            settingsBtn.addEventListener('click', openSettings);
+            helpBtn.addEventListener('click', function() {
+                historyModal.style.display = 'flex';
+            });
+
+            cancelBtn.addEventListener('click', function() {
+                settingsModal.style.display = 'none';
+            });
+
+            // 修改即自动保存：奖品输入实时生效
+            prizeInputs.addEventListener('input', function(e) {
+                if (e.target.classList.contains('prize-input')) applySettingsLive();
+            });
+
+            closeHistoryBtn.addEventListener('click', function() {
+                historyModal.style.display = 'none';
+            });
+            
+            // 点击模态框外部关闭模态框（记录 mousedown 起点，避免拖拽选词后误关闭）
+            let modalMouseDownTarget = null;
+            window.addEventListener('mousedown', function(event) { modalMouseDownTarget = event.target; });
+            window.addEventListener('click', function(event) {
+                if (event.target === settingsModal && modalMouseDownTarget === settingsModal) {
+                    settingsModal.style.display = 'none';
+                }
+                if (event.target === historyModal && modalMouseDownTarget === historyModal) {
+                    historyModal.style.display = 'none';
+                }
+                modalMouseDownTarget = null;
+            });
+            
+            // 窗口大小改变时重新初始化游戏板
+            window.addEventListener('resize', function() {
+                createCirclePath();
+            });
+        });
+    </script>
+</body>
+</html>
