@@ -125,10 +125,11 @@
     .tab-btn:hover { background: var(--accent-soft); color: var(--accent-strong); }
     .tab-btn.active { background: var(--accent); color: #fff; }
 
-    /* ── 标签面板（容器固定高度，切换不跳动） ── */
-    .panel-host { min-height: 60vh; }
-    .panel { display: none; }
-    .panel.show { display: flex; flex-direction: column; gap: 16px; animation: fadeIn .28s ease; }
+    /* ── 标签面板（网格堆叠，切换不重排不跳动） ── */
+    .panel-host { display: grid; align-items: start; }
+    .panel { grid-area: 1 / 1; display: flex; flex-direction: column; gap: 16px;
+             opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .2s ease; }
+    .panel.show { opacity: 1; visibility: visible; pointer-events: auto; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     /* ── 目录列表 ── */
@@ -180,6 +181,14 @@
     .ui-panel .ui-title { font-size: 1.2rem; font-weight: 800; text-align: center; margin-bottom: 10px; }
     .ui-panel .ui-msg { font-size: .92rem; color: var(--ink-soft); line-height: 1.7;
                   text-align: center; margin-bottom: 20px; }
+    .ui-panel .ui-input { width: 100%; border: 1.5px solid var(--line-strong);
+                  border-radius: var(--radius-sm); padding: 11px 14px; font-size: 1.1rem;
+                  color: var(--ink); background: var(--paper); margin-bottom: 8px;
+                  transition: border-color .15s ease, box-shadow .15s ease; }
+    .ui-panel .ui-input:focus { outline: none; border-color: var(--accent);
+                  background: var(--surface); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .ui-panel .ui-err { color: var(--danger); font-size: .82rem; min-height: 1.2em;
+                  margin-bottom: 12px; text-align: center; }
     .ui-panel .ui-row { display: flex; gap: 10px; }
     .ui-panel .ui-row .btn { flex: 1; }
 
@@ -239,7 +248,6 @@
     <div class="hidden" id="screen-app">
       <div class="wrap" style="gap:16px;">
         <header class="page-head">
-          <h1 id="diary-title">我的日记</h1>
           <div class="tabs" role="tablist">
             <button class="tab-btn" data-tab="toc" type="button" role="tab" aria-selected="false">📖 目录</button>
             <button class="tab-btn active" data-tab="write" type="button" role="tab" aria-selected="true">✍️ 写日记</button>
@@ -367,6 +375,62 @@
         overlay.addEventListener('click', e => { if (e.target === overlay) close(false); });
         document.addEventListener('keydown', onKey);
         setTimeout(() => okBtn.focus(), 0);
+      });
+    }
+
+    /* 自定义输入框（替代原生 prompt），返回 Promise<string|null> */
+    function showPrompt({ title = '提示', message = '', placeholder = '', inputType = 'text', maxlength, validate, confirmText = '确定', cancelText = '取消' } = {}) {
+      return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.className = 'ui-overlay';
+        const panel = document.createElement('div');
+        panel.className = 'ui-panel';
+        const h = document.createElement('div'); h.className = 'ui-title'; h.textContent = title;
+        const p = document.createElement('div'); p.className = 'ui-msg'; p.textContent = message;
+        const input = document.createElement('input');
+        input.className = 'ui-input';
+        input.type = inputType || 'text';
+        if (input.type === 'password') input.setAttribute('inputmode', 'numeric');
+        if (placeholder) input.placeholder = placeholder;
+        if (maxlength != null) input.maxLength = maxlength;
+        const errEl = document.createElement('div'); errEl.className = 'ui-err';
+        const row = document.createElement('div'); row.className = 'ui-row';
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button'; cancelBtn.className = 'btn ghost'; cancelBtn.textContent = cancelText;
+        const okBtn = document.createElement('button');
+        okBtn.type = 'button'; okBtn.className = 'btn'; okBtn.textContent = confirmText;
+        row.appendChild(cancelBtn); row.appendChild(okBtn);
+        panel.appendChild(h); panel.appendChild(p); panel.appendChild(input); panel.appendChild(errEl); panel.appendChild(row);
+        overlay.appendChild(panel);
+        document.body.appendChild(overlay);
+        requestAnimationFrame(() => overlay.classList.add('show'));
+
+        let done = false;
+        function close(result) {
+          if (done) return; done = true;
+          document.removeEventListener('keydown', onKey);
+          overlay.classList.remove('show');
+          setTimeout(() => overlay.remove(), 200);
+          resolve(result);
+        }
+        function submit() {
+          const value = input.value.trim();
+          if (typeof validate === 'function') {
+            const msg = validate(value);
+            if (msg != null) { errEl.textContent = msg; return; }
+          }
+          close(value);
+        }
+        function onKey(e) {
+          if (e.key === 'Escape') close(null);
+          else if (e.key === 'Enter') submit();
+        }
+        input.addEventListener('input', () => { errEl.textContent = ''; });
+        okBtn.addEventListener('click', submit);
+        cancelBtn.addEventListener('click', () => close(null));
+        overlay.addEventListener('click', e => { if (e.target === overlay) close(null); });
+        document.addEventListener('keydown', onKey);
+        setTimeout(() => input.focus(), 0);
       });
     }
 
@@ -701,10 +765,10 @@
     /* 设置密码（明文 → 加密，保留数据） */
     $('set-pw-btn').addEventListener('click', async () => {
       if (!subtle) { showToast('此环境不支持加密'); return; }
-      const pw = prompt('设置 4–6 位数字密码：');
+      const pw = await showPrompt({ title: '设置密码', message: '请输入 4–6 位数字密码，用于加密你的日记。', placeholder: '4–6 位数字', inputType: 'password', maxlength: 6 });
       if (pw == null) return;
       if (!PW_RE.test(pw)) { showToast('密码必须是 4–6 位数字'); return; }
-      const pw2 = prompt('请再次输入密码：');
+      const pw2 = await showPrompt({ title: '确认密码', message: '请再次输入相同的密码以确认。', placeholder: '再次输入密码', inputType: 'password', maxlength: 6 });
       if (pw2 == null) return;
       if (pw !== pw2) { showToast('两次输入的密码不一致'); return; }
       // 1) 建立密码与主密钥
@@ -852,10 +916,11 @@
     });
 
     /* ────────── 昵称握手：标题显示「{昵称}的日记」（缺省「我的日记」） ────────── */
-    const diaryTitleEl = $('diary-title');
     function setDiaryTitle(nick) {
+      const el = document.getElementById('diary-title');
+      if (!el) return;
       const n = (typeof nick === 'string') ? nick.trim() : '';
-      diaryTitleEl.textContent = n ? (n + '的日记') : '我的日记';
+      el.textContent = n ? (n + '的日记') : '我的日记';
     }
     window.addEventListener('message', e => {
       if (e.data && e.data.type === 'diary-config' && typeof e.data.nickname === 'string') setDiaryTitle(e.data.nickname);
