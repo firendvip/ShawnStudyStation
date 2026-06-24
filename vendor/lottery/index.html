@@ -11,9 +11,9 @@
           --color-ink:#362c24;
           --color-ink-soft:#71675d;
           --color-ink-dim:#a09890;
-          --color-accent:#359658;
-          --color-accent-strong:#007c3a;
-          --color-accent-soft:#dcf7e2;
+          --color-accent:#3fb389;
+          --color-accent-strong:#2f9c8f;
+          --color-accent-soft:#e3f7ee;
           --color-line:#e5e1da;
           --color-line-strong:#d2cdc5;
           --color-overlay:rgba(54,44,36,0.38);
@@ -62,22 +62,38 @@
         h1 {
             font-size: 2.5rem;
             font-weight: 800;
-            color: var(--color-ink);
             cursor: pointer;
-            transition: transform 0.3s ease;
+            white-space: nowrap;
+            /* 薄荷青柠渐变缓慢横向流动，像水面波光 */
+            background: linear-gradient(90deg, #5fc7a0, #7fd86a, #5fb7c4, #5fc7a0);
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            animation: titleFlow 6s linear infinite;
         }
-        
-        h1:hover {
-            animation: float 1.5s ease-in-out infinite;
+
+        /* 逐字海浪：每个字独立上下正弦浮动，相位由 animation-delay 递增形成行进波 */
+        h1 .wave-char {
+            display: inline-block;
+            animation: waveChar 2.4s ease-in-out infinite;
+            animation-delay: var(--wave-delay, 0s);
+            will-change: transform;
         }
-        
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-8px);
-            }
+
+        @keyframes titleFlow {
+            from { background-position: 0% 50%; }
+            to   { background-position: 300% 50%; }
+        }
+
+        @keyframes waveChar {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-9px); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            h1, h1 .wave-char { animation: none; }
         }
         
         .header-icons {
@@ -86,25 +102,36 @@
         }
         
         .icon-btn {
-            width: 35px;
-            height: 35px;
+            width: 38px;
+            height: 38px;
             border-radius: var(--radius-sm);
             background: var(--color-paper);
             color: var(--color-ink-soft);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: background .25s var(--ease-out), color .25s var(--ease-out), transform .25s var(--ease-out), box-shadow .25s var(--ease-out);
             border: 1px solid var(--color-line);
             box-shadow: 0 1px 2px rgba(54,44,36,.05);
+        }
+
+        .icon-btn svg {
+            width: 20px;
+            height: 20px;
+            display: block;
         }
 
         .icon-btn:hover {
             background: var(--color-accent-soft);
             color: var(--color-accent-strong);
-            transform: scale(1.1);
+            border-color: var(--color-accent);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(63,179,137,.18);
+        }
+
+        .icon-btn:active {
+            transform: translateY(0);
         }
         
         .game-board {
@@ -454,8 +481,19 @@
         <div class="header">
             <h1 id="game-title">小善走格子</h1>
             <div class="header-icons">
-                <button class="icon-btn" id="help-btn">📄</button>
-                <button class="icon-btn" id="settings-btn">⚙</button>
+                <button class="icon-btn" id="help-btn" title="获奖记录" aria-label="获奖记录">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 3v5h5"></path>
+                        <path d="M3.05 13a9 9 0 1 0 2.13-5.74L3 8"></path>
+                        <path d="M12 7v5l3 2"></path>
+                    </svg>
+                </button>
+                <button class="icon-btn" id="settings-btn" title="设置" aria-label="设置">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                </button>
             </div>
         </div>
         
@@ -547,10 +585,25 @@
             let timer = null;
             let speed = 50; // 初始速度(ms)
             
+            // 把标题按字符拆成 <span>，逐字递增 animation-delay，形成行进的海浪波动
+            // 昵称变化时会随 initGame 重新渲染
+            function renderWaveTitle(text) {
+                gameTitle.textContent = '';
+                const chars = Array.from(text);
+                const STEP = 0.12; // 每个字相位延迟 (s)
+                chars.forEach((ch, i) => {
+                    const span = document.createElement('span');
+                    span.className = 'wave-char';
+                    span.style.setProperty('--wave-delay', (i * STEP) + 's');
+                    span.textContent = ch;
+                    gameTitle.appendChild(span);
+                });
+            }
+
             // 初始化游戏
             function initGame() {
-                // 设置标题和角色名称
-                gameTitle.textContent = gameTitleText;
+                // 设置标题和角色名称（逐字波浪渲染）
+                renderWaveTitle(gameTitleText);
                 
                 // 设置角色图片或文本
                 updatePlayerDisplay();
