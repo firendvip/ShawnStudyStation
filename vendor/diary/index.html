@@ -155,6 +155,27 @@
     .entry-locked-notice { color: var(--ink-soft); font-style: italic; }
     .toc-empty { color: var(--ink-dim); text-align: center; padding: 40px 0; }
 
+    /* ── 目录筛选条 + 增删改查 ── */
+    .toc-bar { gap: 8px; }
+    .toc-bar .date-pill { padding: 5px 10px; }
+    .toc-bar input[type="date"] { border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+                  border-radius: 999px; padding: 4px 10px; font-size: .78rem; font-weight: 600; cursor: pointer;
+                  font-family: inherit; }
+    .toc-bar input[type="date"]:focus { outline: none; border-color: var(--accent); }
+    .toc-search { position: relative; flex: 1 1 160px; min-width: 140px; }
+    .toc-search input { width: 100%; border: 1.5px solid var(--line); background: var(--paper); border-radius: 999px;
+                  padding: 7px 12px 7px 32px; font-size: .85rem; color: var(--ink); }
+    .toc-search input:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+    .toc-search .icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+                  color: var(--ink-dim); font-size: .95rem; pointer-events: none; }
+    .entry-act { display: flex; gap: 8px; padding: 0 18px 14px; }
+    .entry-act .act-btn { border: 1px solid var(--line-strong); background: transparent; color: var(--ink-soft);
+                  border-radius: 999px; padding: 4px 14px; font-size: .78rem; font-weight: 700; cursor: pointer;
+                  transition: background .18s ease, color .18s ease, border-color .18s ease; }
+    .entry-act .act-btn:hover { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
+    .entry-act .act-btn.danger:hover { background: #fbeae8; color: var(--danger); border-color: var(--danger); }
+    .toc-filter-empty { color: var(--ink-dim); text-align: center; padding: 40px 0; }
+
     /* ── 修改密码弹窗 ── */
     .overlay { position: fixed; inset: 0; background: rgba(54,44,36,.38); display: flex; align-items: center;
                justify-content: center; padding: 16px; z-index: 50; }
@@ -257,6 +278,18 @@
         <div class="panel-host">
           <!-- 目录面板 -->
           <section class="panel" id="panel-toc" role="tabpanel">
+            <div class="card-base">
+              <div class="bar toc-bar">
+                <input type="date" id="tocDateFilter" title="按日期筛选" />
+                <select class="weather-sel" id="tocWeatherFilter" title="按天气筛选"></select>
+                <div class="toc-search">
+                  <span class="icon">🔍</span>
+                  <input type="text" id="tocSearch" placeholder="搜索日记…" autocomplete="off" />
+                </div>
+                <button class="mini" id="tocClearFilter" type="button">清除筛选</button>
+                <button class="mini" id="tocNew" type="button">+ 新建</button>
+              </div>
+            </div>
             <p class="toc-stat" id="tocStat">共 0 篇日记</p>
             <p class="toc-note" id="tocNote" style="display:none"></p>
             <div class="entry-list" id="entryList"></div>
@@ -876,18 +909,52 @@
       return out;
     }
     const tocStat = $('tocStat'), tocNote = $('tocNote'), entryList = $('entryList');
+    const tocDateFilter = $('tocDateFilter'), tocWeatherFilter = $('tocWeatherFilter'),
+      tocSearch = $('tocSearch'), tocClearFilter = $('tocClearFilter'), tocNewBtn = $('tocNew');
+
+    // 天气筛选下拉：全部 + 预设天气
+    ['全部', ...PRESET_WEATHERS].forEach(w => {
+      const o = document.createElement('option'); o.value = w; o.textContent = w; tocWeatherFilter.appendChild(o);
+    });
+
+    function applyTocFilters(entries) {
+      const dateVal = (tocDateFilter.value || '').trim();
+      const weatherVal = tocWeatherFilter.value || '全部';
+      const kw = (tocSearch.value || '').trim().toLowerCase();
+      return entries.filter(e => {
+        if (dateVal && e.date !== dateVal) return false;
+        if (weatherVal !== '全部' && e.weather !== weatherVal) return false;
+        if (kw) {
+          if (e.encrypted) return false; // 加密项正文不可搜，输入关键字时排除
+          const title = firstLineSummary(e.text).toLowerCase();
+          const body = String(e.text || '').toLowerCase();
+          if (!title.includes(kw) && !body.includes(kw)) return false;
+        }
+        return true;
+      });
+    }
+
     function renderTOC() {
-      const entries = loadFromStorage();
+      const all = loadFromStorage();
+      const total = all.length;
+      let entries = applyTocFilters(all);
       entries.sort((a, b) => (a.date < b.date ? 1 : (a.date > b.date ? -1 : 0)));
-      if (!entries.length) {
+      if (!total) {
         tocStat.textContent = '还没有日记';
         tocNote.style.display = 'inline-block';
         tocNote.textContent = '还没有日记，去写第一篇吧～';
         entryList.innerHTML = '<div class="toc-empty">还没有日记，去「写日记」记录一篇吧 ✍️</div>';
         return;
       }
-      tocStat.textContent = '共 ' + entries.length + ' 篇日记';
+      const filtering = !!((tocDateFilter.value || '').trim() || (tocWeatherFilter.value && tocWeatherFilter.value !== '全部') || (tocSearch.value || '').trim());
+      tocStat.textContent = filtering
+        ? ('筛选出 ' + entries.length + ' 篇 / 共 ' + total + ' 篇日记')
+        : ('共 ' + total + ' 篇日记');
       tocNote.style.display = 'none';
+      if (!entries.length) {
+        entryList.innerHTML = '<div class="toc-filter-empty">没有符合筛选条件的日记，换个条件试试吧 🔍</div>';
+        return;
+      }
       entryList.innerHTML = entries.map((e, idx) => {
         const dateLabel = fmt(e.date);
         const weatherTag = (e.weather && e.weather !== '无')
@@ -907,10 +974,69 @@
               '<span class="entry-chev">▾</span>' +
             '</div>' +
             '<div class="entry-body"><div class="entry-body-inner">' + bodyHtml + '</div></div>' +
+            '<div class="entry-act">' +
+              '<button class="act-btn" type="button" data-act="edit" data-date="' + escapeHtml(e.date) + '">编辑</button>' +
+              '<button class="act-btn danger" type="button" data-act="del" data-date="' + escapeHtml(e.date) + '">删除</button>' +
+            '</div>' +
           '</article>';
       }).join('');
     }
-    entryList.addEventListener('click', e => {
+
+    // 筛选输入联动
+    tocDateFilter.addEventListener('change', renderTOC);
+    tocWeatherFilter.addEventListener('change', renderTOC);
+    tocSearch.addEventListener('input', renderTOC);
+    tocClearFilter.addEventListener('click', () => {
+      tocDateFilter.value = ''; tocWeatherFilter.value = '全部'; tocSearch.value = '';
+      renderTOC();
+    });
+
+    // 切到「写日记」标签页
+    function gotoWriteTab() { document.querySelector('.tab-btn[data-tab="write"]').click(); }
+
+    // 新建
+    tocNewBtn.addEventListener('click', async () => {
+      const date = await showPrompt({
+        title: '新建日记', message: '请输入日期（格式 YYYY-MM-DD）。',
+        placeholder: 'YYYY-MM-DD', inputType: 'text', maxlength: 10,
+        validate: v => /^\d{4}-\d{2}-\d{2}$/.test(v) ? null : '日期格式应为 YYYY-MM-DD'
+      });
+      if (date == null) return;
+      const exists = !!localStorage.getItem(ENTRY_PREFIX + date);
+      if (exists) {
+        const ok = await showConfirm({ title: '日记已存在', message: '「' + fmt(date) + '」已有日记，是否打开编辑？', confirmText: '去编辑', cancelText: '取消' });
+        if (!ok) return;
+      }
+      gotoWriteTab();
+      await openDate(date);
+      showToast(exists ? '已打开该日期的日记' : '开始写「' + fmt(date) + '」的日记吧');
+    });
+
+    // 目录点击统一处理：编辑 / 删除（事件委托）优先，否则手风琴展开
+    entryList.addEventListener('click', async e => {
+      const actBtn = e.target.closest('.entry-act [data-act]');
+      if (actBtn) {
+        e.stopPropagation();
+        const date = actBtn.dataset.date, act = actBtn.dataset.act;
+        if (act === 'edit') {
+          const raw = localStorage.getItem(ENTRY_PREFIX + date);
+          let parsed = null; try { parsed = JSON.parse(raw); } catch (_) {}
+          if (isEncryptedStruct(parsed) && !cryptoKey) { showToast('请先到「写日记」解锁后再编辑'); return; }
+          gotoWriteTab();
+          await openDate(date);
+          return;
+        }
+        if (act === 'del') {
+          const ok = await showConfirm({ title: '删除日记', message: '确定删除「' + fmt(date) + '」这篇日记吗？删除后无法恢复。', confirmText: '删除', cancelText: '取消' });
+          if (!ok) return;
+          localStorage.removeItem(ENTRY_PREFIX + date);
+          renderTOC();
+          showToast('已删除');
+        }
+        return;
+      }
+      // 手风琴展开（避开操作按钮区域）
+      if (e.target.closest('.entry-act')) return;
       const art = e.target.closest('.entry');
       if (art) art.classList.toggle('open');
     });
