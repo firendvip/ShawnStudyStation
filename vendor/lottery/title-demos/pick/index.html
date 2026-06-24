@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>转盘标题配色对比 · 1 号 vs 7 号</title>
+<style>
+  :root{
+    --bg: #f5f3ee;
+    --card: #ffffff;
+    --ink: #2b2f36;
+    --muted: #8a90a0;
+    --line: #ececec;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "PingFang SC","Microsoft YaHei","Hiragino Sans GB","Heiti SC",system-ui,-apple-system,"Segoe UI",sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  header{
+    padding: 24px 24px 8px;
+    text-align: center;
+  }
+  header h1{
+    margin: 0;
+    font-size: clamp(20px, 4vw, 28px);
+    font-weight: 800;
+    letter-spacing: .5px;
+  }
+  header .tip{
+    margin: 10px 0 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  main{
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 18px 22px 56px;
+  }
+  .grid{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+  .card{
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 40px 24px 30px;
+    box-shadow: 0 8px 26px rgba(40,50,80,.06);
+  }
+  .badge{
+    position: absolute;
+    top: -14px;
+    left: -12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid var(--line);
+    box-shadow: 0 3px 10px rgba(40,50,80,.10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--ink);
+  }
+  .name{
+    font-weight: 800;
+    font-size: 18px;
+    margin: 2px 0 6px;
+    text-align: center;
+  }
+  .hex{
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 0 26px;
+    text-align: center;
+    word-break: break-all;
+    font-family: "SFMono-Regular",Menlo,Consolas,monospace;
+  }
+  .demo-wrap{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 90px;
+    padding: 10px 0 4px;
+  }
+  /* ① 渐变流动文字动效（与来源一致） */
+  .flow{
+    font-size: clamp(34px, 8vw, 56px);
+    font-weight: 800;
+    letter-spacing: 2px;
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: flow 5s linear infinite;
+  }
+  @keyframes flow{ to{ background-position: 300% 0; } }
+
+  /* 1. 薄荷青柠 */
+  .c1{ background: linear-gradient(90deg,#5fc7a0,#7fd86a,#5fb7c4,#5fc7a0); }
+  /* 7. 海盐微风 */
+  .c7{ background: linear-gradient(90deg,#4fb8bf,#5fa8e0,#62cbb0,#4fb8bf); }
+
+  footer{
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 0 24px 40px;
+  }
+
+  @media (max-width: 720px){
+    .grid{ grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>转盘标题配色对比 · 1 号 vs 7 号</h1>
+    <p class="tip">同一文案「小善专属转盘」，看看两套配色哪套更好看</p>
+  </header>
+
+  <main>
+    <div class="grid">
+
+      <div class="card">
+        <div class="badge">1</div>
+        <div class="name">1 号 薄荷青柠</div>
+        <p class="hex">#5fc7a0, #7fd86a, #5fb7c4</p>
+        <div class="demo-wrap"><span class="flow c1">小善专属转盘</span></div>
+      </div>
+
+      <div class="card">
+        <div class="badge">7</div>
+        <div class="name">7 号 海盐微风</div>
+        <p class="hex">#4fb8bf, #5fa8e0, #62cbb0</p>
+        <div class="demo-wrap"><span class="flow c7">小善专属转盘</span></div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>纯 CSS 渐变流动动效 · 离线可用 · 文案「小善专属转盘」</footer>
+</body>
+</html>
