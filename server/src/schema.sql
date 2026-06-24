@@ -52,3 +52,19 @@ CREATE TABLE IF NOT EXISTS page_data (
   updated_at BIGINT NOT NULL,
   PRIMARY KEY (user_id, page)
 );
+
+-- 英语作文 custom uploaded articles. parsed_data holds a JSON string
+-- ({ title, sentences: [...] }). is_public defaults to 1 (public).
+CREATE TABLE IF NOT EXISTS composition_articles (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  original_text TEXT,
+  parsed_data TEXT NOT NULL,
+  is_public SMALLINT NOT NULL DEFAULT 1,
+  created_at BIGINT NOT NULL,
+  updated_at BIGINT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_comp_user ON composition_articles(user_id);
+CREATE INDEX IF NOT EXISTS idx_comp_public ON composition_articles(is_public, created_at);

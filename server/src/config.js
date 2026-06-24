@@ -111,7 +111,16 @@ const config = Object.freeze({
   smtp,
   smtpFrom: process.env.SMTP_FROM || DEFAULT_SMTP_FROM,
   emailDevMode: resolveEmailDevMode(),
+  // AI essay enrichment. Left blank => stub mode (local tokenisation only, no
+  // external calls). Supply a provider + key later to enable aiEnrich().
+  aiProvider: (process.env.AI_PROVIDER || '').trim(),
+  aiApiKey: (process.env.AI_API_KEY || '').trim(),
 });
+
+/** True when an AI provider + key are configured (otherwise: stub mode). */
+function isAiConfigured() {
+  return Boolean(config.aiProvider && config.aiApiKey);
+}
 
 /**
  * True only when the minimal SMTP delivery settings are present.
@@ -121,4 +130,4 @@ function isEmailConfigured() {
   return Boolean(host && port && user && pass && config.smtpFrom);
 }
 
-module.exports = { config, isEmailConfigured };
+module.exports = { config, isEmailConfigured, isAiConfigured };
