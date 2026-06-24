@@ -925,30 +925,7 @@
                         <input type="number" id="columns-count" min="1" max="20" step="1" value="6">
                     </div>
                 </div>
-                
-                <!-- 修改标题设置 -->
-                <div class="settings-row">
-                    <div class="setting-group" style="flex: 1;">
-                        <label for="title-input">修改标题:</label>
-                        <input type="text" id="title-input" placeholder="输入新标题..." maxlength="20">
-                    </div>
-                </div>
-                
-                <div class="upload-group">
-                    <div class="upload-label">上传词表 (Excel格式):</div>
-                    <div class="file-upload-container">
-                        <div class="file-input-wrapper">
-                            <div class="file-input-button">
-                                <i class="fas fa-upload"></i>
-                            </div>
-                            <input type="file" id="excel-file" accept=".xlsx, .xls">
-                        </div>
-                        <div id="file-name" class="file-name"></div>
-                    </div>
-                </div>
-                <div class="upload-info">支持格式: .xlsx, .xls (最多5万词)</div>
-                <div class="upload-info">Excel格式要求：第一列单词，第二列中文意思，第三列音标（可选）</div>
-                
+
                 <div class="modal-info">
                     <div>总单词数: <span id="modal-total-words">0</span></div>
                     <div>总分组数: <span id="modal-total-groups">0</span></div>
@@ -996,7 +973,7 @@
         let columnsCount = 6;
         let reviewWords = [];
         let selectedCell = null;
-        let appTitle = '小善背单词';
+        let appTitle = '单词小测';
 
         // DOM元素
         const groupSelect = document.getElementById('group-select');
@@ -1020,16 +997,13 @@
         const deleteBtn = document.getElementById('delete-btn');
         const copyBtn = document.getElementById('copy-btn');
         const selectAllBtn = document.getElementById('select-all-btn');
-        const excelFileInput = document.getElementById('excel-file');
-        const fileNameDisplay = document.getElementById('file-name');
         const englishFontSizeInput = document.getElementById('english-font-size');
         const chineseFontSizeInput = document.getElementById('chinese-font-size');
         const columnsCountInput = document.getElementById('columns-count');
         const prevGroupBtn = document.getElementById('prev-group-btn');
         const nextGroupBtn = document.getElementById('next-group-btn');
         const titleContainer = document.getElementById('title-container');
-        const titleInput = document.getElementById('title-input');
-        
+
         // 单词详情弹窗元素
         const wordDetailModal = document.getElementById('word-detail-modal');
         const closeWordDetail = document.getElementById('close-word-detail');
@@ -1037,93 +1011,32 @@
         const detailPhonetic = document.getElementById('detail-phonetic');
         const detailChinese = document.getElementById('detail-chinese');
 
-        // ================== 优化后的Excel导入 (完整无过滤) ==================
-        function handleExcelUpload(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    // 关键: defval: "" 保证空单元格填充空字符串，header:1 按行数组解析
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
-                    
-                    // 清空原有数据
-                    allWords.length = 0;
-                    allTranslations.length = 0;
-                    allPhonetics.length = 0;
-                    
-                    const newWords = [];
-                    const newTranslations = [];
-                    const newPhonetics = [];
-                    
-                    // 逐行处理，从第0行开始 (不跳过表头/任何行)
-                    for (let i = 0; i < jsonData.length; i++) {
-                        const row = jsonData[i];
-                        let word = '';
-                        let translation = '';
-                        let phonetic = '';
-                        
-                        // 只要是有效的行（数组形式），就取前三列，没有则留空字符串
-                        if (row && Array.isArray(row)) {
-                            // 单词: 第一列 (索引0)
-                            if (row[0] !== undefined && row[0] !== null) {
-                                word = String(row[0]).trim();
-                            }
-                            // 中文: 第二列 (索引1)
-                            if (row[1] !== undefined && row[1] !== null) {
-                                translation = String(row[1]).trim();
-                            }
-                            // 音标: 第三列 (索引2)
-                            if (row[2] !== undefined && row[2] !== null) {
-                                phonetic = String(row[2]).trim();
-                            }
-                        }
-                        // 无条件加入条目，确保Excel每一行（包括空行）都完整保留
-                        newWords.push(word);
-                        newTranslations.push(translation);
-                        newPhonetics.push(phonetic);
-                    }
-                    
-                    // 保留原有的5万词上限保护 (避免页面卡死，但是不做内容过滤)
-                    if (newWords.length > 50000) {
-                        alert(`词表包含 ${newWords.length} 个条目 (包括所有行)，超过最大限制5万条，仅导入前50000条。`);
-                        newWords.splice(50000);
-                        newTranslations.splice(50000);
-                        newPhonetics.splice(50000);
-                    }
-                    
-                    // 将完整数据存入全局数组
-                    Array.prototype.push.apply(allWords, newWords);
-                    Array.prototype.push.apply(allTranslations, newTranslations);
-                    Array.prototype.push.apply(allPhonetics, newPhonetics);
-                    
-                    // 保存至本地存储
-                    saveCurrentSettings();
-                    
-                    // 更新统计显示
-                    modalTotalWords.textContent = allWords.length;
-                    
-                    // 重新构建分组并刷新界面
+        // ===== 从「单词速刷」共享词表同步（__shared_wordpack）=====
+        // 读取共享词表并转换为 wordData 格式应用;不存在则保留现有数据作为回退。
+        function syncFromShared(refresh = false) {
+            try {
+                const raw = localStorage.getItem('__shared_wordpack');
+                if (!raw) return false;
+                const p = JSON.parse(raw);
+                if (!p || !Array.isArray(p.words) || p.words.length === 0) return false;
+                const newWords = p.words.map(w => (w && w.en) ? w.en : '');
+                const newTranslations = p.words.map(w => (w && w.zh) ? w.zh : '');
+                const newPhonetics = p.words.map(w => (w && (w.uk || w.us)) ? (w.uk || w.us) : '');
+                allWords.length = 0; allTranslations.length = 0; allPhonetics.length = 0;
+                Array.prototype.push.apply(allWords, newWords);
+                Array.prototype.push.apply(allTranslations, newTranslations);
+                Array.prototype.push.apply(allPhonetics, newPhonetics);
+                saveCurrentSettings();
+                if (refresh) {
                     createGroups();
                     renderGroupSelector();
-                    currentGroupIndex = 0;
+                    if (currentGroupIndex >= groups.length) currentGroupIndex = Math.max(0, groups.length - 1);
                     renderCurrentGroup();
-                    
-                    // 提示用户最终导入的真实条目数（含可能存在的空行）
-                    alert(`✅ 导入完成！\n共处理 ${newWords.length} 行数据（Excel中的所有行均已保留，未做任何跳过或过滤）。`);
-                } catch (error) {
-                    console.error('Excel解析错误:', error);
-                    alert('❌ 解析Excel文件失败，请检查文件格式是否正确。');
+                    if (typeof modalTotalWords !== 'undefined' && modalTotalWords) modalTotalWords.textContent = allWords.length;
                 }
-            };
-            reader.onerror = function() {
-                alert('读取文件失败，请重试。');
-            };
-            reader.readAsArrayBuffer(file);
+                return true;
+            } catch (_) { return false; }
         }
-        // ================== 其余原有逻辑完全保持不变 ==================
 
         // 初始化应用
         function initApp() {
@@ -1150,7 +1063,10 @@
                     allPhonetics.push(item[2] || '');
                 });
             }
-            
+
+            // 初始化时尝试用「单词速刷」共享词表覆盖(若存在)，不存在则保留上面加载的数据
+            syncFromShared(false);
+
             // 加载应用标题
             const savedTitle = localStorage.getItem('appTitle');
             if (savedTitle) {
@@ -1281,11 +1197,6 @@
                 if (columnsCount > 20) columnsCount = 20;
             }
             columnsCountInput.value = columnsCount;
-            
-            if (titleInput) {
-                const savedTitle = localStorage.getItem('appTitle');
-                titleInput.value = savedTitle ? savedTitle : appTitle;
-            }
         }
 
         function saveCurrentSettings() {
@@ -1541,7 +1452,6 @@
                 const cf = parseFloat(chineseFontSizeInput.value); if (!isNaN(cf)) chineseFontSize = cf;
                 const newCols = parseInt(columnsCountInput.value);
                 if (newCols >= 1 && newCols <= 20) columnsCount = newCols;
-                if (titleInput.value.trim()) { appTitle = titleInput.value.trim(); updateTitleDisplay(); }
                 saveCurrentSettings(); createGroups(); renderGroupSelector();
                 const groupCount = Math.ceil(allWords.length / groupSize) || 1;
                 if (currentGroupIndex >= groupCount) currentGroupIndex = 0;
@@ -1549,7 +1459,7 @@
             }
             let wqSettingsTimer = null;
             function scheduleApplySettings() { if (wqSettingsTimer) clearTimeout(wqSettingsTimer); wqSettingsTimer = setTimeout(applySettingsLive, 300); }
-            [modalGroupSize, englishFontSizeInput, chineseFontSizeInput, columnsCountInput, titleInput].forEach((el) => {
+            [modalGroupSize, englishFontSizeInput, chineseFontSizeInput, columnsCountInput].forEach((el) => {
                 el.addEventListener('input', scheduleApplySettings);
                 el.addEventListener('change', scheduleApplySettings);
             });
@@ -1558,21 +1468,31 @@
             copyBtn.addEventListener('click', handleCopyContent);
             selectAllBtn.addEventListener('click', handleSelectAll);
             document.addEventListener('keydown', handleKeyNavigation);
-            excelFileInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                fileNameDisplay.textContent = file.name;
-                const ext = file.name.split('.').pop().toLowerCase();
-                if (ext !== 'xls' && ext !== 'xlsx') { alert('请上传Excel文件(.xlsx或.xls格式)'); return; }
-                handleExcelUpload(file);
-            });
             prevGroupBtn.addEventListener('click', goToPrevGroup);
             nextGroupBtn.addEventListener('click', goToNextGroup);
             closeWordDetail.addEventListener('click', () => wordDetailModal.style.display = 'none');
             wordDetailModal.addEventListener('click', (e) => { if (e.target === wordDetailModal) wordDetailModal.style.display = 'none'; });
         }
 
-        window.onload = initApp;
+        // ===== 接收主站下发的昵称：标题 = {昵称}单词小测（昵称空时为「单词小测」）=====
+        window.addEventListener('message', e => {
+            if (e.data && e.data.type === 'wordquiz-config' && typeof e.data.nickname === 'string') {
+                appTitle = (e.data.nickname ? e.data.nickname : '') + '单词小测';
+                updateTitleDisplay();
+            }
+        });
+
+        // 监听共享词表变化(跨标签页/跨 iframe 实时同步)
+        window.addEventListener('storage', e => { if (e.key === '__shared_wordpack') syncFromShared(true); });
+        // 回到本页时兜底再同步一次
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) syncFromShared(true); });
+        window.addEventListener('focus', () => syncFromShared(true));
+
+        window.onload = function() {
+            initApp();
+            // 通知父窗口本页已就绪，请求下发昵称
+            try { if (window.parent && window.parent !== window) window.parent.postMessage({ type: 'wordquiz-ready' }, '*'); } catch (_) {}
+        };
     </script>
 </body>
 </html>

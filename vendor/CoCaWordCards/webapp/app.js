@@ -439,6 +439,18 @@ async function loadPack(packId) {
   rebuildPackSelects();
   render();
   stopAudio();
+  writeSharedWordpack();
+}
+
+// 将当前词包写入共享 localStorage,供「单词小测」自动同步。
+function writeSharedWordpack() {
+  try {
+    if (!pack || !Array.isArray(pack.words)) return;
+    localStorage.setItem('__shared_wordpack', JSON.stringify({
+      name: pack.name,
+      words: pack.words.map((w) => ({ en: w.en, zh: w.zh, uk: w.uk, us: w.us })),
+    }));
+  } catch (_) {}
 }
 
 // ---- Custom pack parsing ----

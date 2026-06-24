@@ -612,6 +612,7 @@
         </button>
         <div class="dropdown" role="menu">
           <a class="dropdown-item" href="#" role="menuitem" data-view="changelog">更新日志</a>
+          <a class="dropdown-item" href="#" role="menuitem" data-view="feedback">建议提交</a>
           <a class="dropdown-item" href="#" role="menuitem" data-view="about">联系我们</a>
         </div>
       </div>
@@ -791,6 +792,13 @@
 
     <!-- 联系我们 view -->
     <section class="view view-about" id="view-about">
+      <p class="about-headline">联系我们</p>
+      <img class="about-qr" src="assets/feedback-qr.png" alt="功能建议与 bug 反馈二维码" />
+      <p class="about-hint">扫码反馈，我们会认真倾听 💚</p>
+    </section>
+
+    <!-- 建议提交 view -->
+    <section class="view view-about" id="view-feedback">
       <p class="about-headline">功能建议 / bug 反馈</p>
       <img class="about-qr" src="assets/feedback-qr.png" alt="功能建议与 bug 反馈二维码" />
       <p class="about-hint">扫码反馈，我们会认真倾听 💚</p>
@@ -805,7 +813,15 @@
         </div>
         <div class="cl-list">
           <div class="cl-item latest">
-            <div class="cl-ver-row"><span class="cl-ver">v1.47.1</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-24</span></div>
+            <div class="cl-ver-row"><span class="cl-ver">v1.48.0</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-24</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>「单词小测」设置里去掉了改标题和传词表，更清爽。</div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>「单词小测」标题会带上你的昵称啦，比如「小善单词小测」。</div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>「单词小测」的词表会自动跟着「单词速刷」走，换词包它也跟着换。</div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>「关于」里加了「建议提交」，扫码就能提需求和报问题。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>「联系我们」页面标题改成了「联系我们」。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.47.1</span><span class="cl-date">2026-06-24</span></div>
             <div class="cl-line"><span class="cl-tag opt">优化</span>每日复盘标题会带上你的昵称啦，比如「小善的每日复盘」。</div>
           </div>
           <div class="cl-item">
@@ -1188,7 +1204,7 @@
       f.removeAttribute('src'); // 清空文档，保证所有音频（含 Web Audio/语音播报）停止；返回时重新加载
     }
 
-    const VIEW_NAMES = { home: '', about: '联系我们', changelog: '更新日志', cuozi: '错字练习', phonics: '自然拼读', lottery: '转盘', koudaa: '小学心算', composition: '英语作文', wordcards: '单词速刷', retro: '每日复盘', diary: '日记', wordquiz: '单词小测' };
+    const VIEW_NAMES = { home: '', about: '联系我们', feedback: '建议提交', changelog: '更新日志', cuozi: '错字练习', phonics: '自然拼读', lottery: '转盘', koudaa: '小学心算', composition: '英语作文', wordcards: '单词速刷', retro: '每日复盘', diary: '日记', wordquiz: '单词小测' };
     function switchView(viewName) {
       const lp = document.getElementById('logo-page');
       if (lp) lp.textContent = VIEW_NAMES[viewName] || '';
@@ -1490,6 +1506,20 @@
       postRetroConfig();
     });
 
+    /* 单词小测昵称下发:子页面就绪后回传当前昵称,标题显示「{昵称}单词小测」。 */
+    function postWordquizConfig() {
+      const wf = document.getElementById('frame-wordquiz');
+      if (wf && wf.contentWindow) {
+        try { wf.contentWindow.postMessage({ type: 'wordquiz-config', nickname: (userSettings.nickname || '') }, '*'); } catch (_) {}
+      }
+    }
+    window.addEventListener('message', e => {
+      if (!e.data || e.data.type !== 'wordquiz-ready') return;
+      const wf = document.getElementById('frame-wordquiz');
+      if (!wf || e.source !== wf.contentWindow) return;
+      postWordquizConfig();
+    });
+
     /* 错字练习「查看答案」密码校验:是否等于账号登录密码。
        仅响应错字练习 iframe(frame-cuozi),避免其它来源借此暴力尝试密码。 */
     window.addEventListener('message', async e => {
@@ -1627,6 +1657,7 @@
         renderAccount();
         postPinpinConfig();
         postRetroConfig();
+        postWordquizConfig();
         document.getElementById('settings-saved').classList.add('visible');
         closeSettings();
       } catch (e) { showError(errEl, e.message); }
