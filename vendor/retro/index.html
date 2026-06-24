@@ -8,25 +8,37 @@
     :root {
       --paper:#fcfaf4; --surface:#ffffff; --ink:#362c24; --ink-soft:#71675d; --ink-dim:#a09890;
       --accent:#359658; --accent-strong:#007c3a; --accent-soft:#dcf7e2;
-      --line:#e5e1da; --line-strong:#d2cdc5; --radius:1.25rem; --radius-sm:.75rem;
+      --line:#e5e1da; --line-strong:#d2cdc5; --danger:#c0392b;
+      --radius:1.25rem; --radius-sm:.75rem;
     }
     * { box-sizing: border-box; margin: 0; padding: 0;
         font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC","Segoe UI",system-ui,sans-serif; }
     body { background: var(--paper); color: var(--ink); display: flex; justify-content: center;
            align-items: flex-start; padding: 24px 16px 64px; min-height: 100vh; }
     .wrap { width: 100%; max-width: 720px; display: flex; flex-direction: column; gap: 16px; }
-
-    .head { text-align: center; }
-    .head h1 { font-size: 2rem; font-weight: 800; letter-spacing: -.5px; }
-    .head h1 #retro-nick-prefix { color: var(--ink); }
-    .head h1 .accent { color: var(--accent); }
-    .head p { color: var(--ink-soft); font-size: .95rem; margin-top: 6px; }
-
+    .hidden { display: none !important; }
     .card-base { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
                  box-shadow: 0 1px 2px rgba(54,44,36,.04), 0 8px 20px rgba(54,44,36,.05); }
 
+    /* ── 标签胶囊 ── */
+    .page-head { display: flex; flex-direction: column; gap: 12px; }
+    .tabs { display: inline-flex; gap: 6px; padding: 6px; align-self: flex-start;
+            background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+            box-shadow: 0 1px 2px rgba(54,44,36,.04), 0 6px 16px rgba(54,44,36,.05); }
+    .tab-btn { appearance: none; border: none; background: transparent; color: var(--ink-soft);
+               font: inherit; font-size: .95rem; font-weight: 700; padding: .5rem 1.15rem;
+               border-radius: 999px; cursor: pointer; transition: background .22s ease, color .22s ease; }
+    .tab-btn:hover { background: var(--accent-soft); color: var(--accent-strong); }
+    .tab-btn.active { background: var(--accent); color: #fff; }
+
+    /* ── 标签面板（网格堆叠，切换不重排不跳动） ── */
+    .panel-host { display: grid; align-items: start; }
+    .panel { grid-area: 1 / 1; display: flex; flex-direction: column; gap: 16px;
+             opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .2s ease; }
+    .panel.show { opacity: 1; visibility: visible; pointer-events: auto; }
+
     /* ── 日期 + 搜索 同一排 ── */
-    .bar { position: relative; display: flex; align-items: center; gap: 10px; padding: 12px 16px; }
+    .bar { position: relative; display: flex; align-items: center; gap: 10px; padding: 12px 16px; flex-wrap: wrap; }
     .date-pill { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line-strong);
                  background: var(--surface); color: var(--ink); border-radius: 999px; padding: 4px 10px;
                  font-size: .78rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
@@ -92,45 +104,147 @@
     .card.did { --bar-color: #5B7FC4; }
     .card.well { --bar-color: #3AA76D; }
     .card.improve { --bar-color: #D9826A; }
+
+    /* ── 复盘记录列表 ── */
+    .toc-stat { color: var(--ink-soft); font-size: .9rem; }
+    .toc-note { color: var(--accent-strong); background: var(--accent-soft); display: inline-block;
+                font-size: .82rem; padding: .3rem .8rem; border-radius: 999px; align-self: flex-start; }
+    .entry-list { display: flex; flex-direction: column; gap: 12px; }
+    .entry { overflow: hidden; cursor: pointer; }
+    .entry-head { display: flex; align-items: center; gap: 10px; padding: 14px 18px; }
+    .entry-date { font-weight: 700; font-size: .95rem; color: var(--ink); white-space: nowrap; }
+    .entry-sum { color: var(--ink-soft); font-size: .9rem; flex: 1; overflow: hidden;
+                 text-overflow: ellipsis; white-space: nowrap; }
+    .entry-chev { color: var(--ink-dim); font-size: .75rem; transition: transform .25s ease; }
+    .entry.open .entry-chev { transform: rotate(180deg); }
+    .entry-body { max-height: 0; opacity: 0; transition: max-height .3s ease, opacity .25s ease; border-top: 0 solid var(--line); }
+    .entry.open .entry-body { max-height: 800px; opacity: 1; border-top: 1px solid var(--line); }
+    .entry-body-inner { padding: 14px 18px 18px; color: var(--ink); font-size: .95rem; line-height: 1.7; }
+    .entry-sec { margin-bottom: 12px; }
+    .entry-sec:last-child { margin-bottom: 0; }
+    .entry-sec .sec-label { display: flex; align-items: center; gap: 7px; font-weight: 700; color: var(--ink);
+                  font-size: .9rem; margin-bottom: 4px; }
+    .entry-sec .sec-text { color: var(--ink-soft); white-space: pre-wrap; word-break: break-word; padding-left: 22px; }
+    .toc-empty, .toc-filter-empty { color: var(--ink-dim); text-align: center; padding: 40px 0; }
+
+    /* ── 记录筛选条 + 增删改查 ── */
+    .toc-bar { gap: 8px; }
+    .toc-search { position: relative; flex: 1 1 160px; min-width: 140px; }
+    .toc-search input { width: 100%; border: 1.5px solid var(--line); background: var(--paper); border-radius: 999px;
+                  padding: 7px 12px 7px 32px; font-size: .85rem; color: var(--ink); }
+    .toc-search input:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+    .toc-search .icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+                  color: var(--ink-dim); font-size: .95rem; pointer-events: none; }
+    .mini { border: 1px solid var(--line-strong); background: transparent; color: var(--ink-soft);
+            border-radius: 999px; padding: 5px 12px; font-size: .75rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .mini:hover { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
+    .entry-act { display: flex; gap: 8px; padding: 0 18px 14px; }
+    .entry-act .act-btn { border: 1px solid var(--line-strong); background: transparent; color: var(--ink-soft);
+                  border-radius: 999px; padding: 4px 14px; font-size: .78rem; font-weight: 700; cursor: pointer;
+                  transition: background .18s ease, color .18s ease, border-color .18s ease; }
+    .entry-act .act-btn:hover { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
+    .entry-act .act-btn.danger:hover { background: #fbeae8; color: var(--danger); border-color: var(--danger); }
+
+    /* ── 自定义确认 / 输入 / 轻提示弹窗（贴合主站风格） ── */
+    .btn { width: 100%; border: none; border-radius: var(--radius-sm); padding: 13px; font-size: 1rem;
+           font-weight: 700; cursor: pointer; background: var(--accent); color: #fff; transition: background .2s; }
+    .btn:hover { background: var(--accent-strong); }
+    .btn.ghost { background: transparent; color: var(--ink-soft); border: 1.5px solid var(--line-strong); }
+    .btn.ghost:hover { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
+    .ui-overlay { position: fixed; inset: 0; background: rgba(54,44,36,.38); display: flex;
+                  align-items: center; justify-content: center; padding: 16px; z-index: 60;
+                  opacity: 0; transition: opacity .18s ease; }
+    .ui-overlay.show { opacity: 1; }
+    .ui-overlay .ui-panel { width: 100%; max-width: 360px; background: var(--surface);
+                  border-radius: var(--radius); padding: 24px 24px 20px;
+                  box-shadow: 0 20px 40px rgba(54,44,36,.16);
+                  transform: translateY(8px) scale(.98); transition: transform .18s ease; }
+    .ui-overlay.show .ui-panel { transform: translateY(0) scale(1); }
+    .ui-panel .ui-title { font-size: 1.2rem; font-weight: 800; text-align: center; margin-bottom: 10px; }
+    .ui-panel .ui-msg { font-size: .92rem; color: var(--ink-soft); line-height: 1.7;
+                  text-align: center; margin-bottom: 20px; }
+    .ui-panel .ui-input { width: 100%; border: 1.5px solid var(--line-strong);
+                  border-radius: var(--radius-sm); padding: 11px 14px; font-size: 1.1rem;
+                  color: var(--ink); background: var(--paper); margin-bottom: 8px;
+                  transition: border-color .15s ease, box-shadow .15s ease; }
+    .ui-panel .ui-input:focus { outline: none; border-color: var(--accent);
+                  background: var(--surface); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .ui-panel .ui-err { color: var(--danger); font-size: .82rem; min-height: 1.2em;
+                  margin-bottom: 12px; text-align: center; }
+    .ui-panel .ui-row { display: flex; gap: 10px; }
+    .ui-panel .ui-row .btn { flex: 1; }
+
+    .ui-toast { position: fixed; left: 50%; bottom: 36px;
+                transform: translateX(-50%) translateY(16px); z-index: 70;
+                background: var(--surface); color: var(--ink); border: 1px solid var(--line);
+                border-radius: var(--radius-sm); padding: 12px 18px; font-size: .92rem; font-weight: 600;
+                box-shadow: 0 8px 24px rgba(54,44,36,.14); max-width: 86vw; text-align: center;
+                opacity: 0; transition: opacity .2s ease, transform .2s ease; pointer-events: none; }
+    .ui-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .ui-toast .ui-toast-dot { color: var(--accent-strong); margin-right: 6px; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="head">
-      <h1><span id="retro-nick-prefix"></span><span class="accent">每日复盘</span></h1>
-      <p>每天花几分钟回顾一下，把今天的收获和想法记下来吧 ✨</p>
-    </div>
-
-    <div class="card-base">
-      <div class="bar">
-        <button class="date-pill" id="date-pill" type="button"><span id="date-label">—</span><span class="chev">▾</span></button>
-        <button class="today-btn" id="today-btn" type="button">今天</button>
-        <span class="spacer"></span>
-        <div class="search">
-          <span class="icon">🔍</span>
-          <input type="text" id="search" placeholder="搜索复盘…" autocomplete="off" />
-          <div class="card-base search-results hidden" id="search-results"></div>
-        </div>
+    <header class="page-head">
+      <div class="tabs" role="tablist">
+        <button class="tab-btn" data-tab="records" type="button" role="tab" aria-selected="false">📚 复盘记录</button>
+        <button class="tab-btn active" data-tab="today" type="button" role="tab" aria-selected="true">📝 今日复盘</button>
       </div>
-      <div class="cal hidden" id="cal"></div>
-    </div>
+    </header>
 
-    <div class="card-base card did">
-      <div class="card-label"><span class="emoji">📝</span>今天主要做了哪几件事？</div>
-      <div class="hint-row"><span class="card-hint">把今天完成的事情，一件一件写下来</span><span class="saved">已自动保存 ✓</span></div>
-      <textarea id="did" placeholder="例如：1. 完成了数学作业&#10;2. 读了 20 分钟课外书&#10;3. 练了字帖"></textarea>
-    </div>
+    <div class="panel-host">
+      <!-- 复盘记录面板 -->
+      <section class="panel" id="panel-records" role="tabpanel">
+        <div class="card-base">
+          <div class="bar toc-bar">
+            <div class="toc-search">
+              <span class="icon">🔍</span>
+              <input type="text" id="tocSearch" placeholder="搜索复盘…" autocomplete="off" />
+            </div>
+            <button class="mini" id="tocClearFilter" type="button">清除筛选</button>
+            <button class="mini" id="tocNew" type="button">+ 新建</button>
+          </div>
+        </div>
+        <p class="toc-stat" id="tocStat">共 0 篇复盘</p>
+        <p class="toc-note" id="tocNote" style="display:none"></p>
+        <div class="entry-list" id="entryList"></div>
+      </section>
 
-    <div class="card-base card well">
-      <div class="card-label"><span class="emoji">👍</span>哪些做得很好？</div>
-      <div class="hint-row"><span class="card-hint">为自己点赞，记下今天表现棒的地方</span><span class="saved">已自动保存 ✓</span></div>
-      <textarea id="well" placeholder="例如：今天主动复习了错题，很专心"></textarea>
-    </div>
+      <!-- 今日复盘面板 -->
+      <section class="panel show" id="panel-today" role="tabpanel">
+        <div class="card-base">
+          <div class="bar">
+            <button class="date-pill" id="date-pill" type="button"><span id="date-label">—</span><span class="chev">▾</span></button>
+            <button class="today-btn" id="today-btn" type="button">今天</button>
+            <span class="spacer"></span>
+            <div class="search">
+              <span class="icon">🔍</span>
+              <input type="text" id="search" placeholder="搜索复盘…" autocomplete="off" />
+              <div class="card-base search-results hidden" id="search-results"></div>
+            </div>
+          </div>
+          <div class="cal hidden" id="cal"></div>
+        </div>
 
-    <div class="card-base card improve">
-      <div class="card-label"><span class="emoji">💪</span>哪些还可以做得更好？</div>
-      <div class="hint-row"><span class="card-hint">想想明天可以怎么做，会更进步</span><span class="saved">已自动保存 ✓</span></div>
-      <textarea id="improve" placeholder="例如：写作业时少分心，可以更快完成"></textarea>
+        <div class="card-base card did">
+          <div class="card-label"><span class="emoji">📝</span>今天主要做了哪几件事？</div>
+          <div class="hint-row"><span class="card-hint">把今天完成的事情，一件一件写下来</span><span class="saved">已自动保存 ✓</span></div>
+          <textarea id="did" placeholder="例如：1. 完成了数学作业&#10;2. 读了 20 分钟课外书&#10;3. 练了字帖"></textarea>
+        </div>
+
+        <div class="card-base card well">
+          <div class="card-label"><span class="emoji">👍</span>哪些做得很好？</div>
+          <div class="hint-row"><span class="card-hint">为自己点赞，记下今天表现棒的地方</span><span class="saved">已自动保存 ✓</span></div>
+          <textarea id="well" placeholder="例如：今天主动复习了错题，很专心"></textarea>
+        </div>
+
+        <div class="card-base card improve">
+          <div class="card-label"><span class="emoji">💪</span>哪些还可以做得更好？</div>
+          <div class="hint-row"><span class="card-hint">想想明天可以怎么做，会更进步</span><span class="saved">已自动保存 ✓</span></div>
+          <textarea id="improve" placeholder="例如：写作业时少分心，可以更快完成"></textarea>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -151,6 +265,7 @@
     }
     function readEntry(dateStr) { try { return JSON.parse(localStorage.getItem(PREFIX + dateStr)) || {}; } catch (e) { return {}; } }
     function entryText(o) { return [o.did, o.well, o.improve].filter(Boolean).join('\n'); }
+    function escapeHtml(s) { return String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
 
     function markedDates() {
       const set = new Set();
@@ -161,6 +276,111 @@
         if (o.did || o.well || o.improve) set.add(k.slice(PREFIX.length));
       }
       return set;
+    }
+
+    /* ────────── 自定义弹窗：确认框 / 输入框 / 轻提示（替代原生 confirm/prompt/alert） ────────── */
+    function showConfirm({ title = '提示', message = '', confirmText = '确定', cancelText = '取消' } = {}) {
+      return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.className = 'ui-overlay';
+        const panel = document.createElement('div');
+        panel.className = 'ui-panel';
+        const h = document.createElement('div'); h.className = 'ui-title'; h.textContent = title;
+        const p = document.createElement('div'); p.className = 'ui-msg'; p.textContent = message;
+        const row = document.createElement('div'); row.className = 'ui-row';
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button'; cancelBtn.className = 'btn ghost'; cancelBtn.textContent = cancelText;
+        const okBtn = document.createElement('button');
+        okBtn.type = 'button'; okBtn.className = 'btn'; okBtn.textContent = confirmText;
+        row.appendChild(cancelBtn); row.appendChild(okBtn);
+        panel.appendChild(h); panel.appendChild(p); panel.appendChild(row);
+        overlay.appendChild(panel);
+        document.body.appendChild(overlay);
+        requestAnimationFrame(() => overlay.classList.add('show'));
+
+        let done = false;
+        function close(result) {
+          if (done) return; done = true;
+          document.removeEventListener('keydown', onKey);
+          overlay.classList.remove('show');
+          setTimeout(() => overlay.remove(), 200);
+          resolve(result);
+        }
+        function onKey(e) {
+          if (e.key === 'Escape') close(false);
+          else if (e.key === 'Enter') close(true);
+        }
+        okBtn.addEventListener('click', () => close(true));
+        cancelBtn.addEventListener('click', () => close(false));
+        overlay.addEventListener('click', e => { if (e.target === overlay) close(false); });
+        document.addEventListener('keydown', onKey);
+        setTimeout(() => okBtn.focus(), 0);
+      });
+    }
+
+    function showPrompt({ title = '提示', message = '', placeholder = '', inputType = 'text', maxlength, value = '', validate, confirmText = '确定', cancelText = '取消' } = {}) {
+      return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.className = 'ui-overlay';
+        const panel = document.createElement('div');
+        panel.className = 'ui-panel';
+        const h = document.createElement('div'); h.className = 'ui-title'; h.textContent = title;
+        const p = document.createElement('div'); p.className = 'ui-msg'; p.textContent = message;
+        const input = document.createElement('input');
+        input.className = 'ui-input';
+        input.type = inputType || 'text';
+        if (placeholder) input.placeholder = placeholder;
+        if (maxlength != null) input.maxLength = maxlength;
+        if (value) input.value = value;
+        const errEl = document.createElement('div'); errEl.className = 'ui-err';
+        const row = document.createElement('div'); row.className = 'ui-row';
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button'; cancelBtn.className = 'btn ghost'; cancelBtn.textContent = cancelText;
+        const okBtn = document.createElement('button');
+        okBtn.type = 'button'; okBtn.className = 'btn'; okBtn.textContent = confirmText;
+        row.appendChild(cancelBtn); row.appendChild(okBtn);
+        panel.appendChild(h); panel.appendChild(p); panel.appendChild(input); panel.appendChild(errEl); panel.appendChild(row);
+        overlay.appendChild(panel);
+        document.body.appendChild(overlay);
+        requestAnimationFrame(() => overlay.classList.add('show'));
+
+        let done = false;
+        function close(result) {
+          if (done) return; done = true;
+          document.removeEventListener('keydown', onKey);
+          overlay.classList.remove('show');
+          setTimeout(() => overlay.remove(), 200);
+          resolve(result);
+        }
+        function submit() {
+          const val = input.value.trim();
+          if (typeof validate === 'function') {
+            const msg = validate(val);
+            if (msg != null) { errEl.textContent = msg; return; }
+          }
+          close(val);
+        }
+        function onKey(e) {
+          if (e.key === 'Escape') close(null);
+          else if (e.key === 'Enter') submit();
+        }
+        input.addEventListener('input', () => { errEl.textContent = ''; });
+        okBtn.addEventListener('click', submit);
+        cancelBtn.addEventListener('click', () => close(null));
+        overlay.addEventListener('click', e => { if (e.target === overlay) close(null); });
+        document.addEventListener('keydown', onKey);
+        setTimeout(() => input.focus(), 0);
+      });
+    }
+
+    let toastTimer = null;
+    function showToast(message) {
+      let toast = document.querySelector('.ui-toast');
+      if (!toast) { toast = document.createElement('div'); toast.className = 'ui-toast'; document.body.appendChild(toast); }
+      toast.innerHTML = '<span class="ui-toast-dot">✓</span>' + escapeHtml(message);
+      requestAnimationFrame(() => toast.classList.add('show'));
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
     }
 
     /* ── 日历 ── */
@@ -235,9 +455,8 @@
       e.stopPropagation();
     });
 
-    /* ── 搜索 ── */
+    /* ── 搜索（今日复盘面板内） ── */
     const searchInput = $('search'), searchResults = $('search-results');
-    function escapeHtml(s) { return s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
     function snippet(text, q) {
       const lower = text.toLowerCase(), pos = lower.indexOf(q);
       const start = Math.max(0, pos - 20), end = Math.min(text.length, pos + q.length + 40);
@@ -275,11 +494,161 @@
       if (!e.target.closest('.bar') && !e.target.closest('.cal')) { calEl.classList.add('hidden'); pill.classList.remove('open'); }
     });
 
+    /* ────────── 标签切换：复盘记录 / 今日复盘（默认今日复盘） ────────── */
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const panels = { records: $('panel-records'), today: $('panel-today') };
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.tab;
+        tabBtns.forEach(b => {
+          const active = b === btn;
+          b.classList.toggle('active', active);
+          b.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        Object.keys(panels).forEach(k => panels[k].classList.toggle('show', k === key));
+        if (key === 'records') renderTOC(); // 每次进记录都刷新，反映最新保存
+      });
+    });
+    function gotoTodayTab() { document.querySelector('.tab-btn[data-tab="today"]').click(); }
+
+    /* ────────── 复盘记录：读取真实 localStorage 条目并渲染 ────────── */
+    const SUMMARY_LEN = 40;
+    function summaryOf(o) {
+      const t = entryText(o).replace(/\r/g, '').replace(/\n+/g, ' ').trim();
+      if (!t) return '（空白复盘）';
+      return t.length > SUMMARY_LEN ? t.slice(0, SUMMARY_LEN) + '…' : t;
+    }
+    function loadRecords() {
+      const out = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k || !k.startsWith(PREFIX)) continue;
+        const ds = k.slice(PREFIX.length);
+        const o = readEntry(ds);
+        if (o.did || o.well || o.improve) out.push({ date: ds, ...o });
+      }
+      return out;
+    }
+    const tocStat = $('tocStat'), tocNote = $('tocNote'), entryList = $('entryList');
+    const tocSearch = $('tocSearch'), tocClearFilter = $('tocClearFilter'), tocNewBtn = $('tocNew');
+
+    function applyTocFilters(records) {
+      const kw = (tocSearch.value || '').trim().toLowerCase();
+      if (!kw) return records;
+      return records.filter(r => entryText(r).toLowerCase().includes(kw));
+    }
+
+    const SEC_DEFS = [
+      { key: 'did', emoji: '📝', label: '做了哪几件事' },
+      { key: 'well', emoji: '👍', label: '哪些做得好' },
+      { key: 'improve', emoji: '💪', label: '哪些可改进' }
+    ];
+    function renderTOC() {
+      const all = loadRecords();
+      const total = all.length;
+      let records = applyTocFilters(all);
+      records.sort((a, b) => (a.date < b.date ? 1 : (a.date > b.date ? -1 : 0)));
+      if (!total) {
+        tocStat.textContent = '还没有复盘';
+        tocNote.style.display = 'inline-block';
+        tocNote.textContent = '还没有复盘，去写第一篇吧～';
+        entryList.innerHTML = '<div class="toc-empty">还没有复盘，去「今日复盘」记录一篇吧 📝</div>';
+        return;
+      }
+      const filtering = !!(tocSearch.value || '').trim();
+      tocStat.textContent = filtering
+        ? ('筛选出 ' + records.length + ' 篇 / 共 ' + total + ' 篇复盘')
+        : ('共 ' + total + ' 篇复盘');
+      tocNote.style.display = 'none';
+      if (!records.length) {
+        entryList.innerHTML = '<div class="toc-filter-empty">没有符合条件的复盘，换个关键字试试吧 🔍</div>';
+        return;
+      }
+      entryList.innerHTML = records.map((r, idx) => {
+        const secs = SEC_DEFS.filter(s => (r[s.key] || '').trim())
+          .map(s => '<div class="entry-sec">'
+            + '<div class="sec-label"><span>' + s.emoji + '</span>' + s.label + '</div>'
+            + '<div class="sec-text">' + escapeHtml(r[s.key]) + '</div></div>')
+          .join('') || '<div class="entry-sec"><div class="sec-text">（空白复盘）</div></div>';
+        return '<article class="entry card-base" data-idx="' + idx + '">' +
+            '<div class="entry-head">' +
+              '<span class="entry-date">' + escapeHtml(fmt(r.date)) + '</span>' +
+              '<span class="entry-sum">' + escapeHtml(summaryOf(r)) + '</span>' +
+              '<span class="entry-chev">▾</span>' +
+            '</div>' +
+            '<div class="entry-body"><div class="entry-body-inner">' + secs + '</div></div>' +
+            '<div class="entry-act">' +
+              '<button class="act-btn" type="button" data-act="edit" data-date="' + escapeHtml(r.date) + '">编辑</button>' +
+              '<button class="act-btn danger" type="button" data-act="del" data-date="' + escapeHtml(r.date) + '">删除</button>' +
+            '</div>' +
+          '</article>';
+      }).join('');
+    }
+
+    tocSearch.addEventListener('input', renderTOC);
+    tocClearFilter.addEventListener('click', () => { tocSearch.value = ''; renderTOC(); });
+
+    // 新建：选日期 → 切到今日复盘编辑该天
+    tocNewBtn.addEventListener('click', async () => {
+      const date = await showPrompt({
+        title: '新建复盘', message: '请输入日期（格式 YYYY-MM-DD）。',
+        placeholder: 'YYYY-MM-DD', inputType: 'text', maxlength: 10, value: todayStr(),
+        validate: v => {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return '日期格式应为 YYYY-MM-DD';
+          if (v > todayStr()) return '不能选择未来的日期';
+          return null;
+        }
+      });
+      if (date == null) return;
+      const exists = !!localStorage.getItem(PREFIX + date);
+      if (exists) {
+        const ok = await showConfirm({ title: '复盘已存在', message: '「' + fmt(date) + '」已有复盘，是否打开编辑？', confirmText: '去编辑', cancelText: '取消' });
+        if (!ok) return;
+      }
+      gotoTodayTab();
+      const [y, m] = date.split('-').map(Number);
+      viewY = y; viewM = m - 1;
+      selectDate(date);
+      renderCal();
+      showToast(exists ? '已打开该日期的复盘' : '开始写「' + fmt(date) + '」的复盘吧');
+    });
+
+    // 记录点击：编辑 / 删除（事件委托）优先，否则手风琴展开
+    entryList.addEventListener('click', async e => {
+      const actBtn = e.target.closest('.entry-act [data-act]');
+      if (actBtn) {
+        e.stopPropagation();
+        const date = actBtn.dataset.date, act = actBtn.dataset.act;
+        if (act === 'edit') {
+          gotoTodayTab();
+          const [y, m] = date.split('-').map(Number);
+          viewY = y; viewM = m - 1;
+          selectDate(date);
+          renderCal();
+          return;
+        }
+        if (act === 'del') {
+          const ok = await showConfirm({ title: '删除复盘', message: '确定删除「' + fmt(date) + '」这篇复盘吗？删除后无法恢复。', confirmText: '删除', cancelText: '取消' });
+          if (!ok) return;
+          localStorage.removeItem(PREFIX + date);
+          if (date === selected) selectDate(selected); // 同步清空正在编辑的内容
+          renderTOC();
+          showToast('已删除');
+        }
+        return;
+      }
+      if (e.target.closest('.entry-act')) return;
+      const art = e.target.closest('.entry');
+      if (art) art.classList.toggle('open');
+    });
+
+    /* ── 初始化 ── */
     selectDate(todayStr());
 
-    /* 标题昵称前缀:接收主壳下发的昵称,生成「{昵称}的每日复盘」;昵称为空时只显示「每日复盘」。 */
+    /* 昵称握手保留（不再渲染独立标题）：接收主壳下发昵称即可，无标题元素时安全跳过。 */
     function setRetroNickPrefix(nickname) {
       const el = document.getElementById('retro-nick-prefix');
+      if (!el) return;
       const n = (nickname || '').trim();
       el.textContent = n ? (n + '的') : '';
     }
