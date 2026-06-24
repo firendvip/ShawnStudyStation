@@ -18,6 +18,7 @@
 
     .head { text-align: center; }
     .head h1 { font-size: 2rem; font-weight: 800; letter-spacing: -.5px; }
+    .head h1 #retro-nick-prefix { color: var(--ink); }
     .head h1 .accent { color: var(--accent); }
     .head p { color: var(--ink-soft); font-size: .95rem; margin-top: 6px; }
 
@@ -96,7 +97,7 @@
 <body>
   <div class="wrap">
     <div class="head">
-      <h1>每日<span class="accent">复盘</span></h1>
+      <h1><span id="retro-nick-prefix"></span><span class="accent">每日复盘</span></h1>
       <p>每天花几分钟回顾一下，把今天的收获和想法记下来吧 ✨</p>
     </div>
 
@@ -268,6 +269,17 @@
     });
 
     selectDate(todayStr());
+
+    /* 标题昵称前缀:接收主壳下发的昵称,生成「{昵称}的每日复盘」;昵称为空时只显示「每日复盘」。 */
+    function setRetroNickPrefix(nickname) {
+      const el = document.getElementById('retro-nick-prefix');
+      const n = (nickname || '').trim();
+      el.textContent = n ? (n + '的') : '';
+    }
+    window.addEventListener('message', e => {
+      if (e.data && e.data.type === 'retro-config') setRetroNickPrefix(e.data.nickname);
+    });
+    try { if (window.parent && window.parent !== window) { window.parent.postMessage({ type: 'retro-ready' }, '*'); } } catch (_) {}
   </script>
 </body>
 </html>

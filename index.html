@@ -805,7 +805,11 @@
         </div>
         <div class="cl-list">
           <div class="cl-item latest">
-            <div class="cl-ver-row"><span class="cl-ver">v1.47.0</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-24</span></div>
+            <div class="cl-ver-row"><span class="cl-ver">v1.47.1</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-24</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>每日复盘标题会带上你的昵称啦，比如「小善的每日复盘」。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.47.0</span><span class="cl-date">2026-06-24</span></div>
             <div class="cl-line"><span class="cl-tag add">新增</span>答案版 PDF 的下载、打印、删除现在都要先输密码,练习版不用。</div>
           </div>
           <div class="cl-item">
@@ -1472,6 +1476,20 @@
       postPinpinConfig();
     });
 
+    /* 每日复盘昵称下发:子页面就绪后回传当前昵称,标题显示「{昵称}的每日复盘」。 */
+    function postRetroConfig() {
+      const rf = document.getElementById('frame-retro');
+      if (rf && rf.contentWindow) {
+        try { rf.contentWindow.postMessage({ type: 'retro-config', nickname: (userSettings.nickname || '') }, '*'); } catch (_) {}
+      }
+    }
+    window.addEventListener('message', e => {
+      if (!e.data || e.data.type !== 'retro-ready') return;
+      const rf = document.getElementById('frame-retro');
+      if (!rf || e.source !== rf.contentWindow) return;
+      postRetroConfig();
+    });
+
     /* 错字练习「查看答案」密码校验:是否等于账号登录密码。
        仅响应错字练习 iframe(frame-cuozi),避免其它来源借此暴力尝试密码。 */
     window.addEventListener('message', async e => {
@@ -1608,6 +1626,7 @@
         pendingAvatar = bakedAvatar;
         renderAccount();
         postPinpinConfig();
+        postRetroConfig();
         document.getElementById('settings-saved').classList.add('visible');
         closeSettings();
       } catch (e) { showError(errEl, e.message); }
