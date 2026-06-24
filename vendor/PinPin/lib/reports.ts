@@ -119,7 +119,10 @@ export async function buildReportForRange(
     grid: {
       columns: options.columns ?? DEFAULT_GRID_OPTIONS.columns,
       showIndex: options.showIndex ?? DEFAULT_GRID_OPTIONS.showIndex,
-      showWriteSpace: options.showWriteSpace ?? DEFAULT_GRID_OPTIONS.showWriteSpace,
+      // 答案版 PDF 强制不渲染写字框,无论用户设置如何
+      showWriteSpace: showAnswer
+        ? false
+        : (options.showWriteSpace ?? DEFAULT_GRID_OPTIONS.showWriteSpace),
     },
     pinyinSize: options.fontSize,
     pageMargin: options.margin,
