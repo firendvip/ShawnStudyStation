@@ -125,6 +125,31 @@
     .overlay .panel input:focus { outline: none; border-color: var(--accent); background: var(--surface); }
     .overlay .panel .row { display: flex; gap: 10px; margin-top: 6px; }
     .overlay .panel .row .btn { flex: 1; }
+
+    /* ── 自定义确认 / 轻提示弹窗（贴合主站风格） ── */
+    .ui-overlay { position: fixed; inset: 0; background: rgba(54,44,36,.38); display: flex;
+                  align-items: center; justify-content: center; padding: 16px; z-index: 60;
+                  opacity: 0; transition: opacity .18s ease; }
+    .ui-overlay.show { opacity: 1; }
+    .ui-overlay .ui-panel { width: 100%; max-width: 360px; background: var(--surface);
+                  border-radius: var(--radius); padding: 24px 24px 20px;
+                  box-shadow: 0 20px 40px rgba(54,44,36,.16);
+                  transform: translateY(8px) scale(.98); transition: transform .18s ease; }
+    .ui-overlay.show .ui-panel { transform: translateY(0) scale(1); }
+    .ui-panel .ui-title { font-size: 1.2rem; font-weight: 800; text-align: center; margin-bottom: 10px; }
+    .ui-panel .ui-msg { font-size: .92rem; color: var(--ink-soft); line-height: 1.7;
+                  text-align: center; margin-bottom: 20px; }
+    .ui-panel .ui-row { display: flex; gap: 10px; }
+    .ui-panel .ui-row .btn { flex: 1; }
+
+    .ui-toast { position: fixed; left: 50%; bottom: 36px;
+                transform: translateX(-50%) translateY(16px); z-index: 70;
+                background: var(--surface); color: var(--ink); border: 1px solid var(--line);
+                border-radius: var(--radius-sm); padding: 12px 18px; font-size: .92rem; font-weight: 600;
+                box-shadow: 0 8px 24px rgba(54,44,36,.14); max-width: 86vw; text-align: center;
+                opacity: 0; transition: opacity .2s ease, transform .2s ease; pointer-events: none; }
+    .ui-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .ui-toast .ui-toast-dot { color: var(--accent-strong); margin-right: 6px; }
   </style>
 </head>
 <body>
@@ -243,6 +268,56 @@
     const CUSTOM_OPT = '自定义';
     const subtle = (window.crypto && window.crypto.subtle) || null;
     const $ = id => document.getElementById(id);
+
+    /* ────────── 自定义弹窗：确认框 + 轻提示（替代原生 confirm/alert） ────────── */
+    function showConfirm({ title = '提示', message = '', confirmText = '确定', cancelText = '取消' } = {}) {
+      return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.className = 'ui-overlay';
+        const panel = document.createElement('div');
+        panel.className = 'ui-panel';
+        const h = document.createElement('div'); h.className = 'ui-title'; h.textContent = title;
+        const p = document.createElement('div'); p.className = 'ui-msg'; p.textContent = message;
+        const row = document.createElement('div'); row.className = 'ui-row';
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button'; cancelBtn.className = 'btn ghost'; cancelBtn.textContent = cancelText;
+        const okBtn = document.createElement('button');
+        okBtn.type = 'button'; okBtn.className = 'btn'; okBtn.textContent = confirmText;
+        row.appendChild(cancelBtn); row.appendChild(okBtn);
+        panel.appendChild(h); panel.appendChild(p); panel.appendChild(row);
+        overlay.appendChild(panel);
+        document.body.appendChild(overlay);
+        requestAnimationFrame(() => overlay.classList.add('show'));
+
+        let done = false;
+        function close(result) {
+          if (done) return; done = true;
+          document.removeEventListener('keydown', onKey);
+          overlay.classList.remove('show');
+          setTimeout(() => overlay.remove(), 200);
+          resolve(result);
+        }
+        function onKey(e) {
+          if (e.key === 'Escape') close(false);
+          else if (e.key === 'Enter') close(true);
+        }
+        okBtn.addEventListener('click', () => close(true));
+        cancelBtn.addEventListener('click', () => close(false));
+        overlay.addEventListener('click', e => { if (e.target === overlay) close(false); });
+        document.addEventListener('keydown', onKey);
+        setTimeout(() => okBtn.focus(), 0);
+      });
+    }
+
+    let toastTimer = null;
+    function showToast(message) {
+      let toast = document.querySelector('.ui-toast');
+      if (!toast) { toast = document.createElement('div'); toast.className = 'ui-toast'; document.body.appendChild(toast); }
+      toast.innerHTML = '<span class="ui-toast-dot">✓</span>' + String(message).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+      requestAnimationFrame(() => toast.classList.add('show'));
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
 
     function b64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
     function unb64(s) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
@@ -564,13 +639,13 @@
 
     /* 设置密码（明文 → 加密，保留数据） */
     $('set-pw-btn').addEventListener('click', async () => {
-      if (!subtle) { alert('此环境不支持加密'); return; }
+      if (!subtle) { showToast('此环境不支持加密'); return; }
       const pw = prompt('设置 4–6 位数字密码：');
       if (pw == null) return;
-      if (!PW_RE.test(pw)) { alert('密码必须是 4–6 位数字'); return; }
+      if (!PW_RE.test(pw)) { showToast('密码必须是 4–6 位数字'); return; }
       const pw2 = prompt('请再次输入密码：');
       if (pw2 == null) return;
-      if (pw !== pw2) { alert('两次输入的密码不一致'); return; }
+      if (pw !== pw2) { showToast('两次输入的密码不一致'); return; }
       // 1) 建立密码与主密钥
       await setupPassword(pw);
       // 2) 把所有现有明文条目重新加密
@@ -588,13 +663,14 @@
       updateToolbar();
       await openDate(selected);
       flashSaved();
-      alert('已设置密码，日记现已加密。');
+      showToast('已设置密码，日记现已加密');
     });
 
     /* 取消密码（加密 → 明文，保留数据） */
     $('remove-pw-btn').addEventListener('click', async () => {
       if (!cryptoKey) return;
-      if (!confirm('取消密码后，日记将不再加密，确定吗？')) return;
+      const ok = await showConfirm({ title: '取消密码', message: '取消密码后，日记将不再加密，确定取消吗？', confirmText: '确定取消', cancelText: '再想想' });
+      if (!ok) return;
       // 1) 趁密钥有效先解密收集所有条目
       const entries = [];
       for (const k of Object.keys(localStorage)) {
@@ -611,7 +687,7 @@
       updateToolbar();
       await openDate(selected);
       flashSaved();
-      alert('已取消密码，日记现以明文保存。');
+      showToast('已取消密码，日记现以明文保存');
     });
 
     /* 仅允许数字输入（密码/验证码） */
