@@ -12,6 +12,8 @@ const { ensureSchema } = require('./db'); // PostgreSQL pool + schema bootstrap.
 const authRoutes = require('./routes/auth');
 const dataRoutes = require('./routes/data');
 const compositionRoutes = require('./routes/composition');
+const analyticsRouter = require('./routes/analytics');
+const adminAnalyticsRouter = require('./routes/adminAnalytics');
 const { errorHandler } = require('./middleware/errorHandler');
 
 const JSON_BODY_LIMIT = '1mb';
@@ -40,6 +42,11 @@ app.get('/api/health', (_req, res) => {
 
 // Feature routes.
 app.use('/api/auth', authRoutes);
+// Analytics routers are mounted BEFORE the generic /api dataRoutes because
+// dataRoutes applies requireAuth to every /api/* path via router.use; the
+// public collect endpoint and the admin router must bypass that blanket guard.
+app.use('/api/analytics', analyticsRouter);
+app.use('/api/admin/analytics', adminAnalyticsRouter);
 app.use('/api', dataRoutes);
 app.use('/api/composition', compositionRoutes);
 

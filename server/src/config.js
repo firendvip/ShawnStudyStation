@@ -97,6 +97,17 @@ function resolveCorsOrigins() {
   return ['http://localhost:3000', 'http://localhost:5173'];
 }
 
+/**
+ * Resolve admin emails permitted to access /api/admin/analytics.
+ * ADMIN_EMAILS env var: comma-separated list. Normalised to lowercase/trimmed.
+ */
+function resolveAdminEmails() {
+  const rawAdmin = process.env.ADMIN_EMAILS && process.env.ADMIN_EMAILS.trim();
+  return rawAdmin
+    ? rawAdmin.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
+    : [];
+}
+
 const config = Object.freeze({
   port: Number(process.env.PORT) || DEFAULT_PORT,
   nodeEnv,
@@ -108,6 +119,7 @@ const config = Object.freeze({
   // is relaxed because many providers use certs not in the default CA bundle.
   pgSsl: String(process.env.PGSSL).toLowerCase() === 'true',
   corsOrigins: resolveCorsOrigins(),
+  adminEmails: resolveAdminEmails(),
   smtp,
   smtpFrom: process.env.SMTP_FROM || DEFAULT_SMTP_FROM,
   emailDevMode: resolveEmailDevMode(),

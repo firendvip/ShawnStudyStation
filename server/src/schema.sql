@@ -75,3 +75,24 @@ ALTER TABLE composition_articles ADD COLUMN IF NOT EXISTS level TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_comp_user ON composition_articles(user_id);
 CREATE INDEX IF NOT EXISTS idx_comp_public ON composition_articles(is_public, created_at);
+
+-- 埋点采集事件表 (analytics events). created_at = epoch-millis (Date.now()).
+CREATE TABLE IF NOT EXISTS analytics_events (
+  id BIGSERIAL PRIMARY KEY,
+  visitor_id TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  user_id BIGINT,
+  type TEXT NOT NULL,
+  app TEXT,
+  view TEXT,
+  target TEXT,
+  dwell_ms BIGINT,
+  meta TEXT,
+  referrer TEXT,
+  ua TEXT,
+  created_at BIGINT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_ae_created ON analytics_events(created_at);
+CREATE INDEX IF NOT EXISTS idx_ae_visitor ON analytics_events(visitor_id);
+CREATE INDEX IF NOT EXISTS idx_ae_app ON analytics_events(app);
+CREATE INDEX IF NOT EXISTS idx_ae_type ON analytics_events(type);
