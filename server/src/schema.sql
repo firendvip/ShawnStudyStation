@@ -76,6 +76,25 @@ ALTER TABLE composition_articles ADD COLUMN IF NOT EXISTS level TEXT;
 CREATE INDEX IF NOT EXISTS idx_comp_user ON composition_articles(user_id);
 CREATE INDEX IF NOT EXISTS idx_comp_public ON composition_articles(is_public, created_at);
 
+-- 我的作文 — personal copies. A user can transfer a public composition_articles
+-- row here (source_id set) or create one manually (source_id NULL). These rows
+-- are private to their owner; editing them never touches the public original.
+-- parsed_data holds the same JSON string shape ({ title, sentences: [...] }).
+CREATE TABLE IF NOT EXISTS my_articles (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  source_id BIGINT,
+  title TEXT NOT NULL,
+  prompt TEXT,
+  level TEXT,
+  original_text TEXT,
+  parsed_data TEXT NOT NULL,
+  created_at BIGINT NOT NULL,
+  updated_at BIGINT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_my_user ON my_articles(user_id);
+
 -- 埋点采集事件表 (analytics events). created_at = epoch-millis (Date.now()).
 CREATE TABLE IF NOT EXISTS analytics_events (
   id BIGSERIAL PRIMARY KEY,

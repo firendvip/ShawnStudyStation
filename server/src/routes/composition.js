@@ -130,6 +130,23 @@ function rowToItem(row, currentUserId) {
   };
 }
 
+/**
+ * Map a my_articles DB row to the wire shape for the 我的作文 list/item.
+ * @param {object} row
+ */
+function myRowToItem(row) {
+  return {
+    id: Number(row.id),
+    sourceId: row.source_id == null ? null : Number(row.source_id),
+    title: row.title,
+    prompt: row.prompt || '',
+    level: row.level || '',
+    essay: parseEssay(row.parsed_data),
+    createdAt: Number(row.created_at),
+    updatedAt: Number(row.updated_at),
+  };
+}
+
 /** Validate and normalise the :id route param to a positive integer. */
 function parseId(raw) {
   const id = Number(raw);
@@ -302,6 +319,226 @@ router.delete(
 
     const { rows } = await query(
       `DELETE FROM composition_articles
+        WHERE id = $1 AND user_id = $2
+        RETURNING id`,
+      [id, req.user.id]
+    );
+
+    if (!rows[0]) {
+      throw httpError(404, '文章不存在或无权限');
+    }
+    res.json({ ok: true });
+  })
+);
+
+// --- 我的作文 (personal copies) -------------------------------------------
+// Mounted at /api/composition/my. All rows are private to req.user.id.
+
+/**
+ * Validate + normalise the manual-create / edit fields. `partial` (PUT) only
+ * validates the fields that are present; required-field checks are skipped.
+ * Returns { title?, prompt?, level?, text?, truncated }.
+ * @param {object} body
+ * @param {boolean} partial
+ */
+function normalizeMyFields(body, partial) {
+  const out = { truncated: false };
+
+  // title — required on create; capped at 40 chars.
+  if (body.title !== undefined || !partial) {
+    const rawTitle = body.title;
+    if (typeof rawTitle !== 'string' || !rawTitle.trim()) {
+      throw httpError(400, '请填写标题');
+    }
+    out.title = rawTitle.trim().slice(0, MAX_TITLE_LEN);
+  }
+
+  // level — required on create; must be a known 学段 when present.
+  if (body.level !== undefined || !partial) {
+    const level = typeof body.level === 'string' ? body.level.trim() : '';
+    if (!VALID_LEVELS.includes(level)) {
+      throw httpError(400, '请选择学段');
+    }
+    out.level = level;
+  }
+
+  // prompt — optional; capped at 1000 chars.
+  if (body.prompt !== undefined) {
+    out.prompt =
+      typeof body.prompt === 'string' ? body.prompt.trim().slice(0, MAX_PROMPT_LEN) : '';
+  }
+
+  // text — required on create; capped at 3000 chars (truncation reported).
+  if (body.text !== undefined || !partial) {
+    const rawText = body.text;
+    if (typeof rawText !== 'string' || !rawText.trim()) {
+      throw httpError(400, '正文不能为空');
+    }
+    const trimmed = rawText.trim();
+    out.truncated = trimmed.length > MAX_TEXT_LEN;
+    out.text = out.truncated ? trimmed.slice(0, MAX_TEXT_LEN) : trimmed;
+  }
+
+  return out;
+}
+
+/**
+ * POST /api/composition/my
+ * Two modes, selected by the presence of `sourceId` in the body:
+ *  - TRANSFER  { sourceId }: copy a PUBLIC composition_articles row into the
+ *    caller's my_articles (source_id = sourceId). 404 if no public source.
+ *  - CREATE    { title, prompt?, text, level }: parse text locally and store a
+ *    fresh personal copy (source_id = NULL). Returns { truncated }.
+ * Returns { ok, article } where article is the new my_articles item.
+ */
+router.post(
+  '/my',
+  postLimiter,
+  asyncHandler(async (req, res) => {
+    const body = req.body || {};
+    const now = Date.now();
+
+    // TRANSFER mode — body carries a sourceId.
+    if (body.sourceId !== undefined && body.sourceId !== null && body.sourceId !== '') {
+      const sourceId = parseId(body.sourceId);
+
+      const sourceResult = await query(
+        `SELECT title, prompt, level, original_text, parsed_data
+           FROM composition_articles
+          WHERE id = $1 AND is_public = 1`,
+        [sourceId]
+      );
+      const source = sourceResult.rows[0];
+      if (!source) {
+        throw httpError(404, '原文不存在或不可转存');
+      }
+
+      const { rows } = await query(
+        `INSERT INTO my_articles
+           (user_id, source_id, title, prompt, level, original_text, parsed_data, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)
+         RETURNING id, source_id, title, prompt, level, parsed_data, created_at, updated_at`,
+        [
+          req.user.id,
+          sourceId,
+          source.title,
+          source.prompt,
+          source.level,
+          source.original_text,
+          source.parsed_data,
+          now,
+        ]
+      );
+
+      return res.json({ ok: true, article: myRowToItem(rows[0]) });
+    }
+
+    // MANUAL CREATE mode.
+    const fields = normalizeMyFields(body, false);
+    const essay = parseTextToEssay(fields.text, fields.title);
+    const parsedData = JSON.stringify(essay);
+
+    const { rows } = await query(
+      `INSERT INTO my_articles
+         (user_id, source_id, title, prompt, level, original_text, parsed_data, created_at, updated_at)
+       VALUES ($1, NULL, $2, $3, $4, $5, $6, $7, $7)
+       RETURNING id, source_id, title, prompt, level, parsed_data, created_at, updated_at`,
+      [req.user.id, fields.title, fields.prompt || '', fields.level, fields.text, parsedData, now]
+    );
+
+    return res.json({ ok: true, article: myRowToItem(rows[0]), truncated: fields.truncated });
+  })
+);
+
+/**
+ * GET /api/composition/my
+ * Returns the caller's own personal copies, newest-first:
+ *   { articles: [ { id, sourceId, title, prompt, level, essay, createdAt, updatedAt } ] }
+ */
+router.get(
+  '/my',
+  asyncHandler(async (req, res) => {
+    const { rows } = await query(
+      `SELECT id, source_id, title, prompt, level, parsed_data, created_at, updated_at
+         FROM my_articles
+        WHERE user_id = $1
+        ORDER BY created_at DESC`,
+      [req.user.id]
+    );
+    res.json({ articles: rows.map(myRowToItem) });
+  })
+);
+
+/**
+ * PUT /api/composition/my/:id
+ * Body { title?, prompt?, text?, level? } — partial update of the caller's own
+ * row only. When `text` is provided it is re-parsed and parsed_data + original_text
+ * are updated. 404 if the row is missing or not owned by the caller.
+ * Returns { ok, article, truncated }.
+ */
+router.put(
+  '/my/:id',
+  postLimiter,
+  asyncHandler(async (req, res) => {
+    const id = parseId(req.params.id);
+    const body = req.body || {};
+    const fields = normalizeMyFields(body, true);
+
+    // Build the SET list dynamically from the provided fields only (immutable).
+    const sets = [];
+    const params = [];
+    const push = (col, val) => {
+      params.push(val);
+      sets.push(`${col} = $${params.length}`);
+    };
+
+    if (fields.title !== undefined) push('title', fields.title);
+    if (fields.prompt !== undefined) push('prompt', fields.prompt);
+    if (fields.level !== undefined) push('level', fields.level);
+    if (fields.text !== undefined) {
+      const essay = parseTextToEssay(fields.text, fields.title || '');
+      push('original_text', fields.text);
+      push('parsed_data', JSON.stringify(essay));
+    }
+
+    if (sets.length === 0) {
+      throw httpError(400, '没有需要更新的字段');
+    }
+
+    push('updated_at', Date.now());
+
+    // Owner filter ($id, $userId) appended last.
+    params.push(id);
+    const idIdx = params.length;
+    params.push(req.user.id);
+    const userIdx = params.length;
+
+    const { rows } = await query(
+      `UPDATE my_articles
+          SET ${sets.join(', ')}
+        WHERE id = $${idIdx} AND user_id = $${userIdx}
+      RETURNING id, source_id, title, prompt, level, parsed_data, created_at, updated_at`,
+      params
+    );
+
+    if (!rows[0]) {
+      throw httpError(404, '文章不存在或无权限');
+    }
+    res.json({ ok: true, article: myRowToItem(rows[0]), truncated: fields.truncated });
+  })
+);
+
+/**
+ * DELETE /api/composition/my/:id — delete only the caller's own personal copy.
+ * 404 if missing or not owned. Never affects the public original.
+ */
+router.delete(
+  '/my/:id',
+  asyncHandler(async (req, res) => {
+    const id = parseId(req.params.id);
+
+    const { rows } = await query(
+      `DELETE FROM my_articles
         WHERE id = $1 AND user_id = $2
         RETURNING id`,
       [id, req.user.id]
