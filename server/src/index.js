@@ -14,6 +14,8 @@ const dataRoutes = require('./routes/data');
 const compositionRoutes = require('./routes/composition');
 const analyticsRouter = require('./routes/analytics');
 const adminAnalyticsRouter = require('./routes/adminAnalytics');
+const adminAiConfigRouter = require('./routes/adminAiConfig');
+const adminReviewRouter = require('./routes/adminReview');
 const { errorHandler } = require('./middleware/errorHandler');
 
 const JSON_BODY_LIMIT = '1mb';
@@ -47,6 +49,8 @@ app.use('/api/auth', authRoutes);
 // public collect endpoint and the admin router must bypass that blanket guard.
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/admin/analytics', adminAnalyticsRouter);
+app.use('/api/admin/ai-config', adminAiConfigRouter);
+app.use('/api/admin/review', adminReviewRouter);
 app.use('/api', dataRoutes);
 app.use('/api/composition', compositionRoutes);
 
