@@ -813,7 +813,11 @@
         </div>
         <div class="cl-list">
           <div class="cl-item latest">
-            <div class="cl-ver-row"><span class="cl-ver">v1.58.0</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-24</span></div>
+            <div class="cl-ver-row"><span class="cl-ver">v1.58.1</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-24</span></div>
+            <div class="cl-line"><span class="cl-tag fix">修复</span>改头像/昵称/首页标题保存时偶尔提示「未授权」，现在登录过期会提醒重新登录。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.58.0</span><span class="cl-date">2026-06-24</span></div>
             <div class="cl-line"><span class="cl-tag opt">优化</span>英语作文「文章上传」改成弹窗，填标题/作文考题/作文/学段。</div>
             <div class="cl-line"><span class="cl-tag opt">优化</span>选择文章改成带搜索的两级菜单（小学/初中/高中/大学，内置在高中）。</div>
             <div class="cl-line"><span class="cl-tag opt">优化</span>展示页加上标题和作文考题。</div>
@@ -1361,7 +1365,11 @@
       } catch (e) { throw new Error('无法连接服务器，请确认后端已启动'); }
       let data = {};
       try { data = await res.json(); } catch (_) {}
-      if (!res.ok) throw new Error(data.error || ('请求失败 (' + res.status + ')'));
+      if (!res.ok) {
+        const err = new Error(data.error || ('请求失败 (' + res.status + ')'));
+        err.status = res.status;
+        throw err;
+      }
       return data;
     }
 
@@ -1770,6 +1778,13 @@
       const homeSub = document.getElementById('set-home-sub').value.trim();
       const errEl = document.getElementById('settings-error');
       clearError(errEl);
+      // 未登录 / 无 token：先引导登录,不要裸露后端「未授权」
+      if (!getToken() || !currentUser) {
+        showError(errEl, '登录已过期，请重新登录后再保存');
+        closeSettings();
+        openModal('login');
+        return;
+      }
       const zoomVal = parseFloat((document.getElementById('avatar-zoom')||{}).value || '1');
       const bakedAvatar = await new Promise(res => bakeAvatar(pendingAvatar, zoomVal, res));
       const next = Object.assign({}, userSettings, { nickname, homeTitle, homeSub, avatar: bakedAvatar });
@@ -1785,7 +1800,18 @@
         postCompositionConfig();
         document.getElementById('settings-saved').classList.add('visible');
         closeSettings();
-      } catch (e) { showError(errEl, e.message); }
+      } catch (e) {
+        // token 失效/过期:后端返回 401。给友好提示并唤起登录,登录后可重试保存。
+        if (e && e.status === 401) {
+          clearToken();
+          currentUser = null;
+          showError(errEl, '登录已过期，请重新登录后再保存');
+          closeSettings();
+          openModal('login');
+        } else {
+          showError(errEl, e.message);
+        }
+      }
     });
 
     /* Change password (logged-in) */
