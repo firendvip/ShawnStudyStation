@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>小善学习站 · 数据分析后台</title>
+  <link rel="stylesheet" href="assets/tabler.min.css" />
+  <style>
+    :root { --xss-accent:#206bc4; }
+    body { background:#f5f7fb; }
+    .page-wrap { max-width:1320px; margin:0 auto; padding:16px; }
+    .login-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px; }
+    .login-card { width:100%; max-width:400px; }
+    .brand-title { font-weight:700; letter-spacing:.2px; }
+    .kpi-value { font-size:1.6rem; font-weight:700; line-height:1.1; }
+    .kpi-label { color:var(--tblr-secondary,#6c7a91); font-size:.8rem; }
+    .chart-box { width:100%; height:300px; }
+    .chart-box.sm { height:260px; }
+    .empty-ph { color:#9aa7b8; text-align:center; padding:48px 12px; font-size:.9rem; }
+    .table-scroll { max-height:420px; overflow:auto; }
+    .live-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#2fb344; margin-right:6px; animation:pulse 1.6s infinite; }
+    @keyframes pulse { 0%{opacity:.4;} 50%{opacity:1;} 100%{opacity:.4;} }
+    .bar-cell { background:linear-gradient(90deg, rgba(32,107,196,.16), rgba(32,107,196,.16)); background-repeat:no-repeat; border-radius:4px; }
+    [hidden] { display:none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- ===================== 登录闸 ===================== -->
+  <div id="loginScreen" class="login-screen">
+    <div class="card card-md login-card shadow-sm">
+      <div class="card-body">
+        <h2 class="h2 text-center brand-title mb-1">小善学习站 · 数据分析后台</h2>
+        <p class="text-secondary text-center mb-4">管理员登录</p>
+        <div id="loginError" class="alert alert-danger" hidden></div>
+        <form id="loginForm" autocomplete="off">
+          <div class="mb-3">
+            <label class="form-label">邮箱</label>
+            <input id="loginEmail" type="email" class="form-control" placeholder="管理员邮箱" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">密码</label>
+            <input id="loginPassword" type="password" class="form-control" placeholder="密码" required />
+          </div>
+          <div class="form-footer">
+            <button id="loginBtn" type="submit" class="btn btn-primary w-100">登录</button>
+          </div>
+        </form>
+        <p class="text-secondary text-center mt-3" style="font-size:.78rem">仅管理员邮箱（server/.env 的 ADMIN_EMAILS）可进入</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 仪表盘 ===================== -->
+  <div id="dashboard" hidden>
+    <header class="navbar navbar-expand-md navbar-light sticky-top" style="background:#fff;border-bottom:1px solid #e6e9f0">
+      <div class="page-wrap d-flex align-items-center" style="width:100%;padding-top:10px;padding-bottom:10px">
+        <h1 class="h3 brand-title mb-0 me-auto">小善学习站 · 数据分析后台</h1>
+        <span class="text-secondary me-3 d-none d-md-inline" id="whoami"></span>
+        <button id="logoutBtn" class="btn btn-outline-secondary btn-sm">退出登录</button>
+      </div>
+    </header>
+
+    <div class="page-wrap">
+      <!-- 筛选栏 -->
+      <div class="card mb-3">
+        <div class="card-body py-2">
+          <div class="row g-2 align-items-end">
+            <div class="col-auto">
+              <label class="form-label mb-1" style="font-size:.78rem">时间范围</label>
+              <select id="rangeSelect" class="form-select form-select-sm">
+                <option value="7">近 7 天</option>
+                <option value="30" selected>近 30 天</option>
+                <option value="90">近 90 天</option>
+                <option value="custom">自定义</option>
+              </select>
+            </div>
+            <div class="col-auto custom-range" hidden>
+              <label class="form-label mb-1" style="font-size:.78rem">起</label>
+              <input id="dateFrom" type="date" class="form-control form-control-sm" />
+            </div>
+            <div class="col-auto custom-range" hidden>
+              <label class="form-label mb-1" style="font-size:.78rem">止</label>
+              <input id="dateTo" type="date" class="form-control form-control-sm" />
+            </div>
+            <div class="col-auto">
+              <button id="refreshBtn" class="btn btn-primary btn-sm">
+                <span id="refreshSpin" class="spinner-border spinner-border-sm me-1" hidden></span>刷新
+              </button>
+            </div>
+            <div class="col-auto ms-auto">
+              <span class="badge bg-green-lt"><span class="live-dot"></span><span id="activeNow">—</span> 人在线 (近5分钟)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI 卡片 -->
+      <div class="row row-deck row-cards mb-1" id="kpiRow"></div>
+
+      <!-- 图表行 1 -->
+      <div class="row row-cards mb-1">
+        <div class="col-lg-7">
+          <div class="card">
+            <div class="card-header py-2">
+              <h3 class="card-title">访问趋势</h3>
+              <div class="card-actions">
+                <select id="tsMetric" class="form-select form-select-sm">
+                  <option value="visitors">访客</option>
+                  <option value="pageviews">浏览量</option>
+                  <option value="sessions">会话</option>
+                </select>
+              </div>
+            </div>
+            <div class="card-body"><div id="chartTrend" class="chart-box"></div></div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="card">
+            <div class="card-header py-2">
+              <h3 class="card-title">各功能使用</h3>
+              <div class="card-actions">
+                <button class="btn btn-sm btn-outline-secondary" data-export="byapp">导出 CSV</button>
+              </div>
+            </div>
+            <div class="card-body"><div id="chartApps" class="chart-box"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 图表行 2 -->
+      <div class="row row-cards mb-1">
+        <div class="col-lg-7">
+          <div class="card">
+            <div class="card-header py-2">
+              <h3 class="card-title">热门页面 / 视图</h3>
+              <div class="card-actions d-flex gap-2">
+                <select id="viewAppFilter" class="form-select form-select-sm" style="min-width:130px"></select>
+                <button class="btn btn-sm btn-outline-secondary" data-export="byview">导出 CSV</button>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-scroll">
+                <table class="table table-sm table-vcenter card-table">
+                  <thead><tr><th>视图</th><th class="text-end">浏览量</th><th class="text-end">独立访客</th><th class="text-end">平均停留</th></tr></thead>
+                  <tbody id="viewTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="card">
+            <div class="card-header py-2"><h3 class="card-title">停留时长分布</h3></div>
+            <div class="card-body"><div id="chartDwell" class="chart-box sm"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 图表行 3：最近事件 + 留存 -->
+      <div class="row row-cards mb-3">
+        <div class="col-lg-8">
+          <div class="card">
+            <div class="card-header py-2">
+              <h3 class="card-title">最近访问 <span class="text-secondary" style="font-size:.75rem">(15秒自动刷新)</span></h3>
+              <div class="card-actions">
+                <button class="btn btn-sm btn-outline-secondary" data-export="recent">导出 CSV</button>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-scroll">
+                <table class="table table-sm table-vcenter card-table">
+                  <thead><tr><th>时间</th><th>功能</th><th>类型</th><th>视图</th><th>节点</th><th>访客</th><th>登录</th></tr></thead>
+                  <tbody id="recentTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-header py-2"><h3 class="card-title">次日留存 (D1)</h3></div>
+            <div class="card-body text-center">
+              <div class="kpi-value" id="retD1" style="font-size:2.4rem">—</div>
+              <div class="text-secondary mb-3">近30天首次到访访客的次日回访率</div>
+              <div class="row text-center">
+                <div class="col"><div class="h2 mb-0" id="retCohort">—</div><div class="kpi-label">新访客</div></div>
+                <div class="col"><div class="h2 mb-0" id="retRetained">—</div><div class="kpi-label">次日回访</div></div>
+              </div>
+              <p class="text-secondary mt-3 mb-0" id="retNote" style="font-size:.78rem"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="text-center text-secondary mb-4" style="font-size:.78rem">
+        小善学习站 · 数据分析后台 — 管理员专用 · 数据来自全站埋点统计
+      </footer>
+    </div>
+  </div>
+
+  <script src="assets/echarts.min.js"></script>
+  <script>
+  (function () {
+    "use strict";
+
+    // ---------- 配置 ----------
+    var TOKEN_KEY = "xss_token";
+    var ACTIVE_REFRESH_MS = 30000;
+    var RECENT_REFRESH_MS = 15000;
+
+    // base：本地文件/localhost → http://localhost:4000；生产同域 → /api
+    var API_BASE = (function () {
+      var h = location.hostname;
+      if (location.protocol === "file:" || h === "localhost" || h === "127.0.0.1" || h === "") {
+        return "http://localhost:4000/api";
+      }
+      return "/api";
+    })();
+
+    var APP_NAMES = {
+      shell: "主站", koudaa: "小学心算", lottery: "转盘", diary: "日记",
+      retro: "每日复盘", composition: "英语作文", wordquiz: "单词小测",
+      wordcards: "单词速刷", phonics: "自然拼读", pinpin: "错字练习"
+    };
+    function appName(a) { return APP_NAMES[a] || a || "—"; }
+
+    // ---------- 工具 ----------
+    function $(id) { return document.getElementById(id); }
+    function getToken() { try { return localStorage.getItem(TOKEN_KEY); } catch (e) { return null; } }
+    function setToken(t) { try { localStorage.setItem(TOKEN_KEY, t); } catch (e) {} }
+    function clearToken() { try { localStorage.removeItem(TOKEN_KEY); } catch (e) {} }
+
+    function fmtNum(n) {
+      if (n == null || isNaN(n)) return "0";
+      return Number(n).toLocaleString("en-US");
+    }
+    function fmtDwell(ms) {
+      if (ms == null || isNaN(ms) || ms <= 0) return "0秒";
+      var s = Math.round(ms / 1000);
+      if (s < 60) return s + "秒";
+      var m = Math.floor(s / 60), rs = s % 60;
+      if (m < 60) return rs ? m + "分" + rs + "秒" : m + "分";
+      var h = Math.floor(m / 60), rm = m % 60;
+      return rm ? h + "时" + rm + "分" : h + "时";
+    }
+    function fmtTime(ms) {
+      var d = new Date(Number(ms));
+      if (isNaN(d.getTime())) return "—";
+      function p(x){ return (x<10?"0":"")+x; }
+      return p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds());
+    }
+    function esc(s) {
+      var d = document.createElement("div");
+      d.textContent = s == null ? "" : String(s);
+      return d.innerHTML;
+    }
+
+    // ---------- API 层 ----------
+    function authFailed() {
+      clearToken();
+      stopTimers();
+      $("dashboard").hidden = true;
+      $("loginScreen").hidden = false;
+      showLoginError("登录已失效，请重新登录。");
+    }
+
+    function api(path) {
+      var tok = getToken();
+      return fetch(API_BASE + path, {
+        headers: tok ? { Authorization: "Bearer " + tok } : {}
+      }).then(function (res) {
+        if (res.status === 401) { authFailed(); throw new Error("401"); }
+        if (res.status === 403) { throw new Error("403"); }
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      });
+    }
+
+    function login(email, password) {
+      return fetch(API_BASE + "/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email, password: password })
+      }).then(function (res) {
+        return res.json().then(function (body) { return { ok: res.ok, status: res.status, body: body }; });
+      });
+    }
+
+    // ---------- 时间范围 ----------
+    function currentRange() {
+      var sel = $("rangeSelect").value;
+      var to = Date.now(), from;
+      if (sel === "custom") {
+        var f = $("dateFrom").value, t = $("dateTo").value;
+        from = f ? new Date(f + "T00:00:00").getTime() : (to - 30 * 86400000);
+        to = t ? new Date(t + "T23:59:59").getTime() : to;
+      } else {
+        from = to - parseInt(sel, 10) * 86400000;
+      }
+      return { from: from, to: to };
+    }
+    function rangeQuery() {
+      var r = currentRange();
+      return "?from=" + r.from + "&to=" + r.to;
+    }
+
+    // ---------- 图表实例 ----------
+    var charts = {};
+    function chart(id) {
+      if (!charts[id]) charts[id] = echarts.init($(id));
+      return charts[id];
+    }
+    window.addEventListener("resize", function () {
+      Object.keys(charts).forEach(function (k) { charts[k].resize(); });
+    });
+    function showEmpty(id, msg) {
+      var el = $(id);
+      if (charts[id]) { charts[id].dispose(); delete charts[id]; }
+      el.innerHTML = '<div class="empty-ph">' + esc(msg || "暂无数据") + "</div>";
+    }
+    function resetChartEl(id) {
+      var el = $(id);
+      if (el.querySelector(".empty-ph")) {
+        el.innerHTML = "";
+        if (charts[id]) { charts[id].dispose(); delete charts[id]; }
+      }
+    }
+
+    // ---------- 渲染：KPI ----------
+    var KPI_DEFS = [
+      { key: "todayVisits", label: "今日访问", fmt: fmtNum, color: "text-blue" },
+      { key: "todayVisitors", label: "今日访客", fmt: fmtNum, color: "text-azure" },
+      { key: "uniqueVisitors", label: "独立访客(范围)", fmt: fmtNum, color: "text-green" },
+      { key: "pageviews", label: "总浏览量", fmt: fmtNum, color: "text-teal" },
+      { key: "sessions", label: "会话数", fmt: fmtNum, color: "text-cyan" },
+      { key: "loggedInVisitors", label: "登录用户访客", fmt: fmtNum, color: "text-purple" },
+      { key: "avgDwellMs", label: "平均停留", fmt: fmtDwell, color: "text-orange" }
+    ];
+    function renderKPI(s) {
+      var html = KPI_DEFS.map(function (d) {
+        var v = d.fmt(s ? s[d.key] : null);
+        return '<div class="col-6 col-sm-4 col-lg-2 mb-2">' +
+          '<div class="card card-sm"><div class="card-body">' +
+          '<div class="kpi-value ' + d.color + '">' + esc(v) + "</div>" +
+          '<div class="kpi-label">' + esc(d.label) + "</div>" +
+          "</div></div></div>";
+      }).join("");
+      // 当前活跃单独一张卡（实时）
+      html += '<div class="col-6 col-sm-4 col-lg-2 mb-2">' +
+        '<div class="card card-sm"><div class="card-body">' +
+        '<div class="kpi-value text-pink"><span class="live-dot"></span><span id="kpiActive">—</span></div>' +
+        '<div class="kpi-label">当前活跃(近5分钟)</div>' +
+        "</div></div></div>";
+      $("kpiRow").innerHTML = html;
+    }
+
+    // ---------- 渲染：趋势 ----------
+    function renderTrend(data, metricLabel) {
+      if (!data || !data.length || data.every(function (d) { return !d.value; })) {
+        return showEmpty("chartTrend", "该范围暂无访问数据");
+      }
+      resetChartEl("chartTrend");
+      chart("chartTrend").setOption({
+        tooltip: { trigger: "axis", valueFormatter: function (v) { return fmtNum(v); } },
+        grid: { left: 48, right: 20, top: 24, bottom: 36 },
+        xAxis: { type: "category", data: data.map(function (d) { return d.date; }),
+          axisLabel: { fontSize: 10 } },
+        yAxis: { type: "value", minInterval: 1 },
+        series: [{
+          name: metricLabel, type: "line", smooth: true, showSymbol: false,
+          areaStyle: { opacity: 0.12 }, lineStyle: { width: 2 },
+          itemStyle: { color: "#206bc4" },
+          data: data.map(function (d) { return d.value; })
+        }]
+      });
+    }
+
+    // ---------- 渲染：各功能（饼图） ----------
+    function renderApps(rows) {
+      if (!rows || !rows.length) return showEmpty("chartApps", "暂无功能使用数据");
+      resetChartEl("chartApps");
+      chart("chartApps").setOption({
+        tooltip: { trigger: "item", formatter: function (p) {
+          return esc(p.name) + "<br/>浏览量 " + esc(fmtNum(p.value)) + " (" + esc(String(p.percent)) + "%)";
+        } },
+        legend: { type: "scroll", bottom: 0, textStyle: { fontSize: 10 } },
+        series: [{
+          name: "浏览量", type: "pie", radius: ["40%", "68%"], center: ["50%", "44%"],
+          avoidLabelOverlap: true, label: { show: false }, labelLine: { show: false },
+          data: rows.map(function (r) { return { name: appName(r.app), value: r.pageviews }; })
+        }]
+      });
+    }
+
+    // ---------- 渲染：热门视图表（带条形） ----------
+    function renderViews(rows) {
+      var tb = $("viewTableBody");
+      if (!rows || !rows.length) {
+        tb.innerHTML = '<tr><td colspan="4"><div class="empty-ph">暂无数据</div></td></tr>';
+        return;
+      }
+      var max = Math.max.apply(null, rows.map(function (r) { return r.pageviews || 0; })) || 1;
+      tb.innerHTML = rows.map(function (r) {
+        var pct = Math.round((r.pageviews / max) * 100);
+        return "<tr>" +
+          '<td class="bar-cell" style="background-size:' + pct + '% 100%">' +
+            '<div class="text-truncate" style="max-width:300px" title="' + esc(r.view) + '">' + esc(r.view || "—") + "</div></td>" +
+          '<td class="text-end fw-bold">' + fmtNum(r.pageviews) + "</td>" +
+          '<td class="text-end">' + fmtNum(r.uniqueVisitors) + "</td>" +
+          '<td class="text-end">' + esc(fmtDwell(r.avgDwellMs)) + "</td>" +
+          "</tr>";
+      }).join("");
+    }
+
+    // ---------- 渲染：停留分布 ----------
+    function renderDwell(d) {
+      var bk = d && d.buckets;
+      if (!bk || !bk.length || bk.every(function (b) { return !b.count; })) {
+        return showEmpty("chartDwell", "暂无停留数据");
+      }
+      resetChartEl("chartDwell");
+      chart("chartDwell").setOption({
+        tooltip: { trigger: "axis", valueFormatter: function (v) { return fmtNum(v) + " 次"; } },
+        grid: { left: 40, right: 16, top: 30, bottom: 28 },
+        title: { text: "中位 " + fmtDwell(d.medianMs) + " · 平均 " + fmtDwell(d.avgMs),
+          textStyle: { fontSize: 11, color: "#6c7a91", fontWeight: "normal" }, left: "center", top: 2 },
+        xAxis: { type: "category", data: bk.map(function (b) { return b.label; }), axisLabel: { fontSize: 10 } },
+        yAxis: { type: "value", minInterval: 1 },
+        series: [{
+          type: "bar", barWidth: "55%",
+          itemStyle: { color: "#4299e1", borderRadius: [4, 4, 0, 0] },
+          data: bk.map(function (b) { return b.count; })
+        }]
+      });
+    }
+
+    // ---------- 渲染：最近事件 ----------
+    function renderRecent(rows) {
+      var tb = $("recentTableBody");
+      if (!rows || !rows.length) {
+        tb.innerHTML = '<tr><td colspan="7"><div class="empty-ph">暂无访问记录</div></td></tr>';
+        return;
+      }
+      tb.innerHTML = rows.map(function (r) {
+        var logged = r.userId ? '<span class="badge bg-green-lt">是</span>' : '<span class="badge bg-secondary-lt">否</span>';
+        var vid = r.visitorId ? String(r.visitorId).slice(0, 8) : "—";
+        return "<tr>" +
+          "<td>" + esc(fmtTime(r.created_at)) + "</td>" +
+          "<td>" + esc(appName(r.app)) + "</td>" +
+          '<td><span class="badge bg-blue-lt">' + esc(r.type || "—") + "</span></td>" +
+          '<td><div class="text-truncate" style="max-width:200px" title="' + esc(r.view) + '">' + esc(r.view || "—") + "</div></td>" +
+          '<td><div class="text-truncate" style="max-width:120px" title="' + esc(r.target) + '">' + esc(r.target || "—") + "</div></td>" +
+          "<td><code>" + esc(vid) + "</code></td>" +
+          "<td>" + logged + "</td>" +
+          "</tr>";
+      }).join("");
+    }
+
+    // ---------- 渲染：留存 ----------
+    function renderRetention(r) {
+      if (!r) return;
+      var pct = (r.d1 == null) ? "—" : Math.round(r.d1 * 100) + "%";
+      $("retD1").textContent = pct;
+      $("retCohort").textContent = fmtNum(r.cohort);
+      $("retRetained").textContent = fmtNum(r.retained);
+      $("retNote").textContent = r.note || "";
+    }
+
+    // ---------- 数据缓存（导出用） ----------
+    var lastData = { byapp: [], byview: [], recent: [] };
+
+    // ---------- 加载全量 ----------
+    function setLoading(on) {
+      $("refreshSpin").hidden = !on;
+      $("refreshBtn").disabled = on;
+    }
+
+    var handled403 = false;
+    function loadAll() {
+      setLoading(true);
+      handled403 = false;
+      var q = rangeQuery();
+      var metric = $("tsMetric").value;
+      var metricLabel = { visitors: "访客", pageviews: "浏览量", sessions: "会话" }[metric];
+      var viewApp = $("viewAppFilter").value || "";
+      var viewQ = q + (viewApp ? "&app=" + encodeURIComponent(viewApp) : "");
+
+      var jobs = [
+        api("/admin/analytics/summary" + q).then(renderKPI).catch(logErr("summary")),
+        api("/admin/analytics/timeseries" + q + "&metric=" + metric)
+          .then(function (d) { renderTrend(d, metricLabel); }).catch(logErr("timeseries")),
+        api("/admin/analytics/by-app" + q).then(function (d) { lastData.byapp = d; renderApps(d); populateAppFilter(d); }).catch(logErr("by-app")),
+        api("/admin/analytics/by-view" + viewQ).then(function (d) { lastData.byview = d; renderViews(d); }).catch(logErr("by-view")),
+        api("/admin/analytics/dwell" + q).then(renderDwell).catch(logErr("dwell")),
+        api("/admin/analytics/recent?limit=100").then(function (d) { lastData.recent = d; renderRecent(d); }).catch(logErr("recent")),
+        api("/admin/analytics/retention" + q).then(renderRetention).catch(logErr("retention"))
+      ];
+      return Promise.allSettled(jobs).then(function () { setLoading(false); });
+    }
+    function logErr(name) {
+      return function (e) {
+        if (e && e.message === "403") { if (!handled403) { handled403 = true; handle403(); } return; }
+        if (e && e.message === "401") return;
+        console.warn("[" + name + "] 加载失败:", e && e.message);
+      };
+    }
+
+    function populateAppFilter(rows) {
+      var sel = $("viewAppFilter");
+      if (sel.dataset.filled === "1") return;
+      var cur = sel.value;
+      var opts = ['<option value="">全部功能</option>'];
+      (rows || []).forEach(function (r) {
+        opts.push('<option value="' + esc(r.app) + '">' + esc(appName(r.app)) + "</option>");
+      });
+      sel.innerHTML = opts.join("");
+      sel.value = cur;
+      sel.dataset.filled = "1";
+    }
+
+    // 实时：活跃人数
+    function loadActive() {
+      api("/admin/analytics/active?window=5").then(function (d) {
+        $("activeNow").textContent = fmtNum(d.activeVisitors);
+        var k = $("kpiActive"); if (k) k.textContent = fmtNum(d.activeVisitors);
+      }).catch(function () {});
+    }
+    // 实时：最近事件
+    function loadRecent() {
+      api("/admin/analytics/recent?limit=100").then(function (d) {
+        lastData.recent = d; renderRecent(d);
+      }).catch(function () {});
+    }
+
+    // ---------- 定时器 ----------
+    var timers = [];
+    function startTimers() {
+      stopTimers();
+      timers.push(setInterval(loadActive, ACTIVE_REFRESH_MS));
+      timers.push(setInterval(loadRecent, RECENT_REFRESH_MS));
+    }
+    function stopTimers() { timers.forEach(clearInterval); timers = []; }
+
+    // ---------- CSV 导出 ----------
+    function toCSV(headers, rows) {
+      function cell(v) {
+        var s = v == null ? "" : String(v);
+        if (/[",\n\r]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+        return s;
+      }
+      var lines = [headers.map(cell).join(",")];
+      rows.forEach(function (r) { lines.push(r.map(cell).join(",")); });
+      return "﻿" + lines.join("\r\n"); // BOM for Excel
+    }
+    function download(name, csv) {
+      var blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+    function exportCSV(kind) {
+      var ts = new Date().toISOString().slice(0, 10);
+      if (kind === "byapp") {
+        download("各功能使用_" + ts + ".csv", toCSV(
+          ["功能", "app", "浏览量", "独立访客", "平均停留(秒)"],
+          (lastData.byapp || []).map(function (r) {
+            return [appName(r.app), r.app, r.pageviews, r.uniqueVisitors, Math.round((r.avgDwellMs || 0) / 1000)];
+          })));
+      } else if (kind === "byview") {
+        download("热门视图_" + ts + ".csv", toCSV(
+          ["视图", "浏览量", "独立访客", "平均停留(秒)"],
+          (lastData.byview || []).map(function (r) {
+            return [r.view, r.pageviews, r.uniqueVisitors, Math.round((r.avgDwellMs || 0) / 1000)];
+          })));
+      } else if (kind === "recent") {
+        download("最近访问_" + ts + ".csv", toCSV(
+          ["时间", "功能", "app", "类型", "视图", "节点", "访客ID", "用户ID"],
+          (lastData.recent || []).map(function (r) {
+            return [fmtTime(r.created_at), appName(r.app), r.app, r.type, r.view, r.target, r.visitorId, r.userId || ""];
+          })));
+      }
+    }
+
+    // ---------- 登录流程 ----------
+    function showLoginError(msg) {
+      var el = $("loginError");
+      el.textContent = msg; el.hidden = false;
+    }
+    function hideLoginError() { $("loginError").hidden = true; }
+
+    function handle403() {
+      stopTimers();
+      $("dashboard").hidden = true;
+      $("loginScreen").hidden = false;
+      showLoginError("当前账号无管理员权限，请用管理员邮箱登录（在 server/.env 的 ADMIN_EMAILS 配置）。");
+    }
+
+    function enterDashboard() {
+      // 进入前先打一发 admin 接口验权
+      return api("/admin/analytics/summary?from=" + (Date.now() - 86400000) + "&to=" + Date.now())
+        .then(function () {
+          $("loginScreen").hidden = true;
+          $("dashboard").hidden = false;
+          var em = ""; try { em = parseJwtEmail(getToken()); } catch (e) {}
+          $("whoami").textContent = em ? em : "";
+          initDates();
+          startTimers();
+          loadActive();
+          return loadAll();
+        })
+        .catch(function (e) {
+          if (e && e.message === "403") { handle403(); }
+          else if (e && e.message === "401") { /* authFailed already ran */ }
+          else { showLoginError("无法连接后端，请确认 xss-backend (localhost:4000) 正在运行。"); }
+        });
+    }
+
+    function parseJwtEmail(tok) {
+      if (!tok) return "";
+      var p = tok.split(".")[1];
+      p = p.replace(/-/g, "+").replace(/_/g, "/");
+      var json = decodeURIComponent(atob(p).split("").map(function (c) {
+        return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(""));
+      return JSON.parse(json).email || "";
+    }
+
+    function initDates() {
+      var to = new Date(), from = new Date(Date.now() - 30 * 86400000);
+      function iso(d) { return d.toISOString().slice(0, 10); }
+      if (!$("dateTo").value) $("dateTo").value = iso(to);
+      if (!$("dateFrom").value) $("dateFrom").value = iso(from);
+    }
+
+    // ---------- 事件绑定 ----------
+    $("loginForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      hideLoginError();
+      var email = $("loginEmail").value.trim();
+      var pwd = $("loginPassword").value;
+      if (!email || !pwd) return;
+      $("loginBtn").disabled = true;
+      $("loginBtn").textContent = "登录中…";
+      login(email, pwd).then(function (r) {
+        if (r.ok && r.body && r.body.token) {
+          setToken(r.body.token);
+          return enterDashboard();
+        }
+        showLoginError((r.body && r.body.error) || "登录失败，请检查邮箱和密码。");
+      }).catch(function () {
+        showLoginError("无法连接后端，请确认 xss-backend (localhost:4000) 正在运行。");
+      }).then(function () {
+        $("loginBtn").disabled = false;
+        $("loginBtn").textContent = "登录";
+      });
+    });
+
+    $("logoutBtn").addEventListener("click", function () {
+      clearToken(); stopTimers();
+      $("viewAppFilter").dataset.filled = "";
+      $("dashboard").hidden = true;
+      $("loginScreen").hidden = false;
+      $("loginPassword").value = "";
+    });
+
+    $("rangeSelect").addEventListener("change", function () {
+      var custom = this.value === "custom";
+      document.querySelectorAll(".custom-range").forEach(function (el) { el.hidden = !custom; });
+      if (!custom) loadAll();
+    });
+    $("refreshBtn").addEventListener("click", loadAll);
+    $("tsMetric").addEventListener("change", function () {
+      var metric = this.value;
+      var metricLabel = { visitors: "访客", pageviews: "浏览量", sessions: "会话" }[metric];
+      api("/admin/analytics/timeseries" + rangeQuery() + "&metric=" + metric)
+        .then(function (d) { renderTrend(d, metricLabel); }).catch(logErr("timeseries"));
+    });
+    $("viewAppFilter").addEventListener("change", function () {
+      var viewApp = this.value || "";
+      var viewQ = rangeQuery() + (viewApp ? "&app=" + encodeURIComponent(viewApp) : "");
+      api("/admin/analytics/by-view" + viewQ)
+        .then(function (d) { lastData.byview = d; renderViews(d); }).catch(logErr("by-view"));
+    });
+    document.querySelectorAll("[data-export]").forEach(function (btn) {
+      btn.addEventListener("click", function () { exportCSV(btn.getAttribute("data-export")); });
+    });
+
+    // ---------- 启动 ----------
+    if (getToken()) {
+      enterDashboard();
+    } else {
+      $("loginScreen").hidden = false;
+    }
+  })();
+  </script>
+</body>
+</html>
