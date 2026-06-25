@@ -23,6 +23,15 @@
     @keyframes pulse { 0%{opacity:.4;} 50%{opacity:1;} 100%{opacity:.4;} }
     .bar-cell { background:linear-gradient(90deg, rgba(32,107,196,.16), rgba(32,107,196,.16)); background-repeat:no-repeat; border-radius:4px; }
     [hidden] { display:none !important; }
+    /* ===== 内容审核 / AI 设置 扩展样式 ===== */
+    .xss-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1050; display:flex; align-items:center; justify-content:center; padding:16px; }
+    .xss-modal-card { max-width:720px; width:92%; max-height:88vh; overflow:auto; background:#fff; border-radius:10px; padding:20px; box-shadow:0 12px 40px rgba(0,0,0,.25); }
+    .xss-toast-wrap { position:fixed; top:16px; right:16px; z-index:1080; display:flex; flex-direction:column; gap:8px; max-width:360px; }
+    .xss-toast { box-shadow:0 6px 18px rgba(0,0,0,.18); opacity:1; transition:opacity .4s ease; margin:0; }
+    .xss-toast-out { opacity:0; }
+    @keyframes xssToastIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+    .xss-toast { animation:xssToastIn .25s ease; }
+    .review-text-scroll { max-height:340px; overflow:auto; white-space:pre-wrap; border:1px solid #e6e9f0; border-radius:6px; padding:10px; background:#f8fafc; font-size:.9rem; line-height:1.5; }
   </style>
 </head>
 <body>
@@ -62,6 +71,16 @@
       </div>
     </header>
 
+    <!-- ===================== Tab 导航 ===================== -->
+    <div class="page-wrap" style="padding-bottom:0">
+      <ul class="nav nav-tabs" id="xssTabNav">
+        <li class="nav-item"><a href="#" class="nav-link active" data-tab="dashboard">数据分析</a></li>
+        <li class="nav-item"><a href="#" class="nav-link" data-tab="review">内容审核<span class="badge bg-red ms-2" id="reviewBadge" hidden></span></a></li>
+        <li class="nav-item"><a href="#" class="nav-link" data-tab="aiconfig">AI 设置</a></li>
+      </ul>
+    </div>
+
+    <div id="tabDashboard" class="xss-tab-pane">
     <div class="page-wrap">
       <!-- 筛选栏 -->
       <div class="card mb-3">
@@ -198,6 +217,65 @@
         小善学习站 · 数据分析后台 — 管理员专用 · 数据来自全站埋点统计
       </footer>
     </div>
+    </div><!-- /#tabDashboard -->
+
+    <!-- ===================== 内容审核 ===================== -->
+    <div id="tabReview" class="xss-tab-pane" hidden>
+      <div class="page-wrap">
+        <div class="card">
+          <div class="card-header py-2">
+            <h3 class="card-title">内容审核</h3>
+            <div class="card-actions">
+              <div class="btn-group" role="group">
+                <button type="button" class="btn btn-sm btn-primary active" data-review-status="pending">待审核</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-review-status="approved">已通过</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-review-status="rejected">已拒绝</button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div id="reviewListWrap" class="table-scroll">
+              <table class="table table-sm table-vcenter card-table">
+                <thead><tr><th>类型</th><th>标题</th><th>作者邮箱</th><th>等级</th><th>提交时间</th><th>内容预览</th><th class="text-end">操作</th></tr></thead>
+                <tbody id="reviewTableBody"></tbody>
+              </table>
+            </div>
+            <div id="reviewPlaceholder" class="empty-ph" hidden></div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /#tabReview -->
+
+    <!-- ===================== AI 设置 ===================== -->
+    <div id="tabAiConfig" class="xss-tab-pane" hidden>
+      <div class="page-wrap">
+        <div class="card">
+          <div class="card-header py-2"><h3 class="card-title">AI 设置</h3></div>
+          <div class="card-body" style="max-width:640px">
+            <div class="mb-3">
+              <label class="form-label">服务商</label>
+              <select id="aiProvider" class="form-select">
+                <option value="anthropic">anthropic</option>
+                <option value="openai">openai</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">模型</label>
+              <input id="aiModel" class="form-control" placeholder="claude-opus-4-8" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">API 密钥</label>
+              <div class="mb-1"><span id="aiKeyStatus"></span></div>
+              <input id="aiApiKey" type="password" class="form-control" placeholder="留空则不修改" autocomplete="new-password" />
+            </div>
+            <div class="d-flex align-items-center">
+              <button id="aiSaveBtn" class="btn btn-primary">保存</button>
+            </div>
+            <p class="text-secondary mt-3 mb-0" style="font-size:.8rem">配置后，内容审核「通过」时会自动用 AI 做意群划分/翻译；改了密钥可对已通过内容点「重新处理」。</p>
+          </div>
+        </div>
+      </div>
+    </div><!-- /#tabAiConfig -->
   </div>
 
   <script src="assets/echarts.min.js"></script>
@@ -256,6 +334,12 @@
       d.textContent = s == null ? "" : String(s);
       return d.innerHTML;
     }
+    function toMs(v) {
+      if (v == null) return NaN;
+      if (typeof v === "number") return v;
+      var t = new Date(v).getTime();
+      return isNaN(t) ? NaN : t;
+    }
 
     // ---------- API 层 ----------
     function authFailed() {
@@ -271,6 +355,23 @@
       return fetch(API_BASE + path, {
         headers: tok ? { Authorization: "Bearer " + tok } : {}
       }).then(function (res) {
+        if (res.status === 401) { authFailed(); throw new Error("401"); }
+        if (res.status === 403) { throw new Error("403"); }
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      });
+    }
+
+    function apiSend(path, method, bodyObj) {
+      var tok = getToken();
+      var headers = {};
+      if (tok) headers.Authorization = "Bearer " + tok;
+      var opts = { method: method || "PUT", headers: headers };
+      if (bodyObj !== undefined && bodyObj !== null) {
+        headers["Content-Type"] = "application/json";
+        opts.body = JSON.stringify(bodyObj);
+      }
+      return fetch(API_BASE + path, opts).then(function (res) {
         if (res.status === 401) { authFailed(); throw new Error("401"); }
         if (res.status === 403) { throw new Error("403"); }
         if (!res.ok) throw new Error("HTTP " + res.status);
@@ -610,6 +711,7 @@
           initDates();
           startTimers();
           loadActive();
+          loadReviewBadge();
           return loadAll();
         })
         .catch(function (e) {
@@ -634,6 +736,337 @@
       function iso(d) { return d.toISOString().slice(0, 10); }
       if (!$("dateTo").value) $("dateTo").value = iso(to);
       if (!$("dateFrom").value) $("dateFrom").value = iso(from);
+    }
+
+    // ---------- Toast 提示 ----------
+    function toast(msg, kind) {
+      var wrap = $("xssToastWrap");
+      if (!wrap) {
+        wrap = document.createElement("div");
+        wrap.id = "xssToastWrap";
+        wrap.className = "xss-toast-wrap";
+        document.body.appendChild(wrap);
+      }
+      var k = kind || "info";
+      var el = document.createElement("div");
+      el.className = "alert alert-" + k + " xss-toast";
+      el.textContent = msg == null ? "" : String(msg);
+      wrap.appendChild(el);
+      setTimeout(function () {
+        el.className += " xss-toast-out";
+        setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 450);
+      }, 3000);
+    }
+    function isAuthErr(e) {
+      return e && (e.message === "401" || e.message === "403");
+    }
+
+    // ---------- Tab 切换 ----------
+    function showTab(name) {
+      var map = { dashboard: "tabDashboard", review: "tabReview", aiconfig: "tabAiConfig" };
+      var paneId = map[name] || "tabDashboard";
+      var panes = document.querySelectorAll(".xss-tab-pane");
+      for (var i = 0; i < panes.length; i++) { panes[i].hidden = (panes[i].id !== paneId); }
+      var links = document.querySelectorAll("#xssTabNav [data-tab]");
+      for (var j = 0; j < links.length; j++) {
+        if (links[j].getAttribute("data-tab") === name) { links[j].className = "nav-link active"; }
+        else { links[j].className = "nav-link"; }
+      }
+      if (name === "dashboard") {
+        Object.keys(charts).forEach(function (key) { charts[key].resize(); });
+      } else if (name === "review") {
+        loadReviewPending();
+      } else if (name === "aiconfig") {
+        loadAiConfig();
+      }
+    }
+
+    // ---------- 内容审核 ----------
+    var reviewStatus = "pending";
+
+    function reviewTypeName(t) {
+      if (t === "composition" || t === "essay") return "作文";
+      if (t === "book") return "书籍";
+      return esc(t || "—");
+    }
+
+    function loadReviewBadge() {
+      api("/admin/review/pending").then(function (arr) {
+        var n = (arr || []).length;
+        var b = $("reviewBadge");
+        if (n > 0) { b.textContent = String(n); b.hidden = false; }
+        else { b.hidden = true; }
+      }).catch(function () {});
+    }
+
+    function showReviewPlaceholder(msg) {
+      $("reviewListWrap").hidden = true;
+      var ph = $("reviewPlaceholder");
+      ph.textContent = msg;
+      ph.hidden = false;
+    }
+    function showReviewTable() {
+      $("reviewPlaceholder").hidden = true;
+      $("reviewListWrap").hidden = false;
+    }
+
+    function loadReviewPending() {
+      if (reviewStatus !== "pending") {
+        showReviewPlaceholder("该后端接口尚未提供，待扩展");
+        return;
+      }
+      showReviewPlaceholder("加载中…");
+      api("/admin/review/pending").then(function (arr) {
+        var rows = arr || [];
+        var b = $("reviewBadge");
+        if (rows.length > 0) { b.textContent = String(rows.length); b.hidden = false; }
+        else { b.hidden = true; }
+        if (!rows.length) { showReviewPlaceholder("暂无待审核内容"); return; }
+        showReviewTable();
+        renderReviewRows(rows);
+      }).catch(function (e) {
+        if (isAuthErr(e)) return;
+        showReviewPlaceholder("加载失败");
+        toast("待审核列表加载失败", "danger");
+      });
+    }
+
+    function renderReviewRows(rows) {
+      var tb = $("reviewTableBody");
+      tb.innerHTML = rows.map(function (r) {
+        var typ = reviewTypeName(r.contentType);
+        var lvl = (r.contentType === "book") ? r.bookLevel : r.level;
+        var tms = toMs(r.created_at != null ? r.created_at : r.submittedAt);
+        var timeStr = isNaN(tms) ? "—" : fmtTime(tms);
+        var txt = r.text == null ? "" : String(r.text);
+        var preview = txt.length > 40 ? txt.substr(0, 40) + "…" : txt;
+        var id = r.id;
+        return "<tr>" +
+          '<td><span class="badge bg-blue-lt">' + typ + "</span></td>" +
+          '<td><div class="text-truncate" style="max-width:200px" title="' + esc(r.title) + '">' + esc(r.title || "—") + "</div></td>" +
+          "<td>" + esc(r.authorEmail || "—") + "</td>" +
+          "<td>" + esc(lvl || "—") + "</td>" +
+          "<td>" + esc(timeStr) + "</td>" +
+          '<td><div class="text-truncate" style="max-width:240px" title="' + esc(preview) + '">' + esc(preview) + "</div></td>" +
+          '<td class="text-end" style="white-space:nowrap">' +
+            '<button class="btn btn-sm btn-outline-primary me-1" data-act="view" data-id="' + esc(id) + '">查看</button>' +
+            '<button class="btn btn-sm btn-outline-success me-1" data-act="approve" data-id="' + esc(id) + '">通过</button>' +
+            '<button class="btn btn-sm btn-outline-danger" data-act="reject" data-id="' + esc(id) + '">拒绝</button>' +
+          "</td>" +
+          "</tr>";
+      }).join("");
+    }
+
+    // ---------- 手搓 Modal ----------
+    function buildModal(buildBody) {
+      var overlay = document.createElement("div");
+      overlay.className = "xss-modal-overlay";
+      var card = document.createElement("div");
+      card.className = "xss-modal-card";
+      overlay.appendChild(card);
+      function close() { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+      overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
+      buildBody(card, close);
+      document.body.appendChild(overlay);
+      return { overlay: overlay, card: card, close: close };
+    }
+
+    function openReviewDetail(id) {
+      api("/admin/review/" + id).then(function (r) {
+        buildModal(function (card, close) {
+          var head = document.createElement("div");
+          head.className = "d-flex align-items-start mb-2";
+          var h = document.createElement("h3");
+          h.className = "mb-0 me-auto";
+          h.textContent = r.title || "(无标题)";
+          var x = document.createElement("button");
+          x.className = "btn btn-sm btn-ghost-secondary";
+          x.textContent = "✕";
+          x.addEventListener("click", close);
+          head.appendChild(h);
+          head.appendChild(x);
+          card.appendChild(head);
+
+          var lvl = (r.contentType === "book") ? r.bookLevel : r.level;
+          var meta = document.createElement("div");
+          meta.className = "text-secondary mb-2";
+          meta.style.fontSize = ".85rem";
+          meta.textContent = "类型：" + (r.contentType === "composition" || r.contentType === "essay" ? "作文" : (r.contentType === "book" ? "书籍" : (r.contentType || "—"))) +
+            " · 等级：" + (lvl || "—");
+          card.appendChild(meta);
+
+          if (r.prompt && (r.contentType === "composition" || r.contentType === "essay")) {
+            var pr = document.createElement("div");
+            pr.className = "mb-2";
+            pr.style.fontSize = ".85rem";
+            var pb = document.createElement("b");
+            pb.textContent = "考题：";
+            pr.appendChild(pb);
+            pr.appendChild(document.createTextNode(r.prompt));
+            card.appendChild(pr);
+          }
+
+          var txt = r.text == null ? "" : String(r.text);
+          var wc = document.createElement("div");
+          wc.className = "text-secondary mb-1";
+          wc.style.fontSize = ".8rem";
+          wc.textContent = "字数：" + txt.length;
+          card.appendChild(wc);
+
+          var body = document.createElement("div");
+          body.className = "review-text-scroll mb-3";
+          body.textContent = txt;
+          card.appendChild(body);
+
+          if (r.essay) {
+            var det = document.createElement("details");
+            det.className = "mb-3";
+            var sum = document.createElement("summary");
+            sum.textContent = "结构数据";
+            det.appendChild(sum);
+            var pre = document.createElement("pre");
+            pre.style.maxHeight = "240px";
+            pre.style.overflow = "auto";
+            pre.style.background = "#f8fafc";
+            pre.style.padding = "10px";
+            pre.style.borderRadius = "6px";
+            pre.textContent = JSON.stringify(r.essay, null, 2);
+            det.appendChild(pre);
+            card.appendChild(det);
+          }
+
+          var footer = document.createElement("div");
+          footer.className = "d-flex gap-2 justify-content-end";
+          var bApprove = document.createElement("button");
+          bApprove.className = "btn btn-success";
+          bApprove.textContent = "通过";
+          bApprove.addEventListener("click", function () { approveReview(id, close); });
+          var bReject = document.createElement("button");
+          bReject.className = "btn btn-danger";
+          bReject.textContent = "拒绝";
+          bReject.addEventListener("click", function () { rejectReview(id, close); });
+          var bRe = document.createElement("button");
+          bRe.className = "btn btn-outline-secondary";
+          bRe.textContent = "重新处理";
+          bRe.addEventListener("click", function () { reprocessReview(id); });
+          footer.appendChild(bApprove);
+          footer.appendChild(bReject);
+          footer.appendChild(bRe);
+          card.appendChild(footer);
+        });
+      }).catch(function (e) {
+        if (isAuthErr(e)) return;
+        toast("详情加载失败", "danger");
+      });
+    }
+
+    function approveReview(id, closeDetail) {
+      apiSend("/admin/review/" + id + "/approve", "PUT").then(function (res) {
+        toast("已通过", "success");
+        if (res && res.aiWarning) {
+          toast("已通过并公开，但尚未做意群划分/翻译——请在『AI 设置』填入密钥后，对该条点『重新处理』", "warning");
+        }
+        if (typeof closeDetail === "function") closeDetail();
+        loadReviewPending();
+      }).catch(function (e) {
+        if (isAuthErr(e)) return;
+        toast("操作失败：通过", "danger");
+      });
+    }
+
+    function rejectReview(id, closeDetail) {
+      buildModal(function (card, close) {
+        var h = document.createElement("h3");
+        h.className = "mb-2";
+        h.textContent = "拒绝理由";
+        card.appendChild(h);
+        var ta = document.createElement("textarea");
+        ta.id = "rejectNotes";
+        ta.className = "form-control mb-2";
+        ta.rows = 4;
+        ta.placeholder = "请填写拒绝理由（必填）";
+        card.appendChild(ta);
+        var err = document.createElement("div");
+        err.className = "text-danger mb-2";
+        err.style.fontSize = ".85rem";
+        err.hidden = true;
+        err.textContent = "拒绝理由不能为空";
+        card.appendChild(err);
+        var footer = document.createElement("div");
+        footer.className = "d-flex gap-2 justify-content-end";
+        var bCancel = document.createElement("button");
+        bCancel.className = "btn btn-outline-secondary";
+        bCancel.textContent = "取消";
+        bCancel.addEventListener("click", close);
+        var bOk = document.createElement("button");
+        bOk.className = "btn btn-danger";
+        bOk.textContent = "确认";
+        bOk.addEventListener("click", function () {
+          var notes = ta.value.trim();
+          if (!notes) { err.hidden = false; toast("拒绝理由不能为空", "warning"); return; }
+          apiSend("/admin/review/" + id + "/reject", "PUT", { notes: notes }).then(function () {
+            toast("已拒绝", "success");
+            close();
+            if (typeof closeDetail === "function") closeDetail();
+            loadReviewPending();
+          }).catch(function (e) {
+            if (isAuthErr(e)) return;
+            toast("操作失败：拒绝", "danger");
+          });
+        });
+        footer.appendChild(bCancel);
+        footer.appendChild(bOk);
+        card.appendChild(footer);
+        ta.focus();
+      });
+    }
+
+    function reprocessReview(id) {
+      apiSend("/admin/review/" + id + "/reprocess", "PUT").then(function (res) {
+        if (res && res.aiWarning) { toast("仍未配置 AI 或处理失败", "warning"); }
+        else { toast("已重新处理，意群划分完成", "success"); }
+      }).catch(function (e) {
+        if (isAuthErr(e)) return;
+        toast("重新处理失败", "danger");
+      });
+    }
+
+    // ---------- AI 设置 ----------
+    function loadAiConfig() {
+      api("/admin/ai-config").then(function (c) {
+        c = c || {};
+        $("aiProvider").value = c.provider || "anthropic";
+        $("aiModel").value = c.model || "";
+        if (c.hasKey) {
+          $("aiKeyStatus").innerHTML = '<span class="badge bg-success-lt">已配置</span> <code>' + esc(c.keyMasked) + "</code>";
+        } else {
+          $("aiKeyStatus").innerHTML = '<span class="badge bg-secondary-lt">未配置</span>';
+        }
+        $("aiApiKey").value = "";
+      }).catch(function (e) {
+        if (isAuthErr(e)) return;
+        toast("AI 配置加载失败", "danger");
+      });
+    }
+
+    function saveAiConfig() {
+      var body = { provider: $("aiProvider").value, model: $("aiModel").value.trim() };
+      var key = $("aiApiKey").value;
+      if (key) body.apiKey = key;
+      var btn = $("aiSaveBtn");
+      btn.disabled = true;
+      var orig = btn.innerHTML;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>保存中…';
+      apiSend("/admin/ai-config", "PUT", body).then(function () {
+        $("aiApiKey").value = "";
+        loadAiConfig();
+        toast("已保存", "success");
+      }).catch(function (e) {
+        if (!isAuthErr(e)) toast("保存失败", "danger");
+      }).then(function () {
+        btn.disabled = false;
+        btn.innerHTML = orig;
+      });
     }
 
     // ---------- 事件绑定 ----------
@@ -688,6 +1121,42 @@
     document.querySelectorAll("[data-export]").forEach(function (btn) {
       btn.addEventListener("click", function () { exportCSV(btn.getAttribute("data-export")); });
     });
+
+    // Tab 导航
+    document.querySelectorAll("#xssTabNav [data-tab]").forEach(function (a) {
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        showTab(this.getAttribute("data-tab"));
+      });
+    });
+
+    // 审核状态筛选
+    document.querySelectorAll("[data-review-status]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        reviewStatus = this.getAttribute("data-review-status");
+        document.querySelectorAll("[data-review-status]").forEach(function (b) {
+          if (b === btn) { b.className = "btn btn-sm btn-primary active"; }
+          else { b.className = "btn btn-sm btn-outline-secondary"; }
+        });
+        loadReviewPending();
+      });
+    });
+
+    // 审核操作（事件委托）
+    $("reviewTableBody").addEventListener("click", function (e) {
+      var btn = e.target;
+      while (btn && btn !== this && btn.tagName !== "BUTTON") { btn = btn.parentNode; }
+      if (!btn || btn === this || btn.tagName !== "BUTTON") return;
+      var act = btn.getAttribute("data-act");
+      var id = btn.getAttribute("data-id");
+      if (!act || !id) return;
+      if (act === "view") openReviewDetail(id);
+      else if (act === "approve") approveReview(id);
+      else if (act === "reject") rejectReview(id);
+    });
+
+    // AI 设置保存
+    $("aiSaveBtn").addEventListener("click", saveAiConfig);
 
     // ---------- 启动 ----------
     if (getToken()) {
