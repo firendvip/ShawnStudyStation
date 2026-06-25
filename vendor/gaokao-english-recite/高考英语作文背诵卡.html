@@ -63,10 +63,10 @@ body{
 .btn[disabled]{opacity:.5;pointer-events:none;cursor:not-allowed;}
 
 /* ---------- Top tabs (3-tab layout) ---------- */
-.toptabs{display:flex;gap:.4rem;background:var(--color-surface);border:1px solid var(--color-line);
+.toptabs{display:flex;justify-content:flex-start;gap:.4rem;background:var(--color-surface);border:1px solid var(--color-line);
   border-radius:999px;box-shadow:var(--shadow-card);padding:.35rem;margin-bottom:1.1rem;
   width:100%;max-width:520px;margin-left:auto;margin-right:auto;}
-.toptabs button{flex:1 1 0;font-family:inherit;font-size:.95rem;font-weight:700;color:var(--color-ink-soft);
+.toptabs button{flex:0 0 auto;font-family:inherit;font-size:.95rem;font-weight:700;color:var(--color-ink-soft);
   background:transparent;border:none;border-radius:999px;padding:.6rem .4rem;cursor:pointer;
   transition:all .2s var(--ease-out);white-space:nowrap;}
 .toptabs button.active{background:var(--color-accent);color:#fff;box-shadow:0 2px 8px rgba(53,150,88,.3);}
@@ -148,6 +148,32 @@ body{
 .m-err{font-size:.82rem;font-weight:600;color:#c0392b;min-height:1em;}
 .modal-foot{display:flex;justify-content:flex-end;padding:.6rem 1.3rem 1.2rem;border-top:1px solid var(--color-line);}
 .modal-foot .btn{padding:.6rem 1.6rem;}
+/* content-type radio group */
+.m-radio-row{display:flex;gap:.5rem;}
+.m-radio{flex:0 0 auto;display:inline-flex;align-items:center;gap:.35rem;cursor:pointer;font-size:.92rem;font-weight:600;
+  color:var(--color-ink-soft);background:var(--color-paper);border:1.5px solid var(--color-line-strong);
+  border-radius:var(--radius-md);padding:.5rem .9rem;transition:all .18s var(--ease-out);}
+.m-radio input{accent-color:var(--color-accent);margin:0;}
+.m-radio:hover{border-color:var(--color-accent);}
+/* help (?) icon */
+.help-ico{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:1.5rem;height:1.5rem;
+  margin-left:.4rem;border-radius:50%;border:1.5px solid var(--color-accent);background:transparent;
+  color:var(--color-accent-strong);font-size:.82rem;font-weight:800;line-height:1;cursor:pointer;
+  transition:all .18s var(--ease-out);}
+.help-ico:hover{background:var(--color-accent);color:#fff;}
+.help-body{font-size:.92rem;line-height:1.7;color:var(--color-ink-soft);}
+.help-body p{margin:0 0 .7rem;}
+.help-body p:last-child{margin-bottom:0;}
+/* status badges (public list, own items) */
+.litem-badge{flex:0 0 auto;font-size:.7rem;font-weight:800;letter-spacing:.02em;padding:.16rem .5rem;border-radius:999px;}
+.litem-badge.pending{color:#9a6a00;background:#fff3d6;}
+.litem-badge.approved{color:#1f7a3d;background:#dcf7e2;}
+.litem-badge.rejected{color:#c0392b;background:#fde2dd;}
+.litem-note{flex:1 1 100%;font-size:.74rem;color:var(--color-ink-dim);line-height:1.4;}
+/* book pagination */
+.bookpager{display:flex;align-items:center;justify-content:center;gap:.8rem;margin:1rem 0 .2rem;}
+.bookpager .btn{padding:.45rem 1rem;font-size:.85rem;}
+.bookpager-ind{font-size:.85rem;font-weight:700;color:var(--color-ink-soft);}
 
 /* ---------- Toast ---------- */
 .toast{position:fixed;left:50%;bottom:2rem;transform:translateX(-50%) translateY(8px);z-index:1200;
@@ -262,7 +288,7 @@ body.noseg .en .en-line:not(:last-child):after{content:' ';white-space:pre;}
 <div class="wrap">
   <div class="toptabs" id="topTabs" role="tablist">
     <button type="button" data-tab="public" role="tab">公共资源</button>
-    <button type="button" data-tab="mine" role="tab">我的作文</button>
+    <button type="button" data-tab="mine" role="tab">我的书屋</button>
     <button type="button" data-tab="study" class="active" role="tab">当前学习</button>
   </div>
 
@@ -272,9 +298,10 @@ body.noseg .en .en-line:not(:last-child):after{content:' ';white-space:pre;}
       <div class="lib">
         <div class="lib-head">
           <h2 class="lib-title">公共资源</h2>
-          <button type="button" class="btn" id="btnUploadPublic">文章上传</button>
+          <button type="button" class="btn" id="btnUploadPublic">资料上传</button>
+          <button type="button" class="help-ico" id="helpPublic" aria-label="帮助说明">?</button>
         </div>
-        <p class="lib-note">公共资源的作文不能直接修改；想改成自己的版本，请先「转存到我的作文」再编辑，不影响公共资源。</p>
+        <p class="lib-note">公共资源的内容不能直接修改；想改成自己的版本，请先「收藏到我的书屋」再使用，不影响公共资源。</p>
         <input type="text" class="lib-search" id="pubSearch" placeholder="搜索标题或考题…" autocomplete="off">
         <div id="pubList"></div>
       </div>
@@ -284,8 +311,9 @@ body.noseg .en .en-line:not(:last-child):after{content:' ';white-space:pre;}
     <section class="panel" id="panelMine">
       <div class="lib">
         <div class="lib-head">
-          <h2 class="lib-title">我的作文</h2>
+          <h2 class="lib-title">我的书屋</h2>
           <button type="button" class="btn" id="btnNewMine">+ 新建</button>
+          <button type="button" class="help-ico" id="helpMine" aria-label="帮助说明">?</button>
         </div>
         <input type="text" class="lib-search" id="mineSearch" placeholder="搜索标题或考题…" autocomplete="off">
         <div id="mineList"></div>
@@ -371,24 +399,31 @@ body.noseg .en .en-line:not(:last-child):after{content:' ';white-space:pre;}
       <button type="button" class="modal-close" id="mClose" aria-label="关闭">×</button>
     </div>
     <div class="modal-body">
+      <div class="m-field" id="mTypeField">
+        <span class="m-label">内容类型</span>
+        <div class="m-radio-row">
+          <label class="m-radio"><input type="radio" name="mContentType" value="composition" checked>作文</label>
+          <label class="m-radio"><input type="radio" name="mContentType" value="book">书籍</label>
+        </div>
+      </div>
       <div class="m-field">
         <div class="m-label-row">
           <label class="m-label" for="mTitle">标题</label>
           <span class="m-counter" id="mTitleCount">0/40</span>
         </div>
-        <input type="text" class="m-input" id="mTitle" maxlength="40" placeholder="给这篇作文起个标题">
+        <input type="text" class="m-input" id="mTitle" maxlength="40" placeholder="起个标题">
         <span class="m-help">将显示在列表里</span>
       </div>
-      <div class="m-field">
+      <div class="m-field" id="mPromptField">
         <label class="m-label" for="mPrompt">作文考题</label>
         <textarea class="m-input m-area" id="mPrompt" rows="3" placeholder="粘贴作文题目（可空）"></textarea>
       </div>
       <div class="m-field">
-        <label class="m-label" for="mText">作文</label>
-        <textarea class="m-input m-area" id="mText" rows="6" placeholder="粘贴英文作文…"></textarea>
-        <span class="m-help">≤3000 字，超出自动截断</span>
+        <label class="m-label" for="mText" id="mTextLabel">作文内容</label>
+        <textarea class="m-input m-area" id="mText" rows="6" placeholder="粘贴英文内容…"></textarea>
+        <span class="m-help" id="mTextHint">≤3000 字，超出自动截断</span>
       </div>
-      <div class="m-field">
+      <div class="m-field" id="mLevelField">
         <label class="m-label" for="mLevel">学段</label>
         <select class="m-input m-select" id="mLevel">
           <option value="" disabled selected>请选择学段</option>
@@ -398,10 +433,32 @@ body.noseg .en .en-line:not(:last-child):after{content:' ';white-space:pre;}
           <option value="大学">大学</option>
         </select>
       </div>
+      <div class="m-field" id="mBookLevelField" hidden>
+        <label class="m-label" for="mBookLevel">难度</label>
+        <select class="m-input m-select" id="mBookLevel">
+          <option value="" disabled selected>请选择难度</option>
+          <option value="桥梁">桥梁</option>
+          <option value="初章">初章</option>
+          <option value="中章">中章</option>
+          <option value="高章">高章</option>
+        </select>
+      </div>
       <span class="m-err" id="mErr"></span>
     </div>
     <div class="modal-foot">
       <button type="button" class="btn" id="mSubmit">提交</button>
+    </div>
+  </div>
+</div>
+<!-- ===== 帮助说明 弹窗 ===== -->
+<div class="modal-overlay" id="helpModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+    <div class="modal-head">
+      <h3 class="modal-title" id="helpModalTitle">使用说明</h3>
+      <button type="button" class="modal-close" id="helpClose" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="help-body" id="helpBody"></div>
     </div>
   </div>
 </div>
@@ -435,6 +492,8 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   let publicItems=[];          // from GET /articles (all public)
   let myItems=[];              // from GET /my (personal copies)
   let selectedKey=null;        // currently-studied item key
+  const collectedSourceIds=new Set(); // public article ids already collected into 我的书屋
+  const BOOK_LEVELS=['桥梁','初章','中章','高章'];
   const LAST_VIEW_KEY='composition_last_view';
   // collapsed group state, separate per panel
   const collapsedPub={}, collapsedMine={};
@@ -466,8 +525,20 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   const mErr=document.getElementById('mErr');
   const mSubmit=document.getElementById('mSubmit');
   const toastEl=document.getElementById('toast');
+  // content-type-aware modal fields
+  const mPromptField=document.getElementById('mPromptField');
+  const mLevelField=document.getElementById('mLevelField');
+  const mBookLevelField=document.getElementById('mBookLevelField');
+  const mBookLevel=document.getElementById('mBookLevel');
+  const mTextLabel=document.getElementById('mTextLabel');
+  const mTextHint=document.getElementById('mTextHint');
+  // help modal DOM
+  const helpModal=document.getElementById('helpModal');
+  const helpClose=document.getElementById('helpClose');
+  const helpBody=document.getElementById('helpBody');
   let modalMode='public';      // 'public' | 'mineNew' | 'mineEdit'
   let editingMyId=null;        // when modalMode==='mineEdit'
+  let modalContentType='composition'; // 'composition' | 'book'
 
   ESSAYS.sort((a,b)=>a.id-b.id);
   buildItems();
@@ -554,7 +625,72 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
 
   let rows=[]; // {row, text}
   let curEssayId=null, wholeText='';
-  function render(essay,prompt){
+  // ---- book pagination state ----
+  const BOOK_PAGE_SIZE=30;       // sentences per page for book content
+  const BOOK_PAGE_THRESHOLD=60;  // also paginate any item with more than this many sentences
+  let allSentences=[];           // full sentence list of the current item
+  let isBookView=false, bookPage=1;
+  function buildSentenceRow(s,localIdx){
+    const row=document.createElement('div'); row.className='sent';
+    const body=document.createElement('div'); body.className='sent-body';
+    const enWrap=document.createElement('div'); enWrap.className='en-wrap';
+    enWrap.appendChild(buildEn(s));
+    const mE=document.createElement('div'); mE.className='mask mask-en'; enWrap.appendChild(mE);
+    body.appendChild(enWrap);
+    const zhWrap=document.createElement('div'); zhWrap.className='zh-wrap';
+    const trans=document.createElement('div'); trans.className='trans';
+    trans.appendChild(buildLiteral(s)); trans.appendChild(buildNormal(s)); zhWrap.appendChild(trans);
+    const mZ=document.createElement('div'); mZ.className='mask mask-zh'; zhWrap.appendChild(mZ);
+    body.appendChild(zhWrap);
+
+    const ctrl=document.createElement('div'); ctrl.className='sent-ctrl';
+    const bEn=mkBtn('英','切换英文显隐',()=>{row.classList.toggle('hide-en');bEn.classList.toggle('on',!row.classList.contains('hide-en'));});
+    bEn.classList.add('on');
+    const bZh=mkBtn('中','切换中文显隐',()=>{row.classList.toggle('hide-zh');bZh.classList.toggle('on',!row.classList.contains('hide-zh'));});
+    bZh.classList.add('on');
+    // localIdx aligns with the rows[] array (page-local index) used by sentence playback
+    const bPl=mkBtn('▶','朗读该句',()=>{ if(playing&&curIdx===localIdx){stopPlay();}else{playFrom(localIdx);} });
+    bPl.classList.add('play');
+    ctrl.appendChild(bEn); ctrl.appendChild(bZh); ctrl.appendChild(bPl);
+
+    row.appendChild(body); row.appendChild(ctrl);
+    return {row,text:detok(Array.isArray(s.tokens)?s.tokens:[],true),play:bPl};
+  }
+  // render a slice of sentences into #sentences and rebuild rows[]
+  function renderSentenceSlice(sentences){
+    stopPlay();
+    cont.innerHTML=''; rows=[];
+    sentences.forEach((s,localIdx)=>{
+      const r=buildSentenceRow(s,localIdx);
+      cont.appendChild(r.row);
+      rows.push(r);
+    });
+    wholeText=rows.map(r=>r.text).join(' ');
+  }
+  function bookPageCount(){ return Math.max(1,Math.ceil(allSentences.length/BOOK_PAGE_SIZE)); }
+  function renderBookPage(){
+    const total=bookPageCount();
+    if(bookPage<1) bookPage=1; if(bookPage>total) bookPage=total;
+    const start=(bookPage-1)*BOOK_PAGE_SIZE;
+    renderSentenceSlice(allSentences.slice(start,start+BOOK_PAGE_SIZE));
+    renderBookPager(total);
+  }
+  function renderBookPager(total){
+    let pager=document.getElementById('bookPager');
+    if(pager) pager.remove();
+    pager=document.createElement('div'); pager.className='bookpager'; pager.id='bookPager';
+    const prev=document.createElement('button'); prev.type='button'; prev.className='btn ghost'; prev.id='bookPrev';
+    prev.textContent='上一页'; prev.disabled=bookPage<=1;
+    prev.addEventListener('click',()=>{ if(bookPage>1){ bookPage--; renderBookPage(); cont.scrollIntoView({block:'start'}); } });
+    const ind=document.createElement('span'); ind.className='bookpager-ind'; ind.id='bookInd';
+    ind.textContent='第 '+bookPage+' / '+total+' 页';
+    const next=document.createElement('button'); next.type='button'; next.className='btn ghost'; next.id='bookNext';
+    next.textContent='下一页'; next.disabled=bookPage>=total;
+    next.addEventListener('click',()=>{ if(bookPage<total){ bookPage++; renderBookPage(); cont.scrollIntoView({block:'start'}); } });
+    pager.appendChild(prev); pager.appendChild(ind); pager.appendChild(next);
+    cont.parentNode.insertBefore(pager,cont.nextSibling);
+  }
+  function render(essay,prompt,contentType){
     stopPlay();
     essay=essay||{};
     curEssayId=essay.id;
@@ -564,36 +700,17 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
     const p=(prompt||'').trim();
     if(p){ artPromptText.textContent=p; artPrompt.hidden=false; }
     else { artPromptText.textContent=''; artPrompt.hidden=true; }
-    const sentences=Array.isArray(essay.sentences)?essay.sentences:[];
-    artCount.textContent=sentences.length+' 句';
-    cont.innerHTML=''; rows=[];
-    sentences.forEach((s,idx)=>{
-      const row=document.createElement('div'); row.className='sent';
-      const body=document.createElement('div'); body.className='sent-body';
-      const enWrap=document.createElement('div'); enWrap.className='en-wrap';
-      enWrap.appendChild(buildEn(s));
-      const mE=document.createElement('div'); mE.className='mask mask-en'; enWrap.appendChild(mE);
-      body.appendChild(enWrap);
-      const zhWrap=document.createElement('div'); zhWrap.className='zh-wrap';
-      const trans=document.createElement('div'); trans.className='trans';
-      trans.appendChild(buildLiteral(s)); trans.appendChild(buildNormal(s)); zhWrap.appendChild(trans);
-      const mZ=document.createElement('div'); mZ.className='mask mask-zh'; zhWrap.appendChild(mZ);
-      body.appendChild(zhWrap);
-
-      const ctrl=document.createElement('div'); ctrl.className='sent-ctrl';
-      const bEn=mkBtn('英','切换英文显隐',()=>{row.classList.toggle('hide-en');bEn.classList.toggle('on',!row.classList.contains('hide-en'));});
-      bEn.classList.add('on');
-      const bZh=mkBtn('中','切换中文显隐',()=>{row.classList.toggle('hide-zh');bZh.classList.toggle('on',!row.classList.contains('hide-zh'));});
-      bZh.classList.add('on');
-      const bPl=mkBtn('▶','朗读该句',()=>{ if(playing&&curIdx===idx){stopPlay();}else{playFrom(idx);} });
-      bPl.classList.add('play');
-      ctrl.appendChild(bEn); ctrl.appendChild(bZh); ctrl.appendChild(bPl);
-
-      row.appendChild(body); row.appendChild(ctrl);
-      cont.appendChild(row);
-      rows.push({row,text:detok(Array.isArray(s.tokens)?s.tokens:[],true),play:bPl});
-    });
-    wholeText=rows.map(r=>r.text).join(' ');
+    allSentences=Array.isArray(essay.sentences)?essay.sentences:[];
+    artCount.textContent=allSentences.length+' 句';
+    // decide pagination: book content, or any very long item
+    isBookView=(contentType==='book') || (allSentences.length>BOOK_PAGE_THRESHOLD);
+    const oldPager=document.getElementById('bookPager'); if(oldPager) oldPager.remove();
+    if(isBookView){
+      bookPage=1;            // reset to first page on every new open
+      renderBookPage();
+    } else {
+      renderSentenceSlice(allSentences);
+    }
   }
   function mkBtn(txt,title,fn){const b=document.createElement('button');b.className='cbtn';b.textContent=txt;b.title=title;b.addEventListener('click',fn);return b;}
 
@@ -627,7 +744,7 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
     if(!it){ selectedKey=null; return; }
     selectedKey=key;
     try{ localStorage.setItem(LAST_VIEW_KEY, key); }catch(_){}
-    if(doRender!==false) render(it.essay||{}, it.prompt||'');
+    if(doRender!==false) render(it.essay||{}, it.prompt||'', it.contentType||'composition');
     updateArtDelete();
     markSelected();
   }
@@ -712,14 +829,29 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
     main.appendChild(t);
     if(it.prompt){ const pr=document.createElement('div'); pr.className='litem-prompt'; pr.textContent=it.prompt; main.appendChild(pr); }
     row.appendChild(main);
+    // status badge: only for own items in 公共资源 (T8)
+    if(it.source==='public' && it.isMine===true && it.status){
+      const badge=document.createElement('span');
+      const map={pending:'审核中',approved:'已通过',rejected:'已拒绝'};
+      badge.className='litem-badge '+it.status;
+      badge.textContent=map[it.status]||it.status;
+      row.appendChild(badge);
+    }
     const acts=document.createElement('div'); acts.className='litem-acts';
     (actionsFor(it)||[]).forEach(a=>{
       const b=document.createElement('button'); b.type='button';
       b.className='btn '+(a.cls||''); b.textContent=a.label;
-      b.addEventListener('click',ev=>{ ev.stopPropagation(); a.fn(); });
+      if(a.disabled){ b.disabled=true; }
+      else { b.addEventListener('click',ev=>{ ev.stopPropagation(); a.fn(); }); }
       acts.appendChild(b);
     });
     row.appendChild(acts);
+    // review note line (T8): rejected items with notes
+    if(it.source==='public' && it.isMine===true && it.status==='rejected' && it.review_notes){
+      const note=document.createElement('div'); note.className='litem-note';
+      note.textContent='审核意见：'+it.review_notes;
+      row.appendChild(note);
+    }
     return row;
   }
 
@@ -740,9 +872,14 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
     renderGroupedList(pubList,list,pubSearch.value,collapsedPub,it=>{
       if(it.builtin) return [{label:'学习',cls:'ghost tiny',fn:()=>studyItem(it.key)}];
       const acts=[
-        {label:'学习',cls:'ghost tiny',fn:()=>studyItem(it.key)},
-        {label:'转存到我的作文',cls:'tiny',fn:()=>resaveToMine(it.id)}
+        {label:'学习',cls:'ghost tiny',fn:()=>studyItem(it.key)}
       ];
+      // collect / already-collected (T4 dedup)
+      if(collectedSourceIds.has(String(it.id))){
+        acts.push({label:'✓ 已收藏',cls:'off tiny',disabled:true});
+      } else {
+        acts.push({label:'收藏到我的书屋',cls:'tiny',fn:()=>resaveToMine(it.id)});
+      }
       if(it.isMine===true) acts.push({label:'删除',cls:'off tiny',fn:()=>deletePublic(it)});
       return acts;
     });
@@ -755,15 +892,25 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
     if(!authToken){
       mineList.innerHTML='';
       const hint=document.createElement('div'); hint.className='lib-hint';
-      hint.textContent='登录后使用我的作文';
+      hint.textContent='登录后使用我的书屋';
       mineList.appendChild(hint);
       return;
     }
-    renderGroupedList(mineList,myItems,mineSearch.value,collapsedMine,it=>([
-      {label:'学习',cls:'ghost tiny',fn:()=>studyItem(it.key)},
-      {label:'编辑',cls:'tiny',fn:()=>openModalEdit(it)},
-      {label:'删除',cls:'off tiny',fn:()=>deleteMine(it)}
-    ]));
+    renderGroupedList(mineList,myItems,mineSearch.value,collapsedMine,it=>{
+      // collected (sourceId non-empty) → read-only: 取消收藏 + 学习
+      if(it.sourceId){
+        return [
+          {label:'学习',cls:'ghost tiny',fn:()=>studyItem(it.key)},
+          {label:'取消收藏',cls:'off tiny',fn:()=>deleteMine(it)}
+        ];
+      }
+      // manual-new → 编辑 / 删除 / 学习
+      return [
+        {label:'学习',cls:'ghost tiny',fn:()=>studyItem(it.key)},
+        {label:'编辑',cls:'tiny',fn:()=>openModalEdit(it)},
+        {label:'删除',cls:'off tiny',fn:()=>deleteMine(it)}
+      ];
+    });
   }
   mineSearch.addEventListener('input',renderMineList);
 
@@ -774,10 +921,19 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
       const r=await fetch(apiBase+'/my',{method:'POST',
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
         body:JSON.stringify({sourceId})});
-      if(!r.ok){ showToast(r.status===401?'请先登录':'转存失败'); return; }
+      if(r.status===409){
+        // already collected: mark in set + disable button, then notify
+        collectedSourceIds.add(String(sourceId));
+        renderPublicList();
+        showToast('已收藏');
+        return;
+      }
+      if(!r.ok){ showToast(r.status===401?'请先登录':'收藏失败'); return; }
+      collectedSourceIds.add(String(sourceId));
       await loadMine();
-      showToast('已转存到我的作文');
-    }catch(_){ showToast('转存失败'); }
+      renderPublicList();
+      showToast('已收藏到我的书屋');
+    }catch(_){ showToast('收藏失败'); }
   }
 
   // ---------- delete public (owner of own public article) ----------
@@ -798,15 +954,17 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   // ---------- delete mine ----------
   async function deleteMine(it){
     if(!authToken||!apiBase){ showToast('请先登录后使用'); return; }
-    if(!confirm('确定删除这篇作文？此操作不可恢复。')) return;
+    if(!confirm(it.sourceId?'确定取消收藏这篇内容？':'确定删除这篇内容？此操作不可恢复。')) return;
     try{
       const r=await fetch(apiBase+'/my/'+it.id,{method:'DELETE',headers:{'Authorization':'Bearer '+authToken}});
       if(!r.ok){ showToast('删除失败'); return; }
       myItems=myItems.filter(x=>x.key!==it.key);
+      // if this was a collected copy, free its source id so it can be collected again
+      if(it.sourceId){ collectedSourceIds.delete(String(it.sourceId)); }
       buildItems();
       if(selectedKey===it.key){ selectedKey=null; selectLastOrFirst(); }
-      renderMineList(); updateArtDelete(); markSelected();
-      showToast('已删除');
+      renderMineList(); renderPublicList(); updateArtDelete(); markSelected();
+      showToast(it.sourceId?'已取消收藏':'已删除');
     }catch(_){ showToast('删除失败'); }
   }
   artDel.addEventListener('click',()=>{
@@ -826,34 +984,64 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   }
 
   // ---------- upload / edit modal ----------
-  const MODAL_TITLES={ public:'上传到公共资源', mineNew:'新建我的作文', mineEdit:'编辑我的作文' };
+  const MODAL_TITLES={ public:'资料上传', mineNew:'新建', mineEdit:'编辑我的内容' };
+  const MAX_BOOK_CHARS=200000;
+  // toggle composition/book fields inside the modal
+  function applyModalContentType(ct){
+    modalContentType=(ct==='book')?'book':'composition';
+    const isBook=modalContentType==='book';
+    if(mPromptField) mPromptField.hidden=isBook;
+    if(mLevelField) mLevelField.hidden=isBook;
+    if(mBookLevelField) mBookLevelField.hidden=!isBook;
+    if(mTextLabel) mTextLabel.textContent=isBook?'书籍内容':'作文内容';
+    if(mTextHint) mTextHint.textContent=isBook?'≤20万字符，超出自动截断':'≤3000 字，超出自动截断';
+    if(mText) mText.placeholder=isBook?'粘贴英文书籍内容…':'粘贴英文作文…';
+  }
+  function getModalContentType(){
+    const c=document.querySelector('input[name="mContentType"]:checked');
+    return (c&&c.value==='book')?'book':'composition';
+  }
+  function setModalContentTypeRadio(ct){
+    const target=(ct==='book')?'book':'composition';
+    document.querySelectorAll('input[name="mContentType"]').forEach(r=>{ r.checked=(r.value===target); });
+    applyModalContentType(target);
+  }
   function fillModal(it){
     mTitle.value=it?(it.title||''):'';
     mPrompt.value=it?(it.prompt||''):'';
     mText.value=it?(it.text||''):'';
     mLevel.value=it?(it.level||''):'';
+    if(mBookLevel) mBookLevel.value=it?(it.bookLevel||''):'';
     mErr.textContent=''; mTitleCount.textContent=(mTitle.value.length)+'/40';
     mSubmit.disabled=false; mSubmit.textContent='提交';
   }
   function openModalCommon(){
-    upModalTitle.textContent=MODAL_TITLES[modalMode]||'作文';
+    upModalTitle.textContent=MODAL_TITLES[modalMode]||'内容';
     upModal.hidden=false;
     setTimeout(()=>{ try{ mTitle.focus(); }catch(_){} },0);
   }
   function openModalPublic(){
     if(!authToken){ showToast('请先登录后使用'); return; }
-    modalMode='public'; editingMyId=null; fillModal(null); openModalCommon();
+    modalMode='public'; editingMyId=null; fillModal(null);
+    mTypeFieldEnabled(true); setModalContentTypeRadio('composition'); openModalCommon();
   }
   function openModalMineNew(){
     if(!authToken){ showToast('请先登录后使用'); return; }
-    modalMode='mineNew'; editingMyId=null; fillModal(null); openModalCommon();
+    modalMode='mineNew'; editingMyId=null; fillModal(null);
+    mTypeFieldEnabled(true); setModalContentTypeRadio('composition'); openModalCommon();
   }
   function openModalEdit(it){
     if(!authToken){ showToast('请先登录后使用'); return; }
     modalMode='mineEdit'; editingMyId=it.id;
-    fillModal({title:it.title,prompt:it.prompt,text:essayToText(it.essay),level:it.level});
+    fillModal({title:it.title,prompt:it.prompt,text:essayToText(it.essay),level:it.level,bookLevel:it.bookLevel});
+    // content type fixed to the item's own type while editing
+    mTypeFieldEnabled(false);
+    setModalContentTypeRadio(it.contentType==='book'?'book':'composition');
     openModalCommon();
   }
+  // show/hide the content-type chooser (hidden when editing a fixed-type item)
+  const mTypeField=document.getElementById('mTypeField');
+  function mTypeFieldEnabled(on){ if(mTypeField) mTypeField.hidden=!on; return on; }
   // reconstruct editable plain text from a stored essay (best effort)
   function essayToText(essay){
     const ss=essay&&Array.isArray(essay.sentences)?essay.sentences:[];
@@ -863,6 +1051,10 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   btnUploadPublic.addEventListener('click',openModalPublic);
   btnNewMine.addEventListener('click',openModalMineNew);
   mClose.addEventListener('click',closeModal);
+  // content-type radio change
+  document.querySelectorAll('input[name="mContentType"]').forEach(r=>{
+    r.addEventListener('change',()=>{ applyModalContentType(getModalContentType()); });
+  });
   // drag-safe close: only close when BOTH mousedown AND click happened on the overlay itself
   let upMouseDownTarget=null;
   upModal.addEventListener('mousedown',e=>{ upMouseDownTarget=e.target; });
@@ -873,48 +1065,86 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   mTitle.addEventListener('input',()=>{ mTitleCount.textContent=(mTitle.value.length)+'/40'; });
 
   mSubmit.addEventListener('click',async()=>{
+    const contentType=getModalContentType();
+    const isBook=contentType==='book';
     const title=mTitle.value.trim();
     const prompt=mPrompt.value.trim();
     const level=mLevel.value;
+    const bookLevel=mBookLevel?mBookLevel.value:'';
     let text=mText.value;
+    const maxChars=isBook?MAX_BOOK_CHARS:MAX_TEXT_CHARS;
     if(!authToken){ mErr.textContent='请先登录'; return; }
     if(!title){ mErr.textContent='请填写标题'; return; }
-    if(!level){ mErr.textContent='请选择学段'; return; }
+    if(isBook){ if(!bookLevel){ mErr.textContent='请选择难度'; return; } }
+    else { if(!level){ mErr.textContent='请选择学段'; return; } }
     if(modalMode!=='mineEdit'){
-      if(!text||!text.trim()){ mErr.textContent='请粘贴作文'; return; }
+      if(!text||!text.trim()){ mErr.textContent=isBook?'请粘贴书籍内容':'请粘贴作文'; return; }
     }
-    if(text && text.length>MAX_TEXT_CHARS) text=text.slice(0,MAX_TEXT_CHARS);
+    if(text && text.length>maxChars) text=text.slice(0,maxChars);
     mErr.textContent='';
     mSubmit.disabled=true; mSubmit.textContent='提交中…';
     try{
       let url,method,body;
+      const levelFields=isBook?{bookLevel}:{level};
       if(modalMode==='public'){
         url=apiBase+'/articles'; method='POST';
-        body={title,prompt:prompt||undefined,text,level};
+        body=Object.assign({contentType,title,prompt:(!isBook&&prompt)?prompt:undefined,text},levelFields);
       } else if(modalMode==='mineNew'){
         url=apiBase+'/my'; method='POST';
-        body={title,prompt:prompt||undefined,text,level};
-      } else { // mineEdit
+        body=Object.assign({contentType,title,prompt:(!isBook&&prompt)?prompt:undefined,text},levelFields);
+      } else { // mineEdit (manual items only)
         url=apiBase+'/my/'+editingMyId; method='PUT';
-        body={title,prompt:prompt||undefined,level};
+        body=Object.assign({contentType,title,prompt:(!isBook&&prompt)?prompt:undefined},levelFields);
         if(text && text.trim()) body.text=text;
       }
       const r=await fetch(url,{method,
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
         body:JSON.stringify(body)});
       if(!r.ok){
-        mErr.textContent=r.status===401?'请先登录':r.status===429?'太频繁稍后再试':r.status===400?'请检查填写内容':'失败';
+        mErr.textContent=r.status===401?'请先登录':r.status===403?'收藏的内容不可编辑':r.status===429?'太频繁稍后再试':r.status===400?'请检查填写内容':'失败';
         return;
       }
       const data=await r.json().catch(()=>({}));
       closeModal();
       if(modalMode==='public'){ await loadPublic(); }
       else { await loadMine(); }
-      if(data && data.truncated) showToast('作文过长已截断到3000字');
-      else showToast(modalMode==='mineEdit'?'已保存':modalMode==='public'?'上传成功':'已创建');
+      if(data && data.truncated) showToast('内容较长已自动截断');
+      else if(modalMode==='public') showToast('已提交，审核通过后才会公开');
+      else showToast(modalMode==='mineEdit'?'已保存':'已创建');
     }catch(_){ mErr.textContent='失败'; }
     finally{ mSubmit.disabled=false; mSubmit.textContent='提交'; }
   });
+
+  // ---------- help modal (T9) ----------
+  const HELP_PARAS=[
+    '上传作文或书籍后，系统会对内容做处理，方便学习时使用。',
+    '学习时点单词会播放真人发音：内置覆盖约 2.5万+ 常用单词的真人发音库（英音、美音各一套，共 5万+ 条真人录音），点词即听；极少数生僻词/人名用智能语音兜底；句子等学习内容也支持发音。',
+    '上传内容需经审核通过后才会进入公共资源供大家学习。'
+  ];
+  function buildHelpBody(){
+    if(!helpBody) return;
+    helpBody.innerHTML='';
+    HELP_PARAS.forEach(txt=>{ const p=document.createElement('p'); p.textContent=txt; helpBody.appendChild(p); });
+  }
+  buildHelpBody();
+  function openHelp(){ if(helpModal) helpModal.hidden=false; }
+  function closeHelp(){ if(helpModal) helpModal.hidden=true; }
+  const helpPublicBtn=document.getElementById('helpPublic');
+  const helpMineBtn=document.getElementById('helpMine');
+  if(helpPublicBtn) helpPublicBtn.addEventListener('click',openHelp);
+  if(helpMineBtn) helpMineBtn.addEventListener('click',openHelp);
+  if(helpClose) helpClose.addEventListener('click',closeHelp);
+  // drag-safe overlay close for help modal
+  let helpMouseDownTarget=null;
+  if(helpModal){
+    helpModal.addEventListener('mousedown',e=>{ helpMouseDownTarget=e.target; });
+    helpModal.addEventListener('click',e=>{
+      if(e.target===helpModal && helpMouseDownTarget===helpModal) closeHelp();
+      helpMouseDownTarget=null;
+    });
+  }
+  // Esc closes help modal
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape' && helpModal && !helpModal.hidden) closeHelp(); });
 
   // ---------- auth state ----------
   function applyAuthState(){
@@ -939,7 +1169,9 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
       const data=await r.json();
       publicItems=(Array.isArray(data.articles)?data.articles:[]).map(a=>({
         key:'p'+a.id, id:a.id, title:a.title||'', prompt:a.prompt||'',
-        level:normLevel(a.level), essay:a.essay||{}, builtin:false, source:'public', isMine:a.isMine===true
+        level:normLevel(a.level), bookLevel:a.bookLevel||'', contentType:a.contentType||'composition',
+        essay:a.essay||{}, builtin:false, source:'public', isMine:a.isMine===true,
+        status:a.status||'', review_notes:a.review_notes||''
       }));
       buildItems();
       renderPublicList();
@@ -954,10 +1186,15 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
       const data=await r.json();
       myItems=(Array.isArray(data.articles)?data.articles:[]).map(a=>({
         key:'m'+a.id, id:a.id, sourceId:a.sourceId, title:a.title||'', prompt:a.prompt||'',
-        level:normLevel(a.level), essay:a.essay||{}, builtin:false, source:'mine', isMine:true
+        level:normLevel(a.level), bookLevel:a.bookLevel||'', contentType:a.contentType||'composition',
+        essay:a.essay||{}, builtin:false, source:'mine', isMine:true
       }));
+      // rebuild collected-source-id set from my items (collected items have non-empty sourceId)
+      collectedSourceIds.clear();
+      myItems.forEach(it=>{ if(it.sourceId) collectedSourceIds.add(String(it.sourceId)); });
       buildItems();
       renderMineList();
+      renderPublicList();
       restoreLastView();
     }catch(_){}
   }
@@ -1052,11 +1289,26 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   // per-word highlight helpers
   function clearWordHL(){document.querySelectorAll('.en .word.now').forEach(s=>s.classList.remove('now'));}
   function mkHL(spans){let last=-1;return k=>{ if(k===last)return; if(last>=0&&spans[last])spans[last].classList.remove('now'); if(k>=0&&spans[k])spans[k].classList.add('now'); last=k; };}
+  // per-word audio source builders, tried in order (CoCa real-voice → local → TTS fallback)
+  function wordAudioUrls(word){
+    const enc=encodeURIComponent(word);
+    return [
+      '../CoCaWordCards/audio/'+accent+'/'+enc+'.mp3', // CoCa real-voice library (relative to this html)
+      'audio/'+accent+'/'+enc+'.mp3'                    // existing local audio
+    ];
+  }
+  // play one word through the fallback cascade; calls tts() if every audio source fails
   function speakWord(word){
-    const url='audio/'+accent+'/'+encodeURIComponent(word)+'.mp3';
-    const a=new Audio(url); a.playbackRate=speed; let fell=false;
-    a.onerror=()=>{if(!fell){fell=true;tts(word);}};
-    a.play().catch(()=>{if(!fell){fell=true;tts(word);}});
+    const urls=wordAudioUrls(word);
+    let i=0, done=false;
+    const tryNext=()=>{
+      if(done) return;
+      if(i>=urls.length){ done=true; tts(word); return; }
+      const a=new Audio(urls[i++]); a.playbackRate=speed;
+      a.onerror=()=>{ if(!done) tryNext(); };
+      a.play().catch(()=>{ if(!done) tryNext(); });
+    };
+    tryNext();
   }
   // ---- word loop: keeps repeating the word until stopped / page blur ----
   let wordLoop=false, wordAudio=null, wordBtn=null, wordW=null;
@@ -1070,11 +1322,17 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   function startWordLoop(word,btn){
     stopPlay(); stopWordLoop();
     wordLoop=true; wordW=word; wordBtn=btn; btn.innerHTML=PAUSE_SVG; btn.classList.add('on');
-    const url='audio/'+accent+'/'+encodeURIComponent(word)+'.mp3';
-    const a=new Audio(url); wordAudio=a; a.loop=true; a.playbackRate=speed; let fell=false;
+    const urls=wordAudioUrls(word);
     const ttsLoop=()=>{ if(!wordLoop)return; tts(word,()=>{ if(wordLoop) setTimeout(ttsLoop,260); }); };
-    a.onerror=()=>{ if(fell)return; fell=true; wordAudio=null; ttsLoop(); };
-    a.play().catch(()=>{ if(fell)return; fell=true; wordAudio=null; ttsLoop(); });
+    let i=0;
+    const tryNext=()=>{
+      if(!wordLoop) return;
+      if(i>=urls.length){ wordAudio=null; ttsLoop(); return; }
+      const a=new Audio(urls[i++]); wordAudio=a; a.loop=true; a.playbackRate=speed;
+      a.onerror=()=>{ if(!wordLoop) return; tryNext(); };
+      a.play().catch(()=>{ if(!wordLoop) return; tryNext(); });
+    };
+    tryNext();
   }
   window.addEventListener('blur',stopWordLoop);
   document.addEventListener('visibilitychange',()=>{ if(document.hidden){stopWordLoop();stopPlay();} });

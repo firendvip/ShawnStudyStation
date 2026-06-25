@@ -589,7 +589,7 @@
           <a class="dropdown-item" href="#" role="menuitem" data-view="phonics">自然拼读</a>
           <a class="dropdown-item" href="#" role="menuitem" data-view="wordcards">单词速刷</a>
           <a class="dropdown-item" href="#" role="menuitem" data-view="wordquiz">单词小测</a>
-          <a class="dropdown-item" href="#" role="menuitem" data-view="composition">英语作文</a>
+          <a class="dropdown-item" href="#" role="menuitem" data-view="composition">英读书屋</a>
         </div>
       </div>
 
@@ -813,7 +813,15 @@
         </div>
         <div class="cl-list">
           <div class="cl-item latest">
-            <div class="cl-ver-row"><span class="cl-ver">v1.59.0</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-24</span></div>
+            <div class="cl-ver-row"><span class="cl-ver">v1.60.0</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-24</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>「英语作文」改名「英读书屋」。</div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>可上传作文或整本书籍（分等级），需审核通过后公开。</div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>学习时点单词播放真人发音（覆盖2.5万+常用词，英美双音）。</div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>公共资源的内容可「收藏到我的书屋」（同一篇只收藏一次，收藏的内容只读、可取消收藏）。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>上传/新建弹窗加「?」使用说明。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.59.0</span><span class="cl-date">2026-06-24</span></div>
             <div class="cl-line"><span class="cl-tag add">新增</span>英语作文分「公共资源/我的作文/当前学习」三个标签。</div>
             <div class="cl-line"><span class="cl-tag add">新增</span>公共资源的作文可以「学习」或「转存到我的作文」。</div>
             <div class="cl-line"><span class="cl-tag add">新增</span>我的作文可新建/编辑/删除，自己管理、不影响公共。</div>
@@ -1184,7 +1192,7 @@
 
     <!-- 英语作文 (高考英语作文背诵卡) embedded app -->
     <section class="view view-embed" id="view-composition">
-      <iframe class="embed-frame" id="frame-composition" data-app="COMPOSITION" title="英语作文" loading="lazy"></iframe>
+      <iframe class="embed-frame" id="frame-composition" data-app="COMPOSITION" title="英读书屋" loading="lazy"></iframe>
     </section>
 
     <!-- 单词速刷 (CoCaWordCards) embedded app -->
@@ -1305,7 +1313,7 @@
       f.removeAttribute('src'); // 清空文档，保证所有音频（含 Web Audio/语音播报）停止；返回时重新加载
     }
 
-    const VIEW_NAMES = { home: '', about: '联系我们', feedback: '建议提交', changelog: '更新日志', cuozi: '错字练习', phonics: '自然拼读', lottery: '转盘', koudaa: '小学心算', composition: '英语作文', wordcards: '单词速刷', retro: '每日复盘', diary: '日记', wordquiz: '单词小测' };
+    const VIEW_NAMES = { home: '', about: '联系我们', feedback: '建议提交', changelog: '更新日志', cuozi: '错字练习', phonics: '自然拼读', lottery: '转盘', koudaa: '小学心算', composition: '英读书屋', wordcards: '单词速刷', retro: '每日复盘', diary: '日记', wordquiz: '单词小测' };
     function switchView(viewName) {
       try { window.xssTrack && window.xssTrack('view_change', { view: viewName }); } catch (e) {}
       const lp = document.getElementById('logo-page');
