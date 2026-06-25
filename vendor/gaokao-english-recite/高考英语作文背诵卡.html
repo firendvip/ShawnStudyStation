@@ -62,46 +62,55 @@ body{
 .btn.disabled,label.btn.disabled{opacity:.5;pointer-events:none;}
 .btn[disabled]{opacity:.5;pointer-events:none;cursor:not-allowed;}
 
-/* ---------- Custom searchable dropdown ---------- */
-.dd{position:relative;width:100%;}
-.dd-trigger{display:flex;align-items:center;gap:.5rem;width:100%;font-family:inherit;font-size:1rem;font-weight:600;
-  color:var(--color-ink);background:var(--color-paper);border:1.5px solid var(--color-line-strong);
-  border-radius:var(--radius-md);padding:.65rem .9rem;cursor:pointer;text-align:left;
-  transition:border-color .2s var(--ease-out);}
-.dd-trigger:hover{border-color:var(--color-accent);}
-.dd.open .dd-trigger{border-color:var(--color-accent);}
-.dd-trigger-label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.dd-caret{flex:0 0 auto;color:var(--color-accent);transition:transform .2s var(--ease-out);}
-.dd.open .dd-caret{transform:rotate(180deg);}
-.dd-panel{position:absolute;z-index:60;top:calc(100% + .35rem);left:0;width:min(360px,86vw);
+/* ---------- Top tabs (3-tab layout) ---------- */
+.toptabs{display:flex;gap:.4rem;background:var(--color-surface);border:1px solid var(--color-line);
+  border-radius:999px;box-shadow:var(--shadow-card);padding:.35rem;margin-bottom:1.1rem;
+  width:100%;max-width:520px;margin-left:auto;margin-right:auto;}
+.toptabs button{flex:1 1 0;font-family:inherit;font-size:.95rem;font-weight:700;color:var(--color-ink-soft);
+  background:transparent;border:none;border-radius:999px;padding:.6rem .4rem;cursor:pointer;
+  transition:all .2s var(--ease-out);white-space:nowrap;}
+.toptabs button.active{background:var(--color-accent);color:#fff;box-shadow:0 2px 8px rgba(53,150,88,.3);}
+
+/* ---------- Zero-shake panel host (grid stacking) ---------- */
+.panel-host{display:grid;align-items:start;}
+.panel{grid-area:1/1;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease;}
+.panel.show{opacity:1;visibility:visible;pointer-events:auto;}
+
+/* ---------- Library panels (public / mine) ---------- */
+.lib{background:var(--color-surface);border:1px solid var(--color-line);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-card);padding:clamp(1rem,3vw,1.6rem);}
+.lib-head{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin-bottom:.8rem;}
+.lib-title{font-size:1.15rem;font-weight:800;margin:0;}
+.lib-head .btn{margin-left:auto;}
+.lib-note{background:var(--color-accent-soft);color:var(--color-accent-strong);font-size:.82rem;line-height:1.55;
+  border-radius:var(--radius-md);padding:.55rem .8rem;margin-bottom:.8rem;}
+.lib-search{width:100%;font-family:inherit;font-size:.95rem;color:var(--color-ink);background:var(--color-paper);
+  border:1.5px solid var(--color-line-strong);border-radius:var(--radius-md);padding:.6rem .8rem;margin-bottom:.9rem;}
+.lib-search:focus{outline:none;border-color:var(--color-accent);}
+.lib-hint{padding:1.4rem .6rem;font-size:.92rem;color:var(--color-ink-dim);text-align:center;line-height:1.7;}
+
+.grp{margin-bottom:.5rem;border:1px solid var(--color-line);border-radius:var(--radius-md);overflow:hidden;}
+.grp-head{display:flex;align-items:center;gap:.5rem;width:100%;font-family:inherit;font-size:.84rem;
+  font-weight:800;letter-spacing:.04em;color:var(--color-ink);background:var(--color-paper);
+  border:none;padding:.65rem .8rem;cursor:pointer;text-align:left;transition:background .15s var(--ease-out);}
+.grp-head:hover{background:var(--color-accent-soft);}
+.grp-arrow{display:inline-block;transition:transform .18s var(--ease-out);font-size:.78rem;color:var(--color-accent);}
+.grp.collapsed .grp-arrow{transform:rotate(-90deg);}
+.grp-count{margin-left:auto;font-weight:700;color:var(--color-ink-dim);font-size:.8rem;}
+.grp.collapsed .grp-items{display:none;}
+.grp-items{padding:.3rem;display:flex;flex-direction:column;gap:.3rem;}
+
+.litem{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;
   background:var(--color-surface);border:1px solid var(--color-line);border-radius:var(--radius-md);
-  box-shadow:var(--shadow-modal);padding:.55rem;display:flex;flex-direction:column;max-height:min(60vh,420px);}
-.dd-panel[hidden]{display:none;}
-.dd-search-wrap{flex:0 0 auto;margin-bottom:.45rem;}
-.dd-search{width:100%;font-family:inherit;font-size:.92rem;color:var(--color-ink);background:var(--color-paper);
-  border:1.5px solid var(--color-line-strong);border-radius:var(--radius-sm);padding:.5rem .7rem;}
-.dd-search:focus{outline:none;border-color:var(--color-accent);}
-.dd-list{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;}
-.dd-group{margin-bottom:.2rem;}
-.dd-group-head{display:flex;align-items:center;gap:.4rem;width:100%;font-family:inherit;font-size:.72rem;
-  font-weight:800;letter-spacing:.06em;color:var(--color-ink-dim);text-transform:uppercase;background:transparent;
-  border:none;padding:.4rem .5rem;cursor:pointer;border-radius:var(--radius-sm);text-align:left;}
-.dd-group-head:hover{background:var(--color-paper);}
-.dd-group-arrow{display:inline-block;transition:transform .18s var(--ease-out);font-size:.7rem;color:var(--color-accent);}
-.dd-group.collapsed .dd-group-arrow{transform:rotate(-90deg);}
-.dd-group-count{margin-left:auto;font-weight:700;color:var(--color-ink-dim);}
-.dd-group.collapsed .dd-group-items{display:none;}
-.dd-item{display:flex;align-items:center;gap:.5rem;width:100%;font-family:inherit;font-size:.95rem;font-weight:600;
-  color:var(--color-ink);background:transparent;border:none;border-radius:var(--radius-sm);padding:.5rem .6rem;
-  cursor:pointer;text-align:left;transition:background .15s var(--ease-out);}
-.dd-item:hover,.dd-item.active{background:var(--color-accent-soft);}
-.dd-item.selected{color:var(--color-accent-strong);}
-.dd-item.selected:before{content:'✓';color:var(--color-accent);font-weight:800;}
-.dd-item-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.dd-item-del{flex:0 0 auto;font-size:.78rem;font-weight:700;color:var(--color-ink-dim);background:transparent;
-  border:1px solid var(--color-line-strong);border-radius:.5rem;padding:.12rem .4rem;cursor:pointer;}
-.dd-item-del:hover{color:#c0392b;border-color:#c0392b;}
-.dd-empty{padding:.8rem .6rem;font-size:.85rem;color:var(--color-ink-dim);text-align:center;}
+  padding:.55rem .7rem;}
+.litem.selected{border-color:var(--color-accent);background:var(--color-accent-soft);}
+.litem-main{flex:1 1 180px;min-width:0;display:flex;flex-direction:column;gap:.15rem;}
+.litem-title{font-size:.98rem;font-weight:700;color:var(--color-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.litem-prompt{font-size:.78rem;color:var(--color-ink-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.litem-acts{flex:0 0 auto;display:flex;gap:.35rem;flex-wrap:wrap;}
+.litem-acts .btn{font-size:.8rem;padding:.38rem .7rem;}
+.litem-acts .btn.tiny{font-size:.76rem;padding:.32rem .55rem;}
+.lib-empty{padding:1rem .6rem;font-size:.88rem;color:var(--color-ink-dim);text-align:center;}
 
 /* ---------- 作文考题 block ---------- */
 .art-del{margin-left:.6rem;font-size:.78rem;padding:.3rem .6rem;}
@@ -251,26 +260,41 @@ body.noseg .en .en-line:not(:last-child):after{content:' ';white-space:pre;}
 </head>
 <body class="mode-literal">
 <div class="wrap">
-  <div class="toolbar">
-    <div class="field">
-      <span class="lbl">选择文章</span>
-      <div class="dd" id="essayDD">
-        <button type="button" class="dd-trigger" id="essayTrigger" aria-haspopup="listbox" aria-expanded="false">
-          <span class="dd-trigger-label" id="essayTriggerLabel">请选择文章</span>
-          <svg class="dd-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
-        </button>
-        <div class="dd-panel" id="essayPanel" hidden>
-          <div class="dd-search-wrap">
-            <input type="text" class="dd-search" id="essaySearch" placeholder="搜索标题…" autocomplete="off">
-          </div>
-          <div class="dd-list" id="essayList" role="listbox"></div>
+  <div class="toptabs" id="topTabs" role="tablist">
+    <button type="button" data-tab="public" role="tab">公共资源</button>
+    <button type="button" data-tab="mine" role="tab">我的作文</button>
+    <button type="button" data-tab="study" class="active" role="tab">当前学习</button>
+  </div>
+
+  <div class="panel-host">
+    <!-- ===== 公共资源 ===== -->
+    <section class="panel" id="panelPublic">
+      <div class="lib">
+        <div class="lib-head">
+          <h2 class="lib-title">公共资源</h2>
+          <button type="button" class="btn" id="btnUploadPublic">文章上传</button>
         </div>
+        <p class="lib-note">公共资源的作文不能直接修改；想改成自己的版本，请先「转存到我的作文」再编辑，不影响公共资源。</p>
+        <input type="text" class="lib-search" id="pubSearch" placeholder="搜索标题或考题…" autocomplete="off">
+        <div id="pubList"></div>
       </div>
-    </div>
-    <div class="ctrl-group">
-      <span class="lbl">作文管理</span>
-      <button type="button" class="btn" id="btnOpenUpload">文章上传</button>
-    </div>
+    </section>
+
+    <!-- ===== 我的作文 ===== -->
+    <section class="panel" id="panelMine">
+      <div class="lib">
+        <div class="lib-head">
+          <h2 class="lib-title">我的作文</h2>
+          <button type="button" class="btn" id="btnNewMine">+ 新建</button>
+        </div>
+        <input type="text" class="lib-search" id="mineSearch" placeholder="搜索标题或考题…" autocomplete="off">
+        <div id="mineList"></div>
+      </div>
+    </section>
+
+    <!-- ===== 当前学习 ===== -->
+    <section class="panel show" id="panelStudy">
+  <div class="toolbar">
     <div class="ctrl-group">
       <span class="lbl">翻译模式</span>
       <div class="tabs" id="modeTabs" style="margin:0;">
@@ -335,6 +359,8 @@ body.noseg .en .en-line:not(:last-child):after{content:' ';white-space:pre;}
     </div>
     <div id="sentences"></div>
   </main>
+    </section>
+  </div>
 </div>
 
 <!-- ===== 上传作文 弹窗 ===== -->
@@ -351,7 +377,7 @@ body.noseg .en .en-line:not(:last-child):after{content:' ';white-space:pre;}
           <span class="m-counter" id="mTitleCount">0/40</span>
         </div>
         <input type="text" class="m-input" id="mTitle" maxlength="40" placeholder="给这篇作文起个标题">
-        <span class="m-help">将显示在下拉选项里</span>
+        <span class="m-help">将显示在列表里</span>
       </div>
       <div class="m-field">
         <label class="m-label" for="mPrompt">作文考题</label>
@@ -401,27 +427,36 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   let loopMode='one';
   let speed=1, hlOn=true;
 
-  // ---- custom-upload state ----
+  // ---- library / auth state ----
   let authToken='';            // '' = not logged in
   let apiBase='';              // set from parent via postMessage
   const LEVELS=['小学','初中','高中','大学'];
-  let items=[];                // unified dropdown list (built-in + remote)
-  let remoteItems=[];          // from GET /articles (declared early to avoid TDZ on buildItems())
-  let selectedKey=null;        // currently-selected item key
+  let items=[];                // unified list (built-in + public remote) for keyboard nav + study lookup
+  let publicItems=[];          // from GET /articles (all public)
+  let myItems=[];              // from GET /my (personal copies)
+  let selectedKey=null;        // currently-studied item key
   const LAST_VIEW_KEY='composition_last_view';
+  // collapsed group state, separate per panel
+  const collapsedPub={}, collapsedMine={};
 
-  // dropdown DOM
-  const essayDD=document.getElementById('essayDD');
-  const essayTrigger=document.getElementById('essayTrigger');
-  const essayTriggerLabel=document.getElementById('essayTriggerLabel');
-  const essayPanel=document.getElementById('essayPanel');
-  const essaySearch=document.getElementById('essaySearch');
-  const essayList=document.getElementById('essayList');
-  const collapsed={};          // level -> bool (collapsed groups)
+  // tabs + panels
+  const topTabs=document.getElementById('topTabs');
+  const panels={
+    public:document.getElementById('panelPublic'),
+    mine:document.getElementById('panelMine'),
+    study:document.getElementById('panelStudy')
+  };
+  // library DOM
+  const pubSearch=document.getElementById('pubSearch');
+  const pubList=document.getElementById('pubList');
+  const mineSearch=document.getElementById('mineSearch');
+  const mineList=document.getElementById('mineList');
+  const btnUploadPublic=document.getElementById('btnUploadPublic');
+  const btnNewMine=document.getElementById('btnNewMine');
 
-  // upload-modal DOM
-  const btnOpenUpload=document.getElementById('btnOpenUpload');
+  // upload/edit-modal DOM
   const upModal=document.getElementById('upModal');
+  const upModalTitle=document.getElementById('upModalTitle');
   const mClose=document.getElementById('mClose');
   const mTitle=document.getElementById('mTitle');
   const mTitleCount=document.getElementById('mTitleCount');
@@ -431,10 +466,13 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   const mErr=document.getElementById('mErr');
   const mSubmit=document.getElementById('mSubmit');
   const toastEl=document.getElementById('toast');
+  let modalMode='public';      // 'public' | 'mineNew' | 'mineEdit'
+  let editingMyId=null;        // when modalMode==='mineEdit'
 
   ESSAYS.sort((a,b)=>a.id-b.id);
   buildItems();
-  rebuildDropdown();
+  renderPublicList();
+  renderMineList();
 
   const NO_SPACE_BEFORE=/^[,.;:!?%)\]}…”’]/;
   function isWordTok(t){ return t.m!==null && t.m!==undefined && /[A-Za-z0-9]/.test(t.w||''); }
@@ -577,131 +615,209 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   const MAX_TEXT_CHARS=3000;
   function normLevel(lv){ return LEVELS.indexOf(lv)>=0?lv:'高中'; }
   function buildItems(){
-    const builtin=ESSAYS.map(e=>({key:'b'+e.id,id:e.id,title:e.title||'',prompt:'',level:'高中',essay:e,builtin:true,isMine:false}));
-    items=builtin.concat(remoteItems);
+    const builtin=ESSAYS.map(e=>({key:'b'+e.id,id:e.id,title:e.title||'',prompt:'',level:'高中',essay:e,builtin:true,source:'builtin',isMine:false}));
+    // unified lookup table for study + keyboard nav: built-in + public + mine
+    items=builtin.concat(publicItems).concat(myItems);
   }
   function getItem(key){ return items.find(it=>it.key===key)||null; }
 
+  // study a chosen item: render into 当前学习 + remember last view
   function selectItem(key,doRender){
     const it=getItem(key);
-    if(!it){ selectedKey=null; essayTriggerLabel.textContent='请选择文章'; return; }
+    if(!it){ selectedKey=null; return; }
     selectedKey=key;
     try{ localStorage.setItem(LAST_VIEW_KEY, key); }catch(_){}
-    essayTriggerLabel.textContent=it.level+' · '+(it.title||'未命名');
     if(doRender!==false) render(it.essay||{}, it.prompt||'');
     updateArtDelete();
-    // refresh selected highlight without rebuilding fully
-    Array.prototype.forEach.call(essayList.querySelectorAll('.dd-item'),el=>{
-      el.classList.toggle('selected',el.dataset.key===key);
+    markSelected();
+  }
+  // study item + switch to 当前学习 tab (used by 「学习」 buttons)
+  function studyItem(key){ selectItem(key); switchTab('study'); }
+  function markSelected(){
+    document.querySelectorAll('.litem').forEach(el=>{
+      el.classList.toggle('selected',el.dataset.key===selectedKey);
     });
   }
 
   function updateArtDelete(){
+    // 当前学习 inline delete only applies to a studied 我的作文 copy
     const it=getItem(selectedKey);
-    const canDel=!!(it && it.isMine===true && !it.builtin && authToken && apiBase);
+    const canDel=!!(it && it.source==='mine' && authToken && apiBase);
     artDel.hidden=!canDel;
   }
 
-  function rebuildDropdown(){
-    const q=(essaySearch.value||'').trim().toLowerCase();
-    essayList.innerHTML='';
+  // ---------- tabs ----------
+  let curTab='study';
+  function switchTab(tab){
+    curTab=tab;
+    Array.prototype.forEach.call(topTabs.querySelectorAll('button'),b=>{
+      b.classList.toggle('active',b.dataset.tab===tab);
+    });
+    Object.keys(panels).forEach(k=>{ panels[k].classList.toggle('show',k===tab); });
+  }
+  topTabs.addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b)return;
+    switchTab(b.dataset.tab);
+  });
+
+  // ---------- collapsible grouped list (shared component) ----------
+  // renders `list` into `host`, grouped by level, filtered by `q`, using `collapsedMap` for per-group state.
+  // `actionsFor(it)` returns array of {label, cls, fn} buttons. `loginHint` shown when provided.
+  function renderGroupedList(host,list,q,collapsedMap,actionsFor){
+    host.innerHTML='';
+    const ql=(q||'').trim().toLowerCase();
     const byLevel={}; LEVELS.forEach(l=>byLevel[l]=[]);
-    items.forEach(it=>{ byLevel[normLevel(it.level)].push(it); });
+    list.forEach(it=>{ byLevel[normLevel(it.level)].push(it); });
     let anyShown=false;
     LEVELS.forEach(level=>{
-      let list=byLevel[level];
-      if(q){
-        list=list.filter(it=>(it.title||'').toLowerCase().includes(q) || (it.prompt||'').toLowerCase().includes(q));
-        if(!list.length) return; // hide empty groups while searching
+      let arr=byLevel[level];
+      if(ql){
+        arr=arr.filter(it=>(it.title||'').toLowerCase().includes(ql) || (it.prompt||'').toLowerCase().includes(ql));
+        if(!arr.length) return;
       }
+      if(!arr.length) return;
       anyShown=true;
-      const group=document.createElement('div');
-      group.className='dd-group';
-      const isCollapsed=!q && collapsed[level]===true;
+      const group=document.createElement('div'); group.className='grp';
+      const isCollapsed=!ql && collapsedMap[level]===true;
       if(isCollapsed) group.classList.add('collapsed');
       const head=document.createElement('button');
-      head.type='button'; head.className='dd-group-head';
-      const arrow=document.createElement('span'); arrow.className='dd-group-arrow'; arrow.textContent='▾';
+      head.type='button'; head.className='grp-head';
+      const arrow=document.createElement('span'); arrow.className='grp-arrow'; arrow.textContent='▾';
       const name=document.createElement('span'); name.textContent=level;
-      const count=document.createElement('span'); count.className='dd-group-count'; count.textContent=String(list.length);
+      const count=document.createElement('span'); count.className='grp-count'; count.textContent=String(arr.length);
       head.appendChild(arrow); head.appendChild(name); head.appendChild(count);
-      head.addEventListener('click',()=>{ collapsed[level]=!collapsed[level]; rebuildDropdown(); });
+      // toggle ONLY this group; flip the class in place, no full host rebuild, no list collapse
+      head.addEventListener('click',()=>{
+        const now=!group.classList.contains('collapsed');
+        collapsedMap[level]=now;
+        group.classList.toggle('collapsed',now);
+      });
       group.appendChild(head);
-      const itemsWrap=document.createElement('div'); itemsWrap.className='dd-group-items';
-      list.forEach(it=>{ itemsWrap.appendChild(buildDDItem(it)); });
+      const itemsWrap=document.createElement('div'); itemsWrap.className='grp-items';
+      arr.forEach(it=>{ itemsWrap.appendChild(buildLItem(it,actionsFor)); });
       group.appendChild(itemsWrap);
-      essayList.appendChild(group);
+      host.appendChild(group);
     });
     if(!anyShown){
-      const empty=document.createElement('div'); empty.className='dd-empty';
-      empty.textContent=q?'没有匹配的文章':'暂无文章';
-      essayList.appendChild(empty);
+      const empty=document.createElement('div'); empty.className='lib-empty';
+      empty.textContent=ql?'没有匹配的作文':'暂无作文';
+      host.appendChild(empty);
     }
   }
-  function buildDDItem(it){
-    const btn=document.createElement('button');
-    btn.type='button'; btn.className='dd-item'; btn.dataset.key=it.key;
-    if(it.key===selectedKey) btn.classList.add('selected');
-    btn.setAttribute('role','option');
-    const title=document.createElement('span'); title.className='dd-item-title';
-    title.textContent=it.title||'未命名';
-    btn.appendChild(title);
-    if(it.isMine===true && !it.builtin){
-      const del=document.createElement('span');
-      del.className='dd-item-del'; del.textContent='删除'; del.setAttribute('role','button');
-      del.addEventListener('click',ev=>{ ev.stopPropagation(); deleteItem(it.key); });
-      btn.appendChild(del);
+  function buildLItem(it,actionsFor){
+    const row=document.createElement('div'); row.className='litem'; row.dataset.key=it.key;
+    if(it.key===selectedKey) row.classList.add('selected');
+    const main=document.createElement('div'); main.className='litem-main';
+    const t=document.createElement('div'); t.className='litem-title'; t.textContent=it.title||'未命名';
+    main.appendChild(t);
+    if(it.prompt){ const pr=document.createElement('div'); pr.className='litem-prompt'; pr.textContent=it.prompt; main.appendChild(pr); }
+    row.appendChild(main);
+    const acts=document.createElement('div'); acts.className='litem-acts';
+    (actionsFor(it)||[]).forEach(a=>{
+      const b=document.createElement('button'); b.type='button';
+      b.className='btn '+(a.cls||''); b.textContent=a.label;
+      b.addEventListener('click',ev=>{ ev.stopPropagation(); a.fn(); });
+      acts.appendChild(b);
+    });
+    row.appendChild(acts);
+    return row;
+  }
+
+  // ---------- 公共资源 list ----------
+  function renderPublicList(){
+    if(!pubList) return;
+    if(!authToken){
+      // built-in only (study-only); remind about remote
+      renderGroupedList(pubList,items.filter(it=>it.builtin),pubSearch.value,collapsedPub,it=>([
+        {label:'学习',cls:'ghost tiny',fn:()=>studyItem(it.key)}
+      ]));
+      const hint=document.createElement('div'); hint.className='lib-hint';
+      hint.textContent='登录后查看大家分享的作文';
+      pubList.appendChild(hint);
+      return;
     }
-    btn.addEventListener('click',()=>{ selectItem(it.key); closePanel(); });
-    return btn;
+    const list=items.filter(it=>it.source==='public' || it.builtin);
+    renderGroupedList(pubList,list,pubSearch.value,collapsedPub,it=>{
+      if(it.builtin) return [{label:'学习',cls:'ghost tiny',fn:()=>studyItem(it.key)}];
+      const acts=[
+        {label:'学习',cls:'ghost tiny',fn:()=>studyItem(it.key)},
+        {label:'转存到我的作文',cls:'tiny',fn:()=>resaveToMine(it.id)}
+      ];
+      if(it.isMine===true) acts.push({label:'删除',cls:'off tiny',fn:()=>deletePublic(it)});
+      return acts;
+    });
+  }
+  pubSearch.addEventListener('input',renderPublicList);
+
+  // ---------- 我的作文 list ----------
+  function renderMineList(){
+    if(!mineList) return;
+    if(!authToken){
+      mineList.innerHTML='';
+      const hint=document.createElement('div'); hint.className='lib-hint';
+      hint.textContent='登录后使用我的作文';
+      mineList.appendChild(hint);
+      return;
+    }
+    renderGroupedList(mineList,myItems,mineSearch.value,collapsedMine,it=>([
+      {label:'学习',cls:'ghost tiny',fn:()=>studyItem(it.key)},
+      {label:'编辑',cls:'tiny',fn:()=>openModalEdit(it)},
+      {label:'删除',cls:'off tiny',fn:()=>deleteMine(it)}
+    ]));
+  }
+  mineSearch.addEventListener('input',renderMineList);
+
+  // ---------- 转存 (re-save public → mine) ----------
+  async function resaveToMine(sourceId){
+    if(!authToken||!apiBase){ showToast('请先登录后使用'); return; }
+    try{
+      const r=await fetch(apiBase+'/my',{method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+        body:JSON.stringify({sourceId})});
+      if(!r.ok){ showToast(r.status===401?'请先登录':'转存失败'); return; }
+      await loadMine();
+      showToast('已转存到我的作文');
+    }catch(_){ showToast('转存失败'); }
   }
 
-  // ---------- panel open/close ----------
-  function openPanel(){
-    essayDD.classList.add('open');
-    essayPanel.hidden=false;
-    essayTrigger.setAttribute('aria-expanded','true');
-    rebuildDropdown();
-    setTimeout(()=>{ try{ essaySearch.focus(); }catch(_){} },0);
-  }
-  function closePanel(){
-    essayDD.classList.remove('open');
-    essayPanel.hidden=true;
-    essayTrigger.setAttribute('aria-expanded','false');
-  }
-  function togglePanel(){ essayPanel.hidden?openPanel():closePanel(); }
-  essayTrigger.addEventListener('click',e=>{ e.stopPropagation(); togglePanel(); });
-  essaySearch.addEventListener('input',rebuildDropdown);
-  essaySearch.addEventListener('keydown',e=>{
-    if(e.key==='Enter'){
-      const first=essayList.querySelector('.dd-item');
-      if(first){ selectItem(first.dataset.key); closePanel(); }
-    } else if(e.key==='Escape'){ closePanel(); }
-  });
-  document.addEventListener('click',e=>{ if(!essayDD.contains(e.target)) closePanel(); });
-
-  // ---------- delete (custom, mine only) ----------
-  async function deleteItem(key){
-    const it=getItem(key);
-    if(!it||it.builtin||it.isMine!==true||!authToken||!apiBase) return;
-    if(!confirm('确定删除这篇作文？此操作不可恢复。')) return;
+  // ---------- delete public (owner of own public article) ----------
+  async function deletePublic(it){
+    if(!authToken||!apiBase){ showToast('请先登录后使用'); return; }
+    if(!confirm('确定删除这篇公共作文？此操作不可恢复。')) return;
     try{
       const r=await fetch(apiBase+'/articles/'+it.id,{method:'DELETE',headers:{'Authorization':'Bearer '+authToken}});
       if(!r.ok){ showToast(r.status===404?'无权删除':'删除失败'); return; }
-      remoteItems=remoteItems.filter(x=>x.key!==key);
+      publicItems=publicItems.filter(x=>x.key!==it.key);
       buildItems();
-      if(selectedKey===key){ selectedKey=null; selectFirst(); }
-      rebuildDropdown(); updateArtDelete();
+      if(selectedKey===it.key){ selectedKey=null; selectLastOrFirst(); }
+      renderPublicList(); updateArtDelete(); markSelected();
       showToast('已删除');
     }catch(_){ showToast('删除失败'); }
   }
-  artDel.addEventListener('click',()=>{ if(selectedKey) deleteItem(selectedKey); });
+
+  // ---------- delete mine ----------
+  async function deleteMine(it){
+    if(!authToken||!apiBase){ showToast('请先登录后使用'); return; }
+    if(!confirm('确定删除这篇作文？此操作不可恢复。')) return;
+    try{
+      const r=await fetch(apiBase+'/my/'+it.id,{method:'DELETE',headers:{'Authorization':'Bearer '+authToken}});
+      if(!r.ok){ showToast('删除失败'); return; }
+      myItems=myItems.filter(x=>x.key!==it.key);
+      buildItems();
+      if(selectedKey===it.key){ selectedKey=null; selectLastOrFirst(); }
+      renderMineList(); updateArtDelete(); markSelected();
+      showToast('已删除');
+    }catch(_){ showToast('删除失败'); }
+  }
+  artDel.addEventListener('click',()=>{
+    const it=getItem(selectedKey);
+    if(it && it.source==='mine') deleteMine(it);
+  });
 
   function selectFirst(){
     if(items.length){ selectItem(items[0].key); }
-    else { render({},''); essayTriggerLabel.textContent='请选择文章'; }
+    else { render({},''); }
   }
-
   function selectLastOrFirst(){
     let last=null;
     try{ last=localStorage.getItem(LAST_VIEW_KEY); }catch(_){}
@@ -709,19 +825,51 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
     selectFirst();
   }
 
-  // ---------- upload modal ----------
-  function openModal(){
-    if(!authToken){ showToast('请先登录后使用'); return; }
-    mTitle.value=''; mPrompt.value=''; mText.value=''; mLevel.value='';
-    mErr.textContent=''; mTitleCount.textContent='0/40';
+  // ---------- upload / edit modal ----------
+  const MODAL_TITLES={ public:'上传到公共资源', mineNew:'新建我的作文', mineEdit:'编辑我的作文' };
+  function fillModal(it){
+    mTitle.value=it?(it.title||''):'';
+    mPrompt.value=it?(it.prompt||''):'';
+    mText.value=it?(it.text||''):'';
+    mLevel.value=it?(it.level||''):'';
+    mErr.textContent=''; mTitleCount.textContent=(mTitle.value.length)+'/40';
     mSubmit.disabled=false; mSubmit.textContent='提交';
+  }
+  function openModalCommon(){
+    upModalTitle.textContent=MODAL_TITLES[modalMode]||'作文';
     upModal.hidden=false;
     setTimeout(()=>{ try{ mTitle.focus(); }catch(_){} },0);
   }
+  function openModalPublic(){
+    if(!authToken){ showToast('请先登录后使用'); return; }
+    modalMode='public'; editingMyId=null; fillModal(null); openModalCommon();
+  }
+  function openModalMineNew(){
+    if(!authToken){ showToast('请先登录后使用'); return; }
+    modalMode='mineNew'; editingMyId=null; fillModal(null); openModalCommon();
+  }
+  function openModalEdit(it){
+    if(!authToken){ showToast('请先登录后使用'); return; }
+    modalMode='mineEdit'; editingMyId=it.id;
+    fillModal({title:it.title,prompt:it.prompt,text:essayToText(it.essay),level:it.level});
+    openModalCommon();
+  }
+  // reconstruct editable plain text from a stored essay (best effort)
+  function essayToText(essay){
+    const ss=essay&&Array.isArray(essay.sentences)?essay.sentences:[];
+    return ss.map(s=>detok(Array.isArray(s.tokens)?s.tokens:[],true)).join(' ');
+  }
   function closeModal(){ upModal.hidden=true; }
-  btnOpenUpload.addEventListener('click',openModal);
+  btnUploadPublic.addEventListener('click',openModalPublic);
+  btnNewMine.addEventListener('click',openModalMineNew);
   mClose.addEventListener('click',closeModal);
-  upModal.addEventListener('click',e=>{ if(e.target===upModal) closeModal(); });
+  // drag-safe close: only close when BOTH mousedown AND click happened on the overlay itself
+  let upMouseDownTarget=null;
+  upModal.addEventListener('mousedown',e=>{ upMouseDownTarget=e.target; });
+  upModal.addEventListener('click',e=>{
+    if(e.target===upModal && upMouseDownTarget===upModal) closeModal();
+    upMouseDownTarget=null;
+  });
   mTitle.addEventListener('input',()=>{ mTitleCount.textContent=(mTitle.value.length)+'/40'; });
 
   mSubmit.addEventListener('click',async()=>{
@@ -732,32 +880,38 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
     if(!authToken){ mErr.textContent='请先登录'; return; }
     if(!title){ mErr.textContent='请填写标题'; return; }
     if(!level){ mErr.textContent='请选择学段'; return; }
-    if(!text||!text.trim()){ mErr.textContent='请粘贴作文'; return; }
-    if(text.length>MAX_TEXT_CHARS) text=text.slice(0,MAX_TEXT_CHARS);
+    if(modalMode!=='mineEdit'){
+      if(!text||!text.trim()){ mErr.textContent='请粘贴作文'; return; }
+    }
+    if(text && text.length>MAX_TEXT_CHARS) text=text.slice(0,MAX_TEXT_CHARS);
     mErr.textContent='';
     mSubmit.disabled=true; mSubmit.textContent='提交中…';
     try{
-      const r=await fetch(apiBase+'/articles',{method:'POST',
+      let url,method,body;
+      if(modalMode==='public'){
+        url=apiBase+'/articles'; method='POST';
+        body={title,prompt:prompt||undefined,text,level};
+      } else if(modalMode==='mineNew'){
+        url=apiBase+'/my'; method='POST';
+        body={title,prompt:prompt||undefined,text,level};
+      } else { // mineEdit
+        url=apiBase+'/my/'+editingMyId; method='PUT';
+        body={title,prompt:prompt||undefined,level};
+        if(text && text.trim()) body.text=text;
+      }
+      const r=await fetch(url,{method,
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
-        body:JSON.stringify({title,prompt:prompt||undefined,text,level})});
+        body:JSON.stringify(body)});
       if(!r.ok){
         mErr.textContent=r.status===401?'请先登录':r.status===429?'太频繁稍后再试':r.status===400?'请检查填写内容':'失败';
         return;
       }
-      const data=await r.json();
-      const article=data.article||{};
-      const it={
-        key:'c'+article.id, id:article.id,
-        title:article.title||title, prompt:article.prompt||prompt||'',
-        level:normLevel(article.level||level), essay:article.essay||{},
-        builtin:false, isMine:true
-      };
-      remoteItems=remoteItems.filter(x=>x.key!==it.key); remoteItems.push(it);
-      buildItems(); rebuildDropdown();
-      selectItem(it.key);
+      const data=await r.json().catch(()=>({}));
       closeModal();
-      if(data.truncated) showToast('作文过长已截断到3000字');
-      else showToast('上传成功');
+      if(modalMode==='public'){ await loadPublic(); }
+      else { await loadMine(); }
+      if(data && data.truncated) showToast('作文过长已截断到3000字');
+      else showToast(modalMode==='mineEdit'?'已保存':modalMode==='public'?'上传成功':'已创建');
     }catch(_){ mErr.textContent='失败'; }
     finally{ mSubmit.disabled=false; mSubmit.textContent='提交'; }
   });
@@ -765,35 +919,54 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   // ---------- auth state ----------
   function applyAuthState(){
     const loggedIn=!!authToken;
-    btnOpenUpload.disabled=false;
+    btnUploadPublic.disabled=!loggedIn;
+    btnNewMine.disabled=!loggedIn;
     if(!loggedIn){
-      // drop remote data on logout; keep only built-in
-      remoteItems=[];
+      publicItems=[]; myItems=[];
       buildItems();
-      if(!getItem(selectedKey)) selectFirst();
-      rebuildDropdown();
+      if(!getItem(selectedKey)) selectLastOrFirst();
     }
+    renderPublicList(); renderMineList();
     updateArtDelete();
   }
 
   // ---------- load lists ----------
-  async function loadArticles(){
+  async function loadPublic(){
     if(!authToken||!apiBase) return;
     try{
       const r=await fetch(apiBase+'/articles',{headers:{'Authorization':'Bearer '+authToken}});
       if(!r.ok) return;
       const data=await r.json();
-      remoteItems=(Array.isArray(data.articles)?data.articles:[]).map(a=>({
-        key:'c'+a.id, id:a.id, title:a.title||'', prompt:a.prompt||'',
-        level:normLevel(a.level), essay:a.essay||{}, builtin:false, isMine:a.isMine===true
+      publicItems=(Array.isArray(data.articles)?data.articles:[]).map(a=>({
+        key:'p'+a.id, id:a.id, title:a.title||'', prompt:a.prompt||'',
+        level:normLevel(a.level), essay:a.essay||{}, builtin:false, source:'public', isMine:a.isMine===true
       }));
       buildItems();
-      let lastKey=null;
-      try{ lastKey=localStorage.getItem(LAST_VIEW_KEY); }catch(_){}
-      if(lastKey && getItem(lastKey) && selectedKey!==lastKey){ selectItem(lastKey); }
-      else if(!getItem(selectedKey)){ selectLastOrFirst(); }
-      rebuildDropdown(); updateArtDelete();
+      renderPublicList();
+      restoreLastView();
     }catch(_){}
+  }
+  async function loadMine(){
+    if(!authToken||!apiBase) return;
+    try{
+      const r=await fetch(apiBase+'/my',{headers:{'Authorization':'Bearer '+authToken}});
+      if(!r.ok) return;
+      const data=await r.json();
+      myItems=(Array.isArray(data.articles)?data.articles:[]).map(a=>({
+        key:'m'+a.id, id:a.id, sourceId:a.sourceId, title:a.title||'', prompt:a.prompt||'',
+        level:normLevel(a.level), essay:a.essay||{}, builtin:false, source:'mine', isMine:true
+      }));
+      buildItems();
+      renderMineList();
+      restoreLastView();
+    }catch(_){}
+  }
+  function restoreLastView(){
+    let lastKey=null;
+    try{ lastKey=localStorage.getItem(LAST_VIEW_KEY); }catch(_){}
+    if(lastKey && getItem(lastKey) && selectedKey!==lastKey){ selectItem(lastKey,true); }
+    else if(!getItem(selectedKey)){ selectLastOrFirst(); }
+    updateArtDelete(); markSelected();
   }
 
   // ---------- parent config via postMessage ----------
@@ -801,7 +974,7 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
     const d=e&&e.data; if(!d||d.type!=='composition-config') return;
     authToken=d.token||''; apiBase=d.apiBase||'';
     applyAuthState();
-    if(authToken){ loadArticles(); }
+    if(authToken){ loadPublic(); loadMine(); }
   });
 
   document.getElementById('modeTabs').addEventListener('click',e=>{
@@ -1029,21 +1202,23 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   window.addEventListener('scroll',hidePop,{passive:true});
 
   document.addEventListener('keydown',e=>{
+    if(!upModal.hidden){ if(e.key==='Escape') closeModal(); return; }
     const ae=document.activeElement;
     if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.tagName==='SELECT'))return;
-    if(!upModal.hidden) return;
+    if(curTab!=='study') return; // arrow nav only while studying
     if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
       if(!items.length) return;
       let i=items.findIndex(it=>it.key===selectedKey); if(i<0)i=0;
       if(e.key==='ArrowRight')i=(i+1)%items.length;
       else i=(i-1+items.length)%items.length;
       selectItem(items[i].key);
-    } else if(e.key==='Escape'){ closePanel(); if(!upModal.hidden) closeModal(); }
+    }
   });
 
   buildItems();
   applyAuthState();
   if(!getItem(selectedKey)) selectLastOrFirst();
+  switchTab('study');
   try{ window.parent.postMessage({type:'composition-ready'},'*'); }catch(_){}
 })();
 </script>
