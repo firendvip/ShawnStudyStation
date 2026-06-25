@@ -48,3 +48,20 @@
 - **每一处细微修改都要记**：哪怕只是改个文案、挪个位置、调个颜色，都作为该条目下的一行 `.cl-line`，归类为 `新增` / `优化` / `修复`。
 - **唯一例外——同一需求/同一 Bug 的延续**：如果本次只是对**上一次相同的需求或同一个 Bug**做继续调整（反复微调同一处），则**并入上一条目**、不新开版本（可在原条目补一行或修订原文案），避免为同一件事重复开版本。
 - 一次对话里有多项不同改动时，放在**同一条目**内的多行 `.cl-line`。
+
+## 新页面必须埋点（always on）
+
+每当**新增一个子菜单 / 新页面 / 新子应用**接入主站，都**必须对其埋点**，把访问数据上报到后台数据分析系统（管理员后台「数据分析」），与现有页面一致。具体：
+
+- 在新页面 `</body>` 前注入埋点加载器（带 `xss-track-loader` 标记，幂等），`data-app` 用该页**唯一英文标识**：
+
+  ```html
+  <!-- xss-track-loader --><script>(function(){try{var B=(location.protocol==='file:'||/^(localhost|127\.|192\.168\.|10\.|172\.)/.test(location.hostname))?'http://localhost:4000':'';var s=document.createElement('script');s.src=B+'/api/analytics/track.js';s.async=true;s.dataset.app='新页面标识';document.head.appendChild(s);}catch(e){}})();</script>
+  ```
+
+- 该 `data-app` 标识要在后台的 app→中文名映射里补上（`vendor/admin/index.html` 的映射 + 必要处），让后台能按中文名展示这个新功能的使用数据。
+- 若新页面是 SPA/多视图，关键视图切换调用 `window.xssTrack('view_change',{view:...})`；打开子应用调 `window.xssTrack('app_open',{view:...})`。
+- 埋点必须**全程容错**，任何采集报错都不得影响页面本身。
+- 接入前自检：打开新页面 → 后端 `analytics_events` 应有该 app 的 pageview 记录。
+
+（注：埋点 / 后台 / 数据统计本身的改动**不写入更新日志**——见上面的更新日志规则。）
