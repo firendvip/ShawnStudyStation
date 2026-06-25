@@ -406,6 +406,7 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   let apiBase='';              // set from parent via postMessage
   const LEVELS=['小学','初中','高中','大学'];
   let items=[];                // unified dropdown list (built-in + remote)
+  let remoteItems=[];          // from GET /articles (declared early to avoid TDZ on buildItems())
   let selectedKey=null;        // currently-selected item key
   const LAST_VIEW_KEY='composition_last_view';
 
@@ -574,7 +575,6 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
 
   // ---------- unified items + dropdown ----------
   const MAX_TEXT_CHARS=3000;
-  let remoteItems=[];          // from GET /articles
   function normLevel(lv){ return LEVELS.indexOf(lv)>=0?lv:'高中'; }
   function buildItems(){
     const builtin=ESSAYS.map(e=>({key:'b'+e.id,id:e.id,title:e.title||'',prompt:'',level:'高中',essay:e,builtin:true,isMine:false}));
