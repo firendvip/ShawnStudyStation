@@ -10,11 +10,36 @@
 
 const express = require('express');
 const rateLimit = require('express-rate-limit');
+const fs = require('fs');
+const path = require('path');
 
 const { query } = require('../db');
 const { httpError } = require('../middleware/errorHandler');
 
 const router = express.Router();
+
+// --- Tracker script (GET /api/analytics/track.js) ---
+// Self-contained IIFE served to the shell + every vendor page. Read once at
+// startup; falls back to a no-op stub if the file is missing so a page injection
+// never 404s. CORS is already permissive (origin:true) so cross-origin GET works
+// from file:// pages and the PinPin Next.js app on localhost:3000.
+const TRACKER_PATH = path.join(__dirname, '..', 'analytics', 'track.js');
+let TRACKER_JS = '/* xss tracker unavailable */';
+try {
+  TRACKER_JS = fs.readFileSync(TRACKER_PATH, 'utf8');
+} catch (err) {
+  // eslint-disable-next-line no-console
+  console.error('[analytics] failed to load tracker script:', err.message);
+}
+
+router.get('/track.js', (_req, res) => {
+  res.set('Content-Type', 'application/javascript; charset=utf-8');
+  res.set('Cache-Control', 'no-cache');
+  // Allow the script to be loaded cross-origin (file:// pages, PinPin on :3000).
+  // Overrides helmet's default Cross-Origin-Resource-Policy: same-origin.
+  res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.send(TRACKER_JS);
+});
 
 // --- Limits ---
 const ID_MAX = 64;

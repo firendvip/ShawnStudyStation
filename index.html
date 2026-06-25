@@ -1291,6 +1291,7 @@
 
     const VIEW_NAMES = { home: '', about: '联系我们', feedback: '建议提交', changelog: '更新日志', cuozi: '错字练习', phonics: '自然拼读', lottery: '转盘', koudaa: '小学心算', composition: '英语作文', wordcards: '单词速刷', retro: '每日复盘', diary: '日记', wordquiz: '单词小测' };
     function switchView(viewName) {
+      try { window.xssTrack && window.xssTrack('view_change', { view: viewName }); } catch (e) {}
       const lp = document.getElementById('logo-page');
       if (lp) lp.textContent = VIEW_NAMES[viewName] || '';
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -1300,6 +1301,7 @@
         const frame = target.querySelector('iframe[data-app]');
         if (frame && !frame.getAttribute('src')) {
           frame.setAttribute('src', CONFIG[frame.getAttribute('data-app')]);
+          try { window.xssTrack && window.xssTrack('app_open', { view: frame.getAttribute('data-app') }); } catch (e) {}
         }
       }
       // 跳转后静音所有非当前页面的子页面 iframe，停止其残留的音频/语音/视频播放
@@ -1833,5 +1835,6 @@
     /* Global ESC closes any open modal */
     document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeSettings(); closeChangePassword(); } });
   </script>
+<!-- xss-track-loader --><script>(function(){try{var B=(location.protocol==='file:'||/^(localhost|127\.|192\.168\.|10\.|172\.)/.test(location.hostname))?'http://localhost:4000':'';var s=document.createElement('script');s.src=B+'/api/analytics/track.js';s.async=true;s.dataset.app='shell';document.head.appendChild(s);}catch(e){}})();</script>
 </body>
 </html>
