@@ -18,6 +18,10 @@ const basePath = process.env.BASE_PATH || ''
 const nextConfig: NextConfig = {
   // 隐藏开发模式左下角的 Next.js「N」指示器
   devIndicators: false,
+  // 把构建时的 basePath 暴露给客户端代码(本地为空、容器为 /pinpin)。
+  // 客户端 lib/api.ts 据此给所有打到自身后端的请求加前缀,
+  // 否则云端 /api/... 会被解析成主站根路径 https://look3.cn/api/... 打到主站后端。
+  env: { NEXT_PUBLIC_BASE_PATH: basePath },
   // 子路径部署:为空时不启用,保持本地开发原样
   basePath: basePath || undefined,
   assetPrefix: basePath || undefined,

@@ -5,6 +5,14 @@ import type { EntryItem, PracticeDay, PdfReportItem, AppSettings, AuthUser } fro
  * 改为在本页 localStorage 持久化一个随机令牌,并随每次请求以 x-guest-token 头携带,
  * 保证录入(写)与列表(读)落在同一访客身份上。同源生产环境(/pinpin/)也兼容。
  */
+/**
+ * basePath 前缀:云端以 BASE_PATH=/pinpin 构建,客户端对自身后端的绝对路径请求
+ * (如 /api/...、/api/reports/...)必须前缀 /pinpin,否则会解析成主站根路径
+ * (https://look3.cn/api/...)打到主站后端而非 PinPin 自己的 /pinpin/api/...。
+ * 本地开发 BASE_PATH 为空 → BASE='' → BASE+path === path,行为不变。
+ */
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH || ''
+
 const GUEST_TOKEN_KEY = 'pinpin_guest_token'
 function guestToken(): string {
   if (typeof window === 'undefined') return ''
@@ -30,7 +38,8 @@ function apiFetch(input: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers ?? {})
   const t = guestToken()
   if (t) headers.set('x-guest-token', t)
-  return globalThis.fetch(input, { ...init, headers })
+  // 统一在此给自身后端路径加 basePath 前缀(input 仍传 /api/...)。
+  return globalThis.fetch(BASE + input, { ...init, headers })
 }
 
 interface ApiEnvelope<T> {
@@ -236,7 +245,8 @@ export function reportUrl(id: string): string {
   // 故把访客令牌放到查询参数 gt,让服务端据此识别同一访客,避免「Not found」。
   const t = guestToken()
   const q = t ? `?gt=${encodeURIComponent(t)}` : ''
-  return `/api/reports/${encodeURIComponent(id)}${q}`
+  // PDF 通过 <a>/window.open/iframe 直接访问,同样要带 basePath 前缀,否则会打到主站。
+  return `${BASE}/api/reports/${encodeURIComponent(id)}${q}`
 }
 
 export async function deleteReport(id: string): Promise<void> {
