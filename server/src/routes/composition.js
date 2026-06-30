@@ -44,6 +44,8 @@ const VALID_LEVELS = Object.freeze(['小学', '初中', '高中', '大学']);
 const VALID_BOOK_LEVELS = Object.freeze(['桥梁', '初章', '中章', '高章']);
 // Allowed content types.
 const VALID_CONTENT_TYPES = Object.freeze(['composition', 'book']);
+// 收藏合集（多篇范文打包成一条收藏）的最大篇数 — DoS guard.
+const MAX_COLLECTION_ITEMS = 200;
 
 // aiEnrich tuning.
 const AI_BATCH_SIZE = 10; // sentences per model call
@@ -316,10 +318,40 @@ function rowToItem(row, currentUserId) {
 }
 
 /**
+ * Pull the `items` array out of a collection row's parsed_data blob.
+ * Stored shape: { items: [{ title, prompt, level, essay }, ...] }.
+ * Tolerates bad/missing data by returning [].
+ * @param {string} parsedData
+ * @returns {Array}
+ */
+function parseCollectionItems(parsedData) {
+  try {
+    const obj = JSON.parse(parsedData);
+    return obj && Array.isArray(obj.items) ? obj.items : [];
+  } catch (_err) {
+    return [];
+  }
+}
+
+/**
  * Map a my_articles DB row to the wire shape for the 我的作文/收藏 list/item.
+ * Collection rows (content_type='collection') return an `items` array instead of
+ * a single `essay`; regular rows keep the flat essay shape (unchanged).
  * @param {object} row
  */
 function myRowToItem(row) {
+  const contentType = row.content_type || 'composition';
+  if (contentType === 'collection') {
+    return {
+      id: Number(row.id),
+      sourceId: row.source_id == null ? null : Number(row.source_id),
+      title: row.title,
+      contentType: 'collection',
+      items: parseCollectionItems(row.parsed_data),
+      createdAt: Number(row.created_at),
+      updatedAt: Number(row.updated_at),
+    };
+  }
   return {
     id: Number(row.id),
     sourceId: row.source_id == null ? null : Number(row.source_id),
@@ -327,7 +359,7 @@ function myRowToItem(row) {
     prompt: row.prompt || '',
     level: row.level || '',
     bookLevel: row.book_level || '',
-    contentType: row.content_type || 'composition',
+    contentType,
     essay: parseEssay(row.parsed_data),
     createdAt: Number(row.created_at),
     updatedAt: Number(row.updated_at),
@@ -629,6 +661,57 @@ router.post(
     const body = req.body || {};
     const now = Date.now();
 
+    // COLLECTION mode — body.contentType === 'collection' (favorite a whole pack
+    // of essays as ONE row). Deduped per user by title (one collection only once).
+    if (typeof body.contentType === 'string' && body.contentType.trim() === 'collection') {
+      const rawTitle = body.title;
+      if (typeof rawTitle !== 'string' || !rawTitle.trim()) {
+        throw httpError(400, '请填写合集名称');
+      }
+      const title = rawTitle.trim().slice(0, MAX_TITLE_LEN);
+
+      if (!Array.isArray(body.items) || body.items.length === 0) {
+        throw httpError(400, '合集内容不能为空');
+      }
+      if (body.items.length > MAX_COLLECTION_ITEMS) {
+        throw httpError(400, '合集篇数过多');
+      }
+
+      // Normalise items defensively: keep only well-formed entries with an essay.
+      const items = body.items
+        .filter((it) => it && typeof it === 'object' && it.essay && typeof it.essay === 'object')
+        .map((it) => ({
+          title: typeof it.title === 'string' ? it.title.slice(0, MAX_TITLE_LEN) : '',
+          prompt: typeof it.prompt === 'string' ? it.prompt.slice(0, MAX_PROMPT_LEN) : '',
+          level: VALID_LEVELS.includes(it.level) ? it.level : '高中',
+          essay: it.essay,
+        }));
+      if (items.length === 0) {
+        throw httpError(400, '合集内容无效');
+      }
+
+      // Dedup: same user + same collection title already exists → 409.
+      const dup = await query(
+        "SELECT 1 FROM my_articles WHERE user_id = $1 AND content_type = 'collection' AND title = $2",
+        [req.user.id, title]
+      );
+      if (dup.rows[0]) {
+        throw httpError(409, '已收藏');
+      }
+
+      const parsedData = JSON.stringify({ items });
+      const { rows } = await query(
+        `INSERT INTO my_articles
+           (user_id, source_id, title, prompt, level, book_level, content_type,
+            original_text, parsed_data, created_at, updated_at)
+         VALUES ($1, NULL, $2, '', NULL, NULL, 'collection', '', $3, $4, $4)
+         RETURNING id, source_id, title, prompt, level, book_level, content_type,
+                   parsed_data, created_at, updated_at`,
+        [req.user.id, title, parsedData, now]
+      );
+      return res.json({ ok: true, article: myRowToItem(rows[0]) });
+    }
+
     // FAVORITE mode — body carries a sourceId.
     if (body.sourceId !== undefined && body.sourceId !== null && body.sourceId !== '') {
       const sourceId = parseId(body.sourceId);
@@ -757,6 +840,10 @@ router.put(
       throw httpError(404, '文章不存在或无权限');
     }
     if (existing.source_id !== null && existing.source_id !== undefined) {
+      throw httpError(403, '收藏的内容不可编辑');
+    }
+    // Collections are favorite-only packs — read-only (no editing).
+    if (existing.content_type === 'collection') {
       throw httpError(403, '收藏的内容不可编辑');
     }
 

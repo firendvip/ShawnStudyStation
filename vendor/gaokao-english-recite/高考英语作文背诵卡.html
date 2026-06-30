@@ -102,6 +102,15 @@ body{
 .grp-count{margin-left:auto;font-weight:700;color:var(--color-ink-dim);font-size:.8rem;}
 .grp.collapsed .grp-items{display:none;}
 .grp-items{padding:.3rem;display:flex;flex-direction:column;gap:.3rem;}
+/* 合集卡：复用 .grp 外观，头部为「可点击展开的标题按钮 + 卡片级操作按钮」 */
+.coll-card{border-color:var(--color-accent);}
+.coll-head{display:flex;align-items:center;gap:.5rem;padding:.5rem .7rem;background:var(--color-accent-soft);}
+.coll-toggle{flex:1 1 auto;display:flex;align-items:center;gap:.5rem;min-width:0;
+  font-family:inherit;font-weight:800;letter-spacing:.03em;color:var(--color-ink);
+  background:none;border:none;padding:.15rem 0;cursor:pointer;text-align:left;}
+.coll-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.92rem;}
+.coll-acts{flex:0 0 auto;display:flex;gap:.35rem;flex-wrap:wrap;}
+.coll-card.collapsed .coll-items{display:none;}
 
 .litem{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;
   background:var(--color-surface);border:1px solid var(--color-line);border-radius:var(--radius-md);
@@ -495,7 +504,9 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   let publicItems=[];          // from GET /articles (all public)
   let myItems=[];              // from GET /my (personal copies)
   let selectedKey=null;        // currently-studied item key
-  const collectedSourceIds=new Set(); // public article ids already collected into 我的书屋
+  const collectedSourceIds=new Set(); // public article ids already collected in
+  const BUILTIN_COLLECTION_TITLE='2026年高考作文范文'; // 内置范文合集名
+  let collectionCollected=false;       // 内置范文合集是否已收藏到我的书屋to 我的书屋
   const BOOK_LEVELS=['桥梁','初章','中章','高章'];
   const LAST_VIEW_KEY='composition_last_view';
   // collapsed group state, separate per panel
@@ -736,8 +747,23 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   function normLevel(lv){ return LEVELS.indexOf(lv)>=0?lv:'高中'; }
   function buildItems(){
     const builtin=ESSAYS.map(e=>({key:'b'+e.id,id:e.id,title:e.title||'',prompt:'',level:'高中',essay:e,builtin:true,source:'builtin',isMine:false}));
-    // unified lookup table for study + keyboard nav: built-in + public + mine
-    items=builtin.concat(publicItems).concat(myItems);
+    // 我的书屋合集 → 展开为可学习的子条目（key: mc<合集id>_<序号>），供 studyItem/键盘切换使用
+    const collectionStudy=[];
+    myItems.forEach(c=>{
+      if(c.contentType!=='collection') return;
+      (c.items||[]).forEach((sub,idx)=>{
+        if(!sub||!sub.essay) return;
+        collectionStudy.push({
+          key:'mc'+c.id+'_'+idx, id:c.id, title:sub.title||(sub.essay&&sub.essay.title)||'',
+          prompt:sub.prompt||'', level:normLevel(sub.level), essay:sub.essay,
+          builtin:false, source:'collection', isMine:true
+        });
+      });
+    });
+    // flat my items exclude collections (collections aren't directly studyable as one essay)
+    const myFlat=myItems.filter(it=>it.contentType!=='collection');
+    // unified lookup table for study + keyboard nav: built-in + public + mine + collection essays
+    items=builtin.concat(publicItems).concat(myFlat).concat(collectionStudy);
   }
   function getItem(key){ return items.find(it=>it.key===key)||null; }
 
@@ -858,26 +884,79 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
     return row;
   }
 
+  // ---------- 合集卡（可展开 + 卡片级操作） ----------
+  // subItems: [{key?,title,prompt,essay,...}]，每篇有「学习」按钮（studyFn(sub)）
+  // headerActions: [{label,cls,fn,disabled}] 卡片级按钮（如收藏/取消收藏）
+  // collapseKey: 用 collapsedMap 记忆折叠态
+  function buildCollectionCard(opts){
+    const {title,subItems,headerActions,collapsed,onToggle,studyFn}=opts;
+    const card=document.createElement('div'); card.className='grp coll-card';
+    if(collapsed) card.classList.add('collapsed');
+    const head=document.createElement('div'); head.className='grp-head coll-head';
+    const toggle=document.createElement('button'); toggle.type='button'; toggle.className='coll-toggle';
+    const arrow=document.createElement('span'); arrow.className='grp-arrow'; arrow.textContent='▾';
+    const name=document.createElement('span'); name.className='coll-name'; name.textContent=title;
+    const count=document.createElement('span'); count.className='grp-count'; count.textContent=String(subItems.length)+'篇';
+    toggle.appendChild(arrow); toggle.appendChild(name); toggle.appendChild(count);
+    toggle.addEventListener('click',()=>{ const now=!card.classList.contains('collapsed'); card.classList.toggle('collapsed',now); if(onToggle)onToggle(now); });
+    head.appendChild(toggle);
+    if(headerActions&&headerActions.length){
+      const acts=document.createElement('div'); acts.className='coll-acts';
+      headerActions.forEach(a=>{
+        const b=document.createElement('button'); b.type='button'; b.className='btn '+(a.cls||''); b.textContent=a.label;
+        if(a.disabled){ b.disabled=true; } else { b.addEventListener('click',ev=>{ ev.stopPropagation(); a.fn(); }); }
+        acts.appendChild(b);
+      });
+      head.appendChild(acts);
+    }
+    card.appendChild(head);
+    const wrap=document.createElement('div'); wrap.className='grp-items coll-items';
+    subItems.forEach(sub=>{
+      const row=document.createElement('div'); row.className='litem';
+      const main=document.createElement('div'); main.className='litem-main';
+      const t=document.createElement('div'); t.className='litem-title'; t.textContent=sub.title||(sub.essay&&sub.essay.title)||'未命名';
+      main.appendChild(t);
+      if(sub.prompt){ const pr=document.createElement('div'); pr.className='litem-prompt'; pr.textContent=sub.prompt; main.appendChild(pr); }
+      row.appendChild(main);
+      const a=document.createElement('div'); a.className='litem-acts';
+      const sb=document.createElement('button'); sb.type='button'; sb.className='btn ghost tiny'; sb.textContent='学习';
+      sb.addEventListener('click',ev=>{ ev.stopPropagation(); studyFn(sub); });
+      a.appendChild(sb); row.appendChild(a);
+      wrap.appendChild(row);
+    });
+    card.appendChild(wrap);
+    return card;
+  }
+
   // ---------- 公共资源 list ----------
   function renderPublicList(){
     if(!pubList) return;
+    pubList.innerHTML='';
+    // 内置范文合集卡（始终展示；高中范文不再逐篇罗列）
+    const builtinSubs=items.filter(it=>it.builtin);
+    const collActions=authToken
+      ? [ collectionCollected
+          ? {label:'✓ 已收藏',cls:'off tiny',disabled:true}
+          : {label:'收藏到我的书屋',cls:'tiny',fn:saveCollection} ]
+      : [];
+    pubList.appendChild(buildCollectionCard({
+      title:BUILTIN_COLLECTION_TITLE,
+      subItems:builtinSubs,
+      headerActions:collActions,
+      collapsed:collapsedPub.__coll===true,
+      onToggle:(c)=>{ collapsedPub.__coll=c; },
+      studyFn:(sub)=>studyItem(sub.key)
+    }));
     if(!authToken){
-      // built-in only (study-only); remind about remote
-      renderGroupedList(pubList,items.filter(it=>it.builtin),pubSearch.value,collapsedPub,it=>([
-        {label:'学习',cls:'ghost tiny',fn:()=>studyItem(it.key)}
-      ]));
       const hint=document.createElement('div'); hint.className='lib-hint';
-      hint.textContent='登录后查看大家分享的作文';
+      hint.textContent='登录后查看大家分享的作文、收藏到我的书屋';
       pubList.appendChild(hint);
       return;
     }
-    const list=items.filter(it=>it.source==='public' || it.builtin);
-    renderGroupedList(pubList,list,pubSearch.value,collapsedPub,it=>{
-      if(it.builtin) return [{label:'学习',cls:'ghost tiny',fn:()=>studyItem(it.key)}];
-      const acts=[
-        {label:'学习',cls:'ghost tiny',fn:()=>studyItem(it.key)}
-      ];
-      // collect / already-collected (T4 dedup)
+    // 其它学段/用户上传的公开文章（非内置）仍按学段分组展示
+    const others=document.createElement('div');
+    renderGroupedList(others,items.filter(it=>it.source==='public'),pubSearch.value,collapsedPub,it=>{
+      const acts=[ {label:'学习',cls:'ghost tiny',fn:()=>studyItem(it.key)} ];
       if(collectedSourceIds.has(String(it.id))){
         acts.push({label:'✓ 已收藏',cls:'off tiny',disabled:true});
       } else {
@@ -886,8 +965,27 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
       if(it.isMine===true) acts.push({label:'删除',cls:'off tiny',fn:()=>deletePublic(it)});
       return acts;
     });
+    while(others.firstChild) pubList.appendChild(others.firstChild);
   }
   pubSearch.addEventListener('input',renderPublicList);
+
+  // ---------- 收藏内置范文合集（整体收藏成一条） ----------
+  async function saveCollection(){
+    if(!authToken||!apiBase){ showToast('请先登录后使用'); return; }
+    try{
+      const payload={ contentType:'collection', title:BUILTIN_COLLECTION_TITLE,
+        items:ESSAYS.map(e=>({title:e.title||'',prompt:'',level:'高中',essay:e})) };
+      const r=await fetch(apiBase+'/my',{method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+authToken},
+        body:JSON.stringify(payload)});
+      if(r.status===409){ collectionCollected=true; renderPublicList(); showToast('已收藏'); return; }
+      if(!r.ok){ showToast(r.status===401?'请先登录':'收藏失败'); return; }
+      collectionCollected=true;
+      await loadMine();
+      renderPublicList();
+      showToast('已收藏到我的书屋');
+    }catch(_){ showToast('收藏失败'); }
+  }
 
   // ---------- 我的作文 list ----------
   function renderMineList(){
@@ -899,7 +997,23 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
       mineList.appendChild(hint);
       return;
     }
-    renderGroupedList(mineList,myItems,mineSearch.value,collapsedMine,it=>{
+    mineList.innerHTML='';
+    // 合集条目（可展开，逐篇学习；卡片级取消收藏）
+    const collections=myItems.filter(it=>it.contentType==='collection');
+    collections.forEach(c=>{
+      mineList.appendChild(buildCollectionCard({
+        title:c.title||BUILTIN_COLLECTION_TITLE,
+        subItems:(c.items||[]).map((sub,idx)=>({title:sub.title,prompt:sub.prompt,essay:sub.essay,key:'mc'+c.id+'_'+idx})),
+        headerActions:[{label:'取消收藏',cls:'off tiny',fn:()=>deleteMine(c)}],
+        collapsed:collapsedMine['__coll_'+c.id]===true,
+        onToggle:(col)=>{ collapsedMine['__coll_'+c.id]=col; },
+        studyFn:(sub)=>studyItem(sub.key)
+      }));
+    });
+    // 普通文章（按学段分组）
+    const flat=myItems.filter(it=>it.contentType!=='collection');
+    const host=document.createElement('div');
+    renderGroupedList(host,flat,mineSearch.value,collapsedMine,it=>{
       // collected (sourceId non-empty) → read-only: 取消收藏 + 学习
       if(it.sourceId){
         return [
@@ -914,6 +1028,9 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
         {label:'删除',cls:'off tiny',fn:()=>deleteMine(it)}
       ];
     });
+    // 只有在有普通文章时才并入分组结果，避免合集存在时出现多余的「暂无作文」空态
+    if(flat.length){ while(host.firstChild) mineList.appendChild(host.firstChild); }
+    else if(!collections.length){ while(host.firstChild) mineList.appendChild(host.firstChild); }
   }
   mineSearch.addEventListener('input',renderMineList);
 
@@ -957,17 +1074,24 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   // ---------- delete mine ----------
   async function deleteMine(it){
     if(!authToken||!apiBase){ showToast('请先登录后使用'); return; }
-    if(!confirm(it.sourceId?'确定取消收藏这篇内容？':'确定删除这篇内容？此操作不可恢复。')) return;
+    const isColl=it.contentType==='collection';
+    const msg=isColl?'确定取消收藏这个合集？':(it.sourceId?'确定取消收藏这篇内容？':'确定删除这篇内容？此操作不可恢复。');
+    if(!confirm(msg)) return;
     try{
       const r=await fetch(apiBase+'/my/'+it.id,{method:'DELETE',headers:{'Authorization':'Bearer '+authToken}});
       if(!r.ok){ showToast('删除失败'); return; }
       myItems=myItems.filter(x=>x.key!==it.key);
       // if this was a collected copy, free its source id so it can be collected again
       if(it.sourceId){ collectedSourceIds.delete(String(it.sourceId)); }
+      // 取消收藏内置范文合集 → 允许再次收藏
+      if(isColl && it.title===BUILTIN_COLLECTION_TITLE){ collectionCollected=false; }
       buildItems();
-      if(selectedKey===it.key){ selectedKey=null; selectLastOrFirst(); }
+      // 学习中的条目（含合集子篇 mc<id>_*）被删除 → 重选
+      if(selectedKey===it.key || (isColl && selectedKey && selectedKey.indexOf('mc'+it.id+'_')===0)){
+        selectedKey=null; selectLastOrFirst();
+      }
       renderMineList(); renderPublicList(); updateArtDelete(); markSelected();
-      showToast(it.sourceId?'已取消收藏':'已删除');
+      showToast(isColl?'已取消收藏':(it.sourceId?'已取消收藏':'已删除'));
     }catch(_){ showToast('删除失败'); }
   }
   artDel.addEventListener('click',()=>{
@@ -1187,14 +1311,25 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
       const r=await fetch(apiBase+'/my',{headers:{'Authorization':'Bearer '+authToken}});
       if(!r.ok) return;
       const data=await r.json();
-      myItems=(Array.isArray(data.articles)?data.articles:[]).map(a=>({
-        key:'m'+a.id, id:a.id, sourceId:a.sourceId, title:a.title||'', prompt:a.prompt||'',
-        level:normLevel(a.level), bookLevel:a.bookLevel||'', contentType:a.contentType||'composition',
-        essay:a.essay||{}, builtin:false, source:'mine', isMine:true
-      }));
+      myItems=(Array.isArray(data.articles)?data.articles:[]).map(a=>{
+        if(a.contentType==='collection'){
+          return {
+            key:'m'+a.id, id:a.id, sourceId:a.sourceId||null, title:a.title||'',
+            contentType:'collection', items:Array.isArray(a.items)?a.items:[],
+            builtin:false, source:'mine', isMine:true
+          };
+        }
+        return {
+          key:'m'+a.id, id:a.id, sourceId:a.sourceId, title:a.title||'', prompt:a.prompt||'',
+          level:normLevel(a.level), bookLevel:a.bookLevel||'', contentType:a.contentType||'composition',
+          essay:a.essay||{}, builtin:false, source:'mine', isMine:true
+        };
+      });
       // rebuild collected-source-id set from my items (collected items have non-empty sourceId)
       collectedSourceIds.clear();
       myItems.forEach(it=>{ if(it.sourceId) collectedSourceIds.add(String(it.sourceId)); });
+      // is the built-in 高考范文 collection already in 我的书屋? (dedup by title)
+      collectionCollected=myItems.some(it=>it.contentType==='collection' && it.title===BUILTIN_COLLECTION_TITLE);
       buildItems();
       renderMineList();
       renderPublicList();
@@ -1300,16 +1435,31 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
       'audio/'+accent+'/'+enc+'.mp3'                    // existing local audio
     ];
   }
-  // play one word through the fallback cascade; calls tts() if every audio source fails
+  // 同一时间只允许一个声音：每次发声前先停掉一切正在播放的音频，并用 token 让旧的回退级联失效。
+  let wordPlayToken=0;
+  // stop EVERYTHING audible right now: sentence audio, word audio/loop, TTS.
+  function stopAllAudio(){
+    wordPlayToken++; // invalidate any in-flight word fallback cascade (old onerror chains no-op)
+    stopWordLoop();  // clears wordAudio + cancels speechSynthesis + resets loop btn
+    if(typeof curAudio!=='undefined' && curAudio){
+      curAudio.onended=null;curAudio.onerror=null;curAudio.onplaying=null;curAudio.ontimeupdate=null;
+      curAudio.pause();curAudio=null;
+    }
+    if(window.speechSynthesis)speechSynthesis.cancel();
+  }
+  // play one word through the fallback cascade; calls tts() if every audio source fails.
+  // Stops any previous sound first so only one voice plays at a time.
   function speakWord(word){
+    stopAllAudio();
+    const myToken=wordPlayToken;
     const urls=wordAudioUrls(word);
     let i=0, done=false;
     const tryNext=()=>{
-      if(done) return;
+      if(done || myToken!==wordPlayToken) return; // superseded by a newer click → abort
       if(i>=urls.length){ done=true; tts(word); return; }
-      const a=new Audio(urls[i++]); a.playbackRate=speed;
-      a.onerror=()=>{ if(!done) tryNext(); };
-      a.play().catch(()=>{ if(!done) tryNext(); });
+      const a=new Audio(urls[i++]); wordAudio=a; a.playbackRate=speed;
+      a.onerror=()=>{ if(!done && myToken===wordPlayToken) tryNext(); };
+      a.play().catch(()=>{ if(!done && myToken===wordPlayToken) tryNext(); });
     };
     tryNext();
   }
@@ -1324,6 +1474,7 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   }
   function startWordLoop(word,btn){
     stopPlay(); stopWordLoop();
+    if(typeof wordPlayToken!=='undefined') wordPlayToken++; // supersede any one-shot speakWord cascade
     wordLoop=true; wordW=word; wordBtn=btn; btn.innerHTML=PAUSE_SVG; btn.classList.add('on');
     const urls=wordAudioUrls(word);
     const ttsLoop=()=>{ if(!wordLoop)return; tts(word,()=>{ if(wordLoop) setTimeout(ttsLoop,260); }); };
