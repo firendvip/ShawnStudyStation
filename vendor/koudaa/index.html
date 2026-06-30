@@ -16,11 +16,14 @@
         body {
             background: #fcfaf4;
             color: #362c24;
+            /* 顶部对齐：不垂直居中，让整张卡片（含底部语速滑块）从 70px 顶距开始完整排布；
+               内容超出可视区时正常向下滚动，不再被 iframe 裁切。 */
             min-height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 70px 12px 12px;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 70px 12px 28px;
             zoom: 0.8;
         }
         
