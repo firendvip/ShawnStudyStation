@@ -126,6 +126,9 @@ services:
       - ../vendor/gaokao-english-recite:/usr/share/nginx/html/apps/gaokao-english-recite:ro
       # 单词速刷(CoCaWordCards 的 webapp 子目录)挂载到 /apps/wordcards
       - ../vendor/CoCaWordCards/webapp:/usr/share/nginx/html/apps/wordcards:ro
+      # 真人发音库(CoCa 2.5万词 uk/us)同一份挂到两处:单词速刷用 /apps/wordcards/audio,英读书屋用 /apps/CoCaWordCards/audio
+      - ../vendor/CoCaWordCards/audio:/usr/share/nginx/html/apps/wordcards/audio:ro
+      - ../vendor/CoCaWordCards/audio:/usr/share/nginx/html/apps/CoCaWordCards/audio:ro
       # 每日复盘挂载到 /apps/retro
       - ../vendor/retro:/usr/share/nginx/html/apps/retro:ro
       # 日记挂载到 /apps/diary
