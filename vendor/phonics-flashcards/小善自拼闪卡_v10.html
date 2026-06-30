@@ -252,8 +252,9 @@ function stopPlayback(){ stopAllAudio(); }
 function speakOne(text,rate,my,next){ if(!('speechSynthesis'in window)||!text){ next(); return; }
  const u=utter(text,rate); u.onend=()=>{ if(my===Cur.token)next(); }; u.onerror=()=>{ if(my===Cur.token)next(); };
  try{speechSynthesis.speak(u);}catch(e){ if(my===Cur.token)next(); } }
-function playItems(items,done){ if(!userInteracted)return Cur.token; Cur.token++; const my=Cur.token;
- if(Cur.audio){try{Cur.audio.pause();}catch(e){}Cur.audio=null;} try{speechSynthesis.cancel();}catch(e){} stopVideo();
+function playItems(items,done){ if(!userInteracted)return Cur.token;
+ /* 开播前先停掉一切声音（含翻面旁白 cardAudioEl / 单词音 / TTS / 视频），保证全场只有一个声音。 */
+ stopAllAudio(); const my=Cur.token;
  const q=items.slice();
  (function step(){ if(my!==Cur.token)return;
    if(!q.length){ if(done)done(my); return; }
@@ -288,6 +289,8 @@ function playCardAudio(rec){
  if(!userInteracted)return false;
  try{
    if(!rec||!rec.id) return false;
+   /* 开播本卡旁白前，先停掉一切声音（单词音/TTS/视频/上一张旁白），保证单声互斥。 */
+   stopAllAudio();
    const url="audio/card/"+rec.id+".mp3";
    if(!cardAudioEl){ cardAudioEl=new Audio(); cardAudioEl.preload="auto"; }
    try{ bindAudioIcon(cardAudioEl); }catch(_){}
