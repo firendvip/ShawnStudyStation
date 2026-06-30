@@ -459,6 +459,83 @@
             }
         }
         
+        /* 语速调节 */
+        .speed-control {
+            width: 100%;
+            max-width: 360px;
+            margin-top: 34px;
+            padding: 16px 20px;
+            background: #fcfaf4;
+            border: 1px solid #e5e1da;
+            border-radius: .875rem;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.03);
+        }
+
+        .speed-control-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .speed-label {
+            font-size: 1.05rem;
+            color: #71675d;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .speed-label i {
+            color: #359658;
+        }
+
+        .speed-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #359658;
+            min-width: 58px;
+            text-align: right;
+        }
+
+        .speed-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #359658, #d9efe0);
+            outline: none;
+            cursor: pointer;
+        }
+
+        .speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 3px solid #359658;
+            box-shadow: 0 2px 6px rgba(53,150,88,0.35);
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+
+        .speed-slider::-webkit-slider-thumb:active {
+            transform: scale(1.15);
+        }
+
+        .speed-slider::-moz-range-thumb {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 3px solid #359658;
+            box-shadow: 0 2px 6px rgba(53,150,88,0.35);
+            cursor: pointer;
+        }
+
         /* 新增提示样式 */
         .last-result-hint {
             position: absolute;
@@ -515,6 +592,16 @@
                 <button id="end-btn" class="icon-btn end-btn" style="display: none;">
                     <i class="fas fa-stop"></i>
                 </button>
+            </div>
+
+            <!-- 语速调节 -->
+            <div class="speed-control">
+                <div class="speed-control-head">
+                    <span class="speed-label"><i class="fas fa-gauge-high"></i> 语速</span>
+                    <span class="speed-value" id="speed-value">1.5×</span>
+                </div>
+                <input type="range" id="speed-slider" class="speed-slider"
+                    min="1.0" max="4.0" step="0.1" value="1.5">
             </div>
         </div>
     </div>
@@ -587,6 +674,29 @@
         
         // 用于存储最近一次训练结果
         let lastResult = null;
+
+        // ===== 语速调节 =====
+        // MP3 已预烘焙为 1.5 倍速；滑块值 S = 用户感知实际速度(1.0~4.0)。
+        // 播放时 playbackRate = S / 1.5（S=1.5 → 1.0，与现状一致）。
+        const BAKED_RATE = 1.5;          // 音频已烘焙的倍速
+        const DEFAULT_SPEED = 1.5;       // 默认感知语速
+        let speechSpeed = DEFAULT_SPEED; // 当前感知语速
+
+        function loadSpeed() {
+            const saved = parseFloat(localStorage.getItem('koudaa_speed'));
+            speechSpeed = (!isNaN(saved) && saved >= 1.0 && saved <= 4.0) ? saved : DEFAULT_SPEED;
+            return speechSpeed;
+        }
+
+        // 统一应用到任意 audio 元素：设置变速 + 保音调
+        function applyRate(audio) {
+            try {
+                audio.preservesPitch = true;
+                audio.mozPreservesPitch = true;
+                audio.webkitPreservesPitch = true;
+                audio.playbackRate = speechSpeed / BAKED_RATE;
+            } catch (e) {}
+        }
         
         // DOM元素
         const startBtn = document.getElementById('start-btn');
@@ -639,7 +749,7 @@
         function playNextToken() {
             if (numQi >= numQueue.length) { audioEnabled = true; return; }
             numAudio.src = tokenSrc(numQueue[numQi]);
-            numAudio.playbackRate = 1.0;
+            applyRate(numAudio);
             numAudio.play().then(() => { audioEnabled = true; }).catch(() => speakFallback(numFallbackText));
         }
         numAudio.addEventListener('ended', () => { numQi++; playNextToken(); });
@@ -654,7 +764,9 @@
             if (!text || !('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(String(text).replace('-', '减').replace('+', '加'));
-            u.lang = 'zh-CN'; u.rate = 1.8; u.volume = 1.0; u.pitch = 1.1;
+            // 兜底 TTS 也跟随滑块：默认 1.5× 时对应原 rate 1.8，按比例缩放并夹在合理范围
+            const ttsRate = Math.max(0.5, Math.min(10, 1.8 * (speechSpeed / DEFAULT_SPEED)));
+            u.lang = 'zh-CN'; u.rate = ttsRate; u.volume = 1.0; u.pitch = 1.1;
             try { window.speechSynthesis.speak(u); audioEnabled = true; } catch (e) {}
         }
 
@@ -671,6 +783,7 @@
             numQi = 0;
             phraseFellBack = false;
             phraseAudio.src = `audio/phrases/${op}_${m[1]}_${m[3]}.mp3?v=1`;  // 整句(已按 +20% 自然语速)
+            applyRate(phraseAudio);
             phraseAudio.play().then(() => { audioEnabled = true; }).catch(fallbackToTokens);
         }
         
@@ -960,6 +1073,21 @@
         
         // 初始化
         window.onload = function() {
+            // 语速滑块初始化：读取持久化值（无则默认 1.5），同步 UI 与播放速率
+            const speedSlider = document.getElementById('speed-slider');
+            const speedValue = document.getElementById('speed-value');
+            loadSpeed();
+            speedSlider.value = speechSpeed.toFixed(1);
+            speedValue.textContent = speechSpeed.toFixed(1) + '×';
+            speedSlider.addEventListener('input', () => {
+                speechSpeed = parseFloat(speedSlider.value);
+                speedValue.textContent = speechSpeed.toFixed(1) + '×';
+                localStorage.setItem('koudaa_speed', String(speechSpeed));
+                // 实时作用到正在/即将播放的音频
+                applyRate(phraseAudio);
+                applyRate(numAudio);
+            });
+
             // 设置事件监听器
             startBtn.addEventListener('click', startTraining);
             endBtn.addEventListener('click', endTraining);
