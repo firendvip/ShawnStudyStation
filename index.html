@@ -812,7 +812,11 @@
         </div>
         <div class="cl-list">
           <div class="cl-item latest">
-            <div class="cl-ver-row"><span class="cl-ver">v1.62.0</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-24</span></div>
+            <div class="cl-ver-row"><span class="cl-ver">v1.63.0</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-24</span></div>
+            <div class="cl-line"><span class="cl-tag add">新增</span>每个子页面都有了自己的网址，可以直接分享或收藏打开（比如直达小学心算、英读书屋）。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.62.0</span><span class="cl-date">2026-06-24</span></div>
             <div class="cl-line"><span class="cl-tag opt">优化</span>「AI输入法」改为打开本站内置的猫言小工具，点一下在新标签页打开。</div>
             <div class="cl-line"><span class="cl-tag opt">优化</span>工具菜单去掉了暂未启用的「闪卡」入口。</div>
           </div>
@@ -1331,6 +1335,8 @@
     }
 
     const VIEW_NAMES = { home: '', about: '联系我们', feedback: '建议提交', changelog: '更新日志', cuozi: '错字练习', phonics: '自然拼读', lottery: '转盘', koudaa: '小学心算', composition: '英读书屋', wordcards: '单词速刷', retro: '每日复盘', diary: '日记', wordquiz: '单词小测' };
+    /* 防循环守卫：switchView 改 hash 与 hashchange 回调互相触发时避免无限递归 */
+    let suppressHashRoute = false;
     function switchView(viewName) {
       try { window.xssTrack && window.xssTrack('view_change', { view: viewName }); } catch (e) {}
       const lp = document.getElementById('logo-page');
@@ -1350,7 +1356,23 @@
       document.querySelectorAll('iframe[data-app]').forEach(f => {
         if (f !== activeFrame) silenceFrame(f);
       });
+      // 深链：把 URL 同步成 #<viewName>（首页用空 hash）。守卫避免再次触发 switchView
+      try {
+        const want = (viewName === 'home') ? '' : viewName;
+        if (location.hash.slice(1) !== want) {
+          suppressHashRoute = true;
+          location.hash = want;
+        }
+      } catch (e) {}
     }
+
+    /* 深链路由：从 location.hash 读取目标视图，仅允许合法 view 名，非法/无 hash → 首页 */
+    function routeFromHash() {
+      if (suppressHashRoute) { suppressHashRoute = false; return; }
+      const v = location.hash.slice(1) || 'home';
+      switchView(VIEW_NAMES[v] !== undefined ? v : 'home');
+    }
+    window.addEventListener('hashchange', routeFromHash);
 
     /* Top-level plain nav links + logo */
     document.querySelectorAll('[data-view]').forEach(el => {
@@ -1897,6 +1919,22 @@
 
     /* Global ESC closes any open modal */
     document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeSettings(); closeChangePassword(); } });
+
+    /* 深链初始化：加载时按 location.hash 直达对应视图（无/非法 hash → 首页） */
+    (function initDeepLink() {
+      const v = location.hash.slice(1);
+      if (v && VIEW_NAMES[v] !== undefined && v !== 'home') {
+        switchView(v);
+        // 同步顶部菜单高亮：找到该 view 对应的下拉项，点亮其父级 nav-link
+        const item = document.querySelector('.dropdown-item[data-view="' + v + '"]');
+        if (item) {
+          document.querySelectorAll('.nav-link').forEach(x => x.classList.remove('active'));
+          const navItem = item.closest('.nav-item');
+          const parentLink = navItem ? navItem.querySelector('.nav-link') : null;
+          if (parentLink) parentLink.classList.add('active');
+        }
+      }
+    })();
   </script>
 <!-- xss-track-loader --><script>(function(){try{var B=(location.protocol==='file:'||/^(localhost|127\.|192\.168\.|10\.|172\.)/.test(location.hostname))?'http://localhost:4000':'';var s=document.createElement('script');s.src=B+'/api/analytics/track.js';s.async=true;s.dataset.app='shell';document.head.appendChild(s);}catch(e){}})();</script>
 </body>
