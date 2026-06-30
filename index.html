@@ -599,8 +599,7 @@
           <svg class="chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
         </button>
         <div class="dropdown" role="menu">
-          <a class="dropdown-item" href="https://wt.look3.cn/" target="_blank" rel="noopener noreferrer" role="menuitem">AI输入法</a>
-          <a class="dropdown-item" href="#" role="menuitem">闪卡</a>
+          <a class="dropdown-item" href="#" target="_blank" rel="noopener noreferrer" role="menuitem" data-app-link="kittyecho">AI输入法</a>
           <a class="dropdown-item" href="#" role="menuitem" data-view="lottery">转盘</a>
         </div>
       </div>
@@ -813,7 +812,12 @@
         </div>
         <div class="cl-list">
           <div class="cl-item latest">
-            <div class="cl-ver-row"><span class="cl-ver">v1.61.0</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-24</span></div>
+            <div class="cl-ver-row"><span class="cl-ver">v1.62.0</span><span class="cl-latest">最新</span><span class="cl-date">2026-06-24</span></div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>「AI输入法」改为打开本站内置的猫言小工具，点一下在新标签页打开。</div>
+            <div class="cl-line"><span class="cl-tag opt">优化</span>工具菜单去掉了暂未启用的「闪卡」入口。</div>
+          </div>
+          <div class="cl-item">
+            <div class="cl-ver-row"><span class="cl-ver">v1.61.0</span><span class="cl-date">2026-06-24</span></div>
             <div class="cl-line"><span class="cl-tag add">新增</span>日记可以导出啦（支持 Markdown、纯文本、Word 三种格式），可以全部导出或只导某段日期。</div>
           </div>
           <div class="cl-item">
@@ -1245,9 +1249,16 @@
                          : '/apps/wordcards/index.html',
       RETRO: IS_FILE ? 'vendor/retro/index.html' : '/apps/retro/index.html',
       DIARY: IS_FILE ? 'vendor/diary/index.html' : '/apps/diary/index.html',
-      WORDQUIZ: IS_FILE ? 'vendor/wordquiz/index.html' : '/apps/wordquiz/index.html'
+      WORDQUIZ: IS_FILE ? 'vendor/wordquiz/index.html' : '/apps/wordquiz/index.html',
+      KITTYECHO: IS_FILE ? 'vendor/kittyecho/index.html' : '/apps/kittyecho/index.html'
     };
     const API = CONFIG.API;
+
+    /* ── 外链型工具按 data-app-link 设置 href（新标签打开内置子站） ── */
+    document.querySelectorAll('a[data-app-link]').forEach(function (a) {
+      var key = (a.getAttribute('data-app-link') || '').toUpperCase();
+      if (CONFIG[key]) a.setAttribute('href', CONFIG[key]);
+    });
 
     /* ── Date label ── */
     const d = new Date();
