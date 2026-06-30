@@ -58,6 +58,10 @@ services:
       PORT: "4000"
       # 仅允许来自正式域名(https)的跨域请求
       CORS_ORIGIN: https://${DOMAIN}
+      # 管理员后台白名单邮箱(逗号分隔);AI 解析的 provider/key(留空时走桩,密钥可在后台填)
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      AI_PROVIDER: ${AI_PROVIDER:-}
+      AI_API_KEY: ${AI_API_KEY:-}
       # 邮箱验证码(SMTP 真实发送所需的值)
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT:-465}
