@@ -118,6 +118,20 @@ services:
       - ../vendor/lottery:/usr/share/nginx/html/apps/lottery:ro
       # 小学心算(口答)静态应用挂载到 /apps/koudaa(自包含 HTML)
       - ../vendor/koudaa:/usr/share/nginx/html/apps/koudaa:ro
+      # 英读书屋(高考英语作文背诵卡)挂载到 /apps/gaokao-english-recite
+      - ../vendor/gaokao-english-recite:/usr/share/nginx/html/apps/gaokao-english-recite:ro
+      # 单词速刷(CoCaWordCards 的 webapp 子目录)挂载到 /apps/wordcards
+      - ../vendor/CoCaWordCards/webapp:/usr/share/nginx/html/apps/wordcards:ro
+      # 每日复盘挂载到 /apps/retro
+      - ../vendor/retro:/usr/share/nginx/html/apps/retro:ro
+      # 日记挂载到 /apps/diary
+      - ../vendor/diary:/usr/share/nginx/html/apps/diary:ro
+      # 单词小测挂载到 /apps/wordquiz
+      - ../vendor/wordquiz:/usr/share/nginx/html/apps/wordquiz:ro
+      # AI输入法(kittyecho)挂载到 /apps/kittyecho
+      - ../vendor/kittyecho:/usr/share/nginx/html/apps/kittyecho:ro
+      # 管理后台(数据分析)挂载到 /apps/admin(登录鉴权,仅管理员可用)
+      - ../vendor/admin:/usr/share/nginx/html/apps/admin:ro
       # TLS 证书:把 fullchain.pem / privkey.pem 放进 ./certs(见 certs/README.md)
       - ./certs:/etc/nginx/certs:ro
       # Let's Encrypt webroot 验证目录(certbot --webroot -w ./certbot/www 时使用;
