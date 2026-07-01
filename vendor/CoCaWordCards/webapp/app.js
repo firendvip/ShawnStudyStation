@@ -413,11 +413,11 @@ function updateGroupUI() {
 // ---- Pack management ----
 function builtInPacks() {
   return [
-    { id: "primary", name: "小学英语", url: "packs/primary.json?d=3" },
-    { id: "junior", name: "初中英语", url: "packs/junior.json?d=3" },
-    { id: "senior", name: "高中英语", url: "packs/senior.json?d=3" },
-    { id: "coca5000", name: "COCA 5000 核心词", url: "packs/coca5000.json?d=3" },
-    { id: "coca17k", name: "COCA 高频 17000 词", url: "packs/coca17k.json?d=2" },
+    { id: "primary", name: "小学英语", url: "packs/primary.json?d=4" },
+    { id: "junior", name: "初中英语", url: "packs/junior.json?d=4" },
+    { id: "senior", name: "高中英语", url: "packs/senior.json?d=4" },
+    { id: "coca5000", name: "COCA 5000 核心词", url: "packs/coca5000.json?d=4" },
+    { id: "coca17k", name: "COCA 高频 17000 词", url: "packs/coca17k.json?d=4" },
   ];
 }
 function allPackMetas() { return [...builtInPacks(), ...Object.values(customPacks).map((p) => ({ id: p.id, name: p.name }))]; }
