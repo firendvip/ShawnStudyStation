@@ -45,7 +45,7 @@ const OFFSET_LIMIT = 200;
 const DEFAULTS = {
   accent: "US", speed: 1.0, repeat: 1, interval: 0.3, flipInterval: 0.3, autoAdvance: true,
   showZh: true, showPos: true, showPhon: true, showEn: true, showButtons: true, showPlay: true, showHeader: true, showArrows: true,
-  fontScaleEn: 1.0, fontScaleZh: 1.0, fontScalePhon: 1.0,
+  fontScaleEn: 2.8, fontScaleZh: 1.0, fontScalePhon: 0.7,
   moduleX: [0, 0, 0, 0, 0, 0], moduleY: [0, 0, 0, 0, 0, 0],
   rangeStart: 1, rangeEnd: 0, // rangeEnd 0 = to the end (show all)
   packId: "coca17k", groupSize: 10, limitMode: "range",
@@ -67,6 +67,12 @@ if (!_loaded.pronDefaults202607) {
   settings.accent = "US"; settings.speed = 1.0; settings.repeat = 1;
   settings.interval = 0.3; settings.autoAdvance = true; settings.flipInterval = 0.3;
   settings.pronDefaults202607 = true;
+}
+// One-time: unify the three font-size sliders onto a common absolute base; reset to the
+// new per-element defaults so equal slider position = equal rendered size. Runs once.
+if (!_loaded.fontUnified202607) {
+  settings.fontScaleEn = 2.8; settings.fontScaleZh = 1.0; settings.fontScalePhon = 0.7;
+  settings.fontUnified202607 = true;
 }
 let customPacks = loadJSON(LS_CUSTOM, {});
 let positions = loadJSON(LS_POS, {});

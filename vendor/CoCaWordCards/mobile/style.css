@@ -15,6 +15,7 @@
   --border: #cfdcc9;
   --accent: #5B9E5B;
   --fs-en: 1; --fs-zh: 1; --fs-phon: 1;
+  --fs-base: clamp(1.25rem, 0.8rem + 3vw, 2rem);
 
   --space: clamp(0.75rem, 0.5rem + 1vw, 1.1rem);
   --radius: 14px;
@@ -118,11 +119,11 @@ body {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   overflow: hidden;
 }
-#mod0 { height: calc(clamp(2.8rem, 1rem + 14vw, 5.5rem) * var(--fs-en) * 1.28); }
-#mod1 { height: calc(clamp(1.25rem, 0.8rem + 3vw, 2rem) * var(--fs-zh) * 1.95); }
+#mod0 { height: calc(var(--fs-base) * var(--fs-en) * 1.28); }
+#mod1 { height: calc(var(--fs-base) * var(--fs-zh) * 1.95); }
 #mod2 { height: calc(1.6rem * var(--fs-zh)); }
 #mod3 { height: 3.2rem; }
-#mod4 { height: calc(clamp(0.95rem, 0.7rem + 1.6vw, 1.3rem) * var(--fs-en) * 1.7); }
+#mod4 { height: calc(var(--fs-base) * var(--fs-phon) * 1.7); }
 /* Play module is a placeholder on mobile (the real play button lives in the bottom bar). */
 #mod5 { height: 0; }
 .module-play-src { display: none; }
@@ -131,20 +132,20 @@ body {
 
 .word-en {
   font-weight: 700; letter-spacing: -0.01em; line-height: 1.1;
-  font-size: calc(clamp(2.8rem, 1rem + 14vw, 5.5rem) * var(--fs-en));
+  font-size: calc(var(--fs-base) * var(--fs-en));
   color: var(--text-primary); cursor: pointer; white-space: nowrap;
 }
 .word-en .chunk { border-radius: 0.16em; padding: 0 0.05em; box-decoration-break: clone; }
 .word-en .chunk-a { background: color-mix(in srgb, var(--accent) 26%, transparent); }
 .word-en .chunk-b { background: color-mix(in srgb, var(--text-secondary) 24%, transparent); }
 .word-zh {
-  font-size: calc(clamp(1.25rem, 0.8rem + 3vw, 2rem) * var(--fs-zh));
+  font-size: calc(var(--fs-base) * var(--fs-zh));
   color: var(--text-secondary); line-height: 1.3; text-align: center; cursor: pointer;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .word-pos { font-size: calc(0.95rem * var(--fs-zh)); color: var(--accent); font-weight: 600; letter-spacing: 0.02em; }
 .word-phon {
-  font-size: calc(clamp(0.95rem, 0.7rem + 1.6vw, 1.3rem) * var(--fs-phon));
+  font-size: calc(var(--fs-base) * var(--fs-phon));
   color: var(--text-secondary); opacity: 0.72; min-height: 1.4em; max-width: 92vw;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   font-family: "Doulos SIL", "Charis SIL", "Times New Roman", serif;
