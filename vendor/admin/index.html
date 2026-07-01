@@ -1167,5 +1167,142 @@
     }
   })();
   </script>
+<!-- zh-datepicker (中文日期选择器) -->
+<script>
+/* 中文日期选择器（与 PinPin/每日复盘同风格）— 内联复用实现
+   保留原生 <input type="date">（隐藏），值仍为 YYYY-MM-DD；
+   选日期时给该 input 赋 .value 并派发原生 input+change 事件，
+   原有筛选/导出/查询逻辑完全不变。 */
+(function (global) {
+  'use strict';
+  var WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+  var STYLE_ID = 'zh-datepicker-style';
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function isValidDate(s) { return /^\d{4}-\d{2}-\d{2}$/.test(s || ''); }
+  function fmtFull(s) { var p = s.split('-').map(Number); var d = new Date(p[0], p[1] - 1, p[2]); return p[0] + '年' + p[1] + '月' + p[2] + '日 星期' + WEEK[d.getDay()]; }
+  function fmtShort(s) { var p = s.split('-').map(Number); return p[0] + '年' + p[1] + '月' + p[2] + '日'; }
+  function injectStyle() {
+    if (document.getElementById(STYLE_ID)) return;
+    var css =
+      '.zdp-wrap{position:relative;display:inline-block;font-family:inherit;vertical-align:middle;}' +
+      '.zdp-pill{display:inline-flex;align-items:center;gap:5px;border:1px solid #d2cdc5;background:#fff;color:#362c24;border-radius:999px;padding:5px 12px;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap;line-height:1.2;transition:border-color .15s;}' +
+      '.zdp-pill:hover{border-color:#359658;}' +
+      '.zdp-pill .zdp-chev{color:#9a9086;font-size:.6rem;transition:transform .2s;}' +
+      '.zdp-wrap.open .zdp-chev{transform:rotate(180deg);}' +
+      '.zdp-pill.placeholder{color:#9a9086;font-weight:600;}' +
+      '.zdp-pop{position:absolute;top:calc(100% + 6px);left:0;z-index:9999;width:264px;background:#fff;border:1px solid #d2cdc5;border-radius:14px;padding:12px 14px 14px;box-shadow:0 12px 34px rgba(54,44,36,.16);}' +
+      '.zdp-pop.hidden{display:none;}' +
+      '.zdp-head{display:flex;align-items:center;justify-content:space-between;padding:2px 2px 8px;}' +
+      '.zdp-title{font-weight:700;font-size:.95rem;color:#362c24;}' +
+      '.zdp-nav{border:none;background:transparent;color:#6b6055;font-size:1.25rem;width:32px;height:32px;border-radius:50%;cursor:pointer;line-height:1;}' +
+      '.zdp-nav:hover{background:#dcf7e2;color:#2b7a48;}' +
+      '.zdp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}' +
+      '.zdp-wk{text-align:center;font-size:.7rem;color:#9a9086;padding:3px 0;}' +
+      '.zdp-cell{aspect-ratio:1;}' +
+      '.zdp-day{position:relative;width:100%;height:100%;border:none;background:transparent;color:#362c24;font-size:.85rem;border-radius:9px;cursor:pointer;padding:0;font-family:inherit;}' +
+      '.zdp-day:hover{background:#dcf7e2;}' +
+      '.zdp-day.today{font-weight:800;color:#2b7a48;}' +
+      '.zdp-day.sel{background:#359658;color:#fff;}' +
+      '.zdp-day.sel:hover{background:#2f8850;}' +
+      '.zdp-day.other{color:#c3bcb2;opacity:.55;cursor:default;}' +
+      '.zdp-day.disabled{color:#cfc9c0;opacity:.4;cursor:not-allowed;}' +
+      '.zdp-foot{display:flex;justify-content:center;padding-top:8px;}' +
+      '.zdp-today-btn{border:1px solid #359658;background:transparent;color:#2b7a48;border-radius:999px;padding:4px 14px;font-size:.74rem;font-weight:700;cursor:pointer;font-family:inherit;}' +
+      '.zdp-today-btn:hover{background:#dcf7e2;}';
+    var el = document.createElement('style'); el.id = STYLE_ID; el.textContent = css; document.head.appendChild(el);
+  }
+  function enhance(target, opts) {
+    opts = opts || {};
+    var input = typeof target === 'string' ? document.querySelector(target) : target;
+    if (!input || input.dataset.zdpDone === '1') return null;
+    injectStyle();
+    input.dataset.zdpDone = '1';
+    var rangeLabel = !!opts.rangeLabel;
+    var placeholder = opts.placeholder || '选择日期';
+    input.style.display = 'none';
+    var wrap = document.createElement('span'); wrap.className = 'zdp-wrap';
+    var pill = document.createElement('button'); pill.type = 'button'; pill.className = 'zdp-pill';
+    var titleAttr = input.getAttribute('title'); if (titleAttr) pill.setAttribute('title', titleAttr);
+    var labelSpan = document.createElement('span'); labelSpan.className = 'zdp-label';
+    var chev = document.createElement('span'); chev.className = 'zdp-chev'; chev.textContent = '▾';
+    pill.appendChild(labelSpan); pill.appendChild(chev);
+    var pop = document.createElement('div'); pop.className = 'zdp-pop hidden';
+    wrap.appendChild(pill); wrap.appendChild(pop);
+    input.parentNode.insertBefore(wrap, input.nextSibling);
+    var viewY, viewM;
+    function currentValue() { return input.value || ''; }
+    function maxStr() { return input.max || ''; }
+    function renderLabel() {
+      var v = currentValue();
+      if (isValidDate(v)) { labelSpan.textContent = rangeLabel ? fmtShort(v) : fmtFull(v); pill.classList.remove('placeholder'); }
+      else { labelSpan.textContent = placeholder; pill.classList.add('placeholder'); }
+    }
+    function renderCal() {
+      var t = todayStr(); var mx = maxStr();
+      var first = new Date(viewY, viewM, 1).getDay();
+      var days = new Date(viewY, viewM + 1, 0).getDate();
+      var prevDays = new Date(viewY, viewM, 0).getDate();
+      var sel = currentValue();
+      var html = '<div class="zdp-head"><button type="button" class="zdp-nav" data-nav="-1" aria-label="上个月">‹</button><span class="zdp-title">' + viewY + '年' + (viewM + 1) + '月</span><button type="button" class="zdp-nav" data-nav="1" aria-label="下个月">›</button></div><div class="zdp-grid">';
+      WEEK.forEach(function (w) { html += '<div class="zdp-wk">' + w + '</div>'; });
+      for (var i = 0; i < first; i++) { html += '<div class="zdp-cell"><button type="button" class="zdp-day other" disabled>' + (prevDays - first + 1 + i) + '</button></div>'; }
+      for (var d = 1; d <= days; d++) {
+        var ds = viewY + '-' + pad(viewM + 1) + '-' + pad(d);
+        var cls = ['zdp-day'];
+        if (ds === sel) cls.push('sel');
+        if (ds === t) cls.push('today');
+        var disabled = mx && ds > mx; if (disabled) cls.push('disabled');
+        html += '<div class="zdp-cell"><button type="button" class="' + cls.join(' ') + '" data-date="' + ds + '"' + (disabled ? ' disabled' : '') + '>' + d + '</button></div>';
+      }
+      var totalCells = first + days; var trailing = (7 - (totalCells % 7)) % 7;
+      for (var j = 1; j <= trailing; j++) { html += '<div class="zdp-cell"><button type="button" class="zdp-day other" disabled>' + j + '</button></div>'; }
+      html += '</div><div class="zdp-foot"><button type="button" class="zdp-today-btn" data-today="1">今天</button></div>';
+      pop.innerHTML = html;
+    }
+    function openPop() {
+      var v = currentValue();
+      if (isValidDate(v)) { var p = v.split('-').map(Number); viewY = p[0]; viewM = p[1] - 1; }
+      else { var d = new Date(); viewY = d.getFullYear(); viewM = d.getMonth(); }
+      renderCal(); pop.classList.remove('hidden'); wrap.classList.add('open');
+    }
+    function closePop() { pop.classList.add('hidden'); wrap.classList.remove('open'); }
+    function isOpen() { return !pop.classList.contains('hidden'); }
+    function commit(dateStr) {
+      input.value = dateStr; renderLabel();
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    pill.addEventListener('click', function (e) { e.stopPropagation(); if (isOpen()) closePop(); else openPop(); });
+    pop.addEventListener('click', function (e) {
+      var nav = e.target.closest('[data-nav]');
+      if (nav) { viewM += Number(nav.dataset.nav); if (viewM < 0) { viewM = 11; viewY--; } if (viewM > 11) { viewM = 0; viewY++; } renderCal(); e.stopPropagation(); return; }
+      if (e.target.closest('[data-today]')) { var mx = maxStr(); var ts = todayStr(); if (!(mx && ts > mx)) { commit(ts); closePop(); } e.stopPropagation(); return; }
+      var day = e.target.closest('[data-date]');
+      if (day && !day.disabled) { commit(day.dataset.date); closePop(); }
+      e.stopPropagation();
+    });
+    document.addEventListener('click', function (e) { if (isOpen() && !wrap.contains(e.target)) closePop(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen()) closePop(); });
+    var origDesc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+    try {
+      Object.defineProperty(input, 'value', {
+        configurable: true,
+        get: function () { return origDesc.get.call(this); },
+        set: function (v) { origDesc.set.call(this, v); renderLabel(); }
+      });
+    } catch (err) {}
+    input.addEventListener('change', renderLabel);
+    renderLabel();
+    return { input: input, wrap: wrap, refresh: renderLabel };
+  }
+  global.ZhDatePicker = { enhance: enhance };
+})(window);
+
+  (function(){function boot(){if(!window.ZhDatePicker)return;
+    ZhDatePicker.enhance('#dateFrom',{rangeLabel:true,placeholder:'开始日期'});
+    ZhDatePicker.enhance('#dateTo',{rangeLabel:true,placeholder:'结束日期'});
+  }if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();})();
+</script>
 </body>
 </html>
