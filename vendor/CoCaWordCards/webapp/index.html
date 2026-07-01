@@ -4,18 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>单词卡片 · WordCards</title>
-  <link rel="stylesheet" href="style.css?v=066" />
+  <link rel="stylesheet" href="style.css?v=067" />
 </head>
 <body>
   <div id="app" class="app">
     <!-- Header (pack + current group + progress; toggleable via 显示页头). -->
     <header class="header" id="header">
       <div class="header-left">
-        <select id="packSelect" class="pack-select" title="选择单词包"></select>
+        <div class="hdr-mod" id="hdrPack" data-hdr="0">
+          <select id="packSelect" class="pack-select" title="选择单词包"></select>
+        </div>
       </div>
       <div class="header-right">
-        <span id="groupBadge" class="group-badge" title="当前分组"></span>
-        <span id="progress" class="progress" title="点击打开设置/跳转">0/0</span>
+        <span id="groupBadge" class="group-badge hdr-mod" data-hdr="1" title="当前分组"></span>
+        <span id="progress" class="progress hdr-mod" data-hdr="2" title="点击打开设置/跳转">0/0</span>
       </div>
     </header>
 
@@ -65,7 +67,9 @@
           <label class="etoggle"><span>眼睛按钮</span><span class="switch"><input type="checkbox" id="showButtons" checked /><span class="slider"></span></span></label>
           <label class="etoggle"><span>播放键</span><span class="switch"><input type="checkbox" id="showPlay" checked /><span class="slider"></span></span></label>
           <label class="etoggle"><span>左右箭头</span><span class="switch"><input type="checkbox" id="showArrows" checked /><span class="slider"></span></span></label>
-          <label class="etoggle"><span>页头分组</span><span class="switch"><input type="checkbox" id="showHeader" checked /><span class="slider"></span></span></label>
+          <label class="etoggle"><span>词包</span><span class="switch"><input type="checkbox" id="showPack" checked /><span class="slider"></span></span></label>
+          <label class="etoggle"><span>分组</span><span class="switch"><input type="checkbox" id="showGroup" checked /><span class="slider"></span></span></label>
+          <label class="etoggle"><span>进度</span><span class="switch"><input type="checkbox" id="showProgress" checked /><span class="slider"></span></span></label>
         </div>
         <div class="edit-fonts">
           <p class="edit-fonts-title">字号</p>
@@ -80,6 +84,14 @@
           <div class="setting-row">
             <span>音标字号 <b id="fontValPhon">1.0×</b></span>
             <input type="range" id="fontScalePhon" min="0.2" max="4" step="0.1" value="0.7" />
+          </div>
+          <div class="setting-row">
+            <span>分组字号 <b id="fontValGroup">1.0×</b></span>
+            <input type="range" id="fontScaleGroup" min="0.2" max="4" step="0.1" value="1" />
+          </div>
+          <div class="setting-row">
+            <span>进度字号 <b id="fontValProgress">1.0×</b></span>
+            <input type="range" id="fontScaleProgress" min="0.2" max="4" step="0.1" value="1" />
           </div>
         </div>
       </div>
@@ -220,7 +232,7 @@
   </aside>
 
   <audio id="audio" preload="auto"></audio>
-  <script src="app.js?v=066" defer></script>
+  <script src="app.js?v=067" defer></script>
 <!-- xss-track-loader --><script>(function(){try{var B=(location.protocol==='file:'||/^(localhost|127\.|192\.168\.|10\.|172\.)/.test(location.hostname))?'http://localhost:4000':'';var s=document.createElement('script');s.src=B+'/api/analytics/track.js';s.async=true;s.dataset.app='wordcards';document.head.appendChild(s);}catch(e){}})();</script>
 </body>
 </html>

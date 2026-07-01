@@ -9,6 +9,7 @@
   --border: #cfdcc9;
   --accent: #5B9E5B;
   --fs-en: 1; --fs-zh: 1; --fs-phon: 1;
+  --fs-group: 1; --fs-progress: 1;
   --fs-base: clamp(1.2rem, 0.8rem + 2.4vw, 2rem);
 
   --space: clamp(0.75rem, 0.5rem + 1vw, 1.25rem);
@@ -43,9 +44,15 @@ body {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 999px; padding: 0.4rem 0.9rem; max-width: 60vw; cursor: pointer;
 }
-.progress { font-variant-numeric: tabular-nums; font-size: 0.95rem; color: var(--text-secondary); cursor: pointer; padding: 0.3rem 0.5rem; }
-.group-badge { font-size: 0.8rem; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 999px; padding: 0.18rem 0.6rem; white-space: nowrap; }
+.progress { font-variant-numeric: tabular-nums; font-size: calc(0.95rem * var(--fs-progress)); color: var(--text-secondary); cursor: pointer; padding: 0.3rem 0.5rem; }
+.group-badge { font-size: calc(0.8rem * var(--fs-group)); font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 999px; padding: 0.18rem 0.6rem; white-space: nowrap; }
 .group-badge:empty { display: none; }
+
+/* Header modules become draggable in edit mode; default look is unchanged. */
+.hdr-mod { will-change: transform; }
+.app.editing .hdr-mod { touch-action: none; cursor: move; outline: 2px dashed var(--accent); outline-offset: 4px; border-radius: 8px; transition: none; }
+.app.editing .hdr-mod.dragging { cursor: grabbing; opacity: 0.85; }
+.app.editing .hdr-mod select { pointer-events: none; }
 .icon-btn {
   font-size: 1.2rem; background: transparent; border: none; color: var(--text-secondary);
   cursor: pointer; width: 2.2rem; height: 2.2rem; border-radius: 50%;

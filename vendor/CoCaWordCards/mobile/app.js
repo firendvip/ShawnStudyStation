@@ -44,9 +44,12 @@ const OFFSET_LIMIT = 200;
 
 const DEFAULTS = {
   accent: "US", speed: 1.0, repeat: 1, interval: 0.3, flipInterval: 0.3, autoAdvance: true,
-  showZh: true, showPos: true, showPhon: true, showEn: true, showButtons: true, showPlay: true, showHeader: true, showArrows: true,
+  showZh: true, showPos: true, showPhon: true, showEn: true, showButtons: true, showPlay: true, showArrows: true,
+  showPack: true, showGroup: true, showProgress: true,
   fontScaleEn: 2.8, fontScaleZh: 1.0, fontScalePhon: 0.7,
+  fontScaleGroup: 1.0, fontScaleProgress: 1.0,
   moduleX: [0, 0, 0, 0, 0, 0], moduleY: [0, 0, 0, 0, 0, 0],
+  hdrX: [0, 0, 0], hdrY: [0, 0, 0],  // 0=词包 1=分组 2=进度
   rangeStart: 1, rangeEnd: 0, // rangeEnd 0 = to the end (show all)
   packId: "coca17k", groupSize: 10, limitMode: "range",
 };
@@ -61,6 +64,16 @@ if (_loaded.fontScale != null && _loaded.fontScaleEn == null) settings.fontScale
 if (_loaded.fontScale != null && _loaded.fontScaleZh == null) settings.fontScaleZh = _loaded.fontScale;
 if (!Array.isArray(settings.moduleX) || settings.moduleX.length !== 6) settings.moduleX = [0, 0, 0, 0, 0, 0];
 if (!Array.isArray(settings.moduleY) || settings.moduleY.length !== 6) settings.moduleY = [0, 0, 0, 0, 0, 0];
+if (!Array.isArray(settings.hdrX) || settings.hdrX.length !== 3) settings.hdrX = [0, 0, 0];
+if (!Array.isArray(settings.hdrY) || settings.hdrY.length !== 3) settings.hdrY = [0, 0, 0];
+// One-time: split the single 页头分组 toggle into three independent header modules
+// (词包 / 分组 / 进度). Old users who had the header hidden keep all three hidden.
+if (!_loaded.headerModules202607) {
+  const shown = _loaded.showHeader !== false;
+  settings.showPack = shown; settings.showGroup = shown; settings.showProgress = shown;
+  settings.headerModules202607 = true;
+}
+delete settings.showHeader;
 // One-time: adopt the 美音-based default pronunciation preset (accent + speed/repeat/interval/auto-flip);
 // runs once for everyone, then respects the user's later choices.
 if (!_loaded.pronDefaults202607) {
@@ -96,7 +109,10 @@ const els = {
   wordEn: $("wordEn"), wordZh: $("wordZh"), wordPos: $("wordPos"), wordPhon: $("wordPhon"),
   playBtn: $("playBtn"), progress: $("progress"),
   card: $("card"), mods: [$("mod0"), $("mod1"), $("mod2"), $("mod3"), $("mod4"), $("mod5")],
+  // Header modules: 0=词包容器 1=分组徽标 2=进度
+  hdrMods: [$("hdrPack"), $("groupBadge"), $("progress")],
 };
+const HDR_COUNT = 3;
 
 // ---- Storage helpers ----
 function loadJSON(key, fallback) {
@@ -121,6 +137,8 @@ function applyPalette() {
   r.setProperty("--fs-en", String(settings.fontScaleEn));
   r.setProperty("--fs-zh", String(settings.fontScaleZh));
   r.setProperty("--fs-phon", String(settings.fontScalePhon));
+  r.setProperty("--fs-group", String(settings.fontScaleGroup));
+  r.setProperty("--fs-progress", String(settings.fontScaleProgress));
 }
 
 // ---- Chunking for the highlight view: single word -> syllables; phrase -> words.
@@ -281,6 +299,14 @@ function applyModuleOffsets() {
   for (let i = 0; i < MOD_COUNT; i++) {
     els.mods[i].style.transform = `translate(${settings.moduleX[i]}px, ${settings.moduleY[i]}px)`;
   }
+  applyHdrOffsets();
+}
+// Apply saved drag offsets to the three header modules (词包/分组/进度).
+function applyHdrOffsets() {
+  for (let i = 0; i < HDR_COUNT; i++) {
+    const el = els.hdrMods[i];
+    if (el) el.style.transform = `translate3d(${settings.hdrX[i]}px, ${settings.hdrY[i]}px, 0)`;
+  }
 }
 // Shrink the (single-line) English word to fit width, so long words don't overflow
 // and the module height stays stable.
@@ -323,7 +349,10 @@ function render() {
   els.mods[5].style.visibility = settings.showPlay ? "visible" : "hidden";     // 播放键(占位, 手机版实际按钮在底栏)
   // 底栏播放键随 showPlay 显隐（手机版实际按钮）
   const cbPlay = $("playBtn"); if (cbPlay) cbPlay.style.visibility = settings.showPlay ? "visible" : "hidden";
-  $("header").style.display = settings.showHeader ? "" : "none";
+  // Header modules toggle independently (词包 / 分组 / 进度); header stays present as anchor.
+  $("hdrPack").style.visibility = settings.showPack ? "visible" : "hidden";
+  $("groupBadge").style.visibility = settings.showGroup ? "visible" : "hidden";
+  $("progress").style.visibility = settings.showProgress ? "visible" : "hidden";
   // Show/hide side arrows ("" lets the .editing CSS still hide them during edit).
   $("prevBtn").style.display = settings.showArrows ? "" : "none";
   $("nextBtn").style.display = settings.showArrows ? "" : "none";
@@ -550,17 +579,28 @@ function syncVisToggles() {
   set("showEn", settings.showEn); set("showZh", settings.showZh);
   set("showPos", settings.showPos); set("showPhon", settings.showPhon);
   set("showButtons", settings.showButtons); set("showPlay", settings.showPlay);
-  set("showArrows", settings.showArrows); set("showHeader", settings.showHeader);
+  set("showArrows", settings.showArrows);
+  set("showPack", settings.showPack); set("showGroup", settings.showGroup);
+  set("showProgress", settings.showProgress);
   // Mobile sheet mirrors (2-suffixed):
   set("showEn2", settings.showEn); set("showZh2", settings.showZh);
   set("showPos2", settings.showPos); set("showPhon2", settings.showPhon);
   set("showButtons2", settings.showButtons); set("showPlay2", settings.showPlay);
-  set("showArrows2", settings.showArrows); set("showHeader2", settings.showHeader);
+  set("showArrows2", settings.showArrows);
+  set("showPack2", settings.showPack); set("showGroup2", settings.showGroup);
+  set("showProgress2", settings.showProgress);
+}
+// Sync the two header size sliders + their value labels (仿字号滑块).
+function syncHdrFontSliders() {
+  const s = (id, v) => { const el = $(id); if (el) el.value = v; };
+  const t = (id, v) => { const el = $(id); if (el) el.textContent = v; };
+  s("fontScaleGroup", settings.fontScaleGroup); t("fontValGroup", settings.fontScaleGroup.toFixed(1) + "×");
+  s("fontScaleProgress", settings.fontScaleProgress); t("fontValProgress", settings.fontScaleProgress.toFixed(1) + "×");
 }
 
 // ---- Edit mode (draggable modules) ----
 function enterEdit() {
-  editBackup = { x: settings.moduleX.slice(), y: settings.moduleY.slice() };
+  editBackup = { x: settings.moduleX.slice(), y: settings.moduleY.slice(), hx: settings.hdrX.slice(), hy: settings.hdrY.slice() };
   editMode = true;
   document.getElementById("app").classList.add("editing");
   const win = $("editBar");
@@ -570,6 +610,7 @@ function enterEdit() {
   $("fontScaleEn").value = settings.fontScaleEn; $("fontValEn").textContent = settings.fontScaleEn.toFixed(1) + "×";
   $("fontScaleZh").value = settings.fontScaleZh; $("fontValZh").textContent = settings.fontScaleZh.toFixed(1) + "×";
   $("fontScalePhon").value = settings.fontScalePhon; $("fontValPhon").textContent = settings.fontScalePhon.toFixed(1) + "×";
+  syncHdrFontSliders();
   closeDrawer();
 }
 // Make the edit window draggable by its header.
@@ -627,6 +668,53 @@ function bindEditDrag() {
     mod.addEventListener("pointercancel", end);
   });
 }
+// Edit-mode drag for the three header modules (词包/分组/进度). rAF-coalesced like
+// bindEditDrag. Offsets stored in hdrX/hdrY. The pack <select> is made
+// non-interactive during edit (CSS) so the container receives the drag pointer.
+function bindHdrDrag() {
+  els.hdrMods.forEach((mod, i) => {
+    if (!mod) return;
+    let startX = 0, startY = 0, baseX = 0, baseY = 0, rafId = 0;
+    const applyFrame = () => {
+      rafId = 0;
+      mod.style.transform = `translate3d(${settings.hdrX[i]}px, ${settings.hdrY[i]}px, 0)`;
+    };
+    // Clamp within the viewport so a module can roam most of the page but never escape it.
+    const clampX = (v) => {
+      const r = mod.getBoundingClientRect();
+      const cur = settings.hdrX[i];
+      const left = r.left - cur, right = r.right - cur;
+      return Math.max(-left + 4, Math.min(v, window.innerWidth - right - 4));
+    };
+    const clampY = (v) => {
+      const r = mod.getBoundingClientRect();
+      const cur = settings.hdrY[i];
+      const top = r.top - cur, bottom = r.bottom - cur;
+      return Math.max(-top + 4, Math.min(v, window.innerHeight - bottom - 4));
+    };
+    mod.addEventListener("pointerdown", (e) => {
+      if (!editMode) return;
+      e.preventDefault();
+      startX = e.clientX; startY = e.clientY; baseX = settings.hdrX[i]; baseY = settings.hdrY[i];
+      mod.classList.add("dragging"); mod.setPointerCapture(e.pointerId);
+    });
+    mod.addEventListener("pointermove", (e) => {
+      if (!editMode || !mod.hasPointerCapture(e.pointerId)) return;
+      e.preventDefault();
+      settings.hdrX[i] = clampX(baseX + (e.clientX - startX));
+      settings.hdrY[i] = clampY(baseY + (e.clientY - startY));
+      if (!rafId) rafId = requestAnimationFrame(applyFrame);
+    });
+    const end = (e) => {
+      if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+      mod.style.transform = `translate3d(${settings.hdrX[i]}px, ${settings.hdrY[i]}px, 0)`;
+      if (mod.hasPointerCapture(e.pointerId)) mod.releasePointerCapture(e.pointerId);
+      mod.classList.remove("dragging");
+    };
+    mod.addEventListener("pointerup", end);
+    mod.addEventListener("pointercancel", end);
+  });
+}
 
 // ---- Drawer / bottom sheet / settings UI ----
 function openDrawer() {
@@ -650,6 +738,7 @@ function syncDrawer() {
   $("fontScaleEn").value = settings.fontScaleEn; $("fontValEn").textContent = settings.fontScaleEn.toFixed(1) + "×";
   $("fontScaleZh").value = settings.fontScaleZh; $("fontValZh").textContent = settings.fontScaleZh.toFixed(1) + "×";
   $("fontScalePhon").value = settings.fontScalePhon; $("fontValPhon").textContent = settings.fontScalePhon.toFixed(1) + "×";
+  syncHdrFontSliders();
   $("autoAdvance").checked = settings.autoAdvance;
   updateFlipRow();
   updateLimitMode();
@@ -709,7 +798,7 @@ async function resetSettings() {
   if (!(await showConfirm({ title: "恢复默认设置", message: "确定将所有设置恢复为默认？自定义词包不会被删除。", confirmText: "恢复默认", cancelText: "取消" }))) return;
   stopAudio();
   Object.keys(settings).forEach((k) => delete settings[k]);
-  Object.assign(settings, DEFAULTS, { moduleX: [0, 0, 0, 0, 0, 0], moduleY: [0, 0, 0, 0, 0, 0] });
+  Object.assign(settings, DEFAULTS, { moduleX: [0, 0, 0, 0, 0, 0], moduleY: [0, 0, 0, 0, 0, 0], hdrX: [0, 0, 0], hdrY: [0, 0, 0] });
   saveSettings();
   applyPalette();
   applyModuleOffsets();
@@ -746,6 +835,8 @@ function bindEvents() {
   $("fontScaleEn").addEventListener("input", (e) => { settings.fontScaleEn = parseFloat(e.target.value); $("fontValEn").textContent = settings.fontScaleEn.toFixed(1) + "×"; applyPalette(); render(); saveSettings(); });
   $("fontScaleZh").addEventListener("input", (e) => { settings.fontScaleZh = parseFloat(e.target.value); $("fontValZh").textContent = settings.fontScaleZh.toFixed(1) + "×"; applyPalette(); render(); saveSettings(); });
   $("fontScalePhon").addEventListener("input", (e) => { settings.fontScalePhon = parseFloat(e.target.value); $("fontValPhon").textContent = settings.fontScalePhon.toFixed(1) + "×"; applyPalette(); render(); saveSettings(); });
+  $("fontScaleGroup").addEventListener("input", (e) => { settings.fontScaleGroup = parseFloat(e.target.value); $("fontValGroup").textContent = settings.fontScaleGroup.toFixed(1) + "×"; applyPalette(); render(); saveSettings(); });
+  $("fontScaleProgress").addEventListener("input", (e) => { settings.fontScaleProgress = parseFloat(e.target.value); $("fontValProgress").textContent = settings.fontScaleProgress.toFixed(1) + "×"; applyPalette(); render(); saveSettings(); });
   $("repeatBtn").addEventListener("click", () => { settings.repeat = REPEAT_CYCLE[(REPEAT_CYCLE.indexOf(settings.repeat) + 1) % REPEAT_CYCLE.length]; saveSettings(); syncDrawer(); });
   $("autoAdvance").addEventListener("change", (e) => { settings.autoAdvance = e.target.checked; saveSettings(); updateFlipRow(); });
 
@@ -763,10 +854,12 @@ function bindEvents() {
   const visToggle = (id, key) => { const el = $(id); if (el) el.addEventListener("change", (e) => { settings[key] = e.target.checked; saveSettings(); syncVisToggles(); render(); }); };
   // Desktop-parity ids (in the hidden editBar):
   visToggle("showZh", "showZh"); visToggle("showPos", "showPos"); visToggle("showPhon", "showPhon"); visToggle("showEn", "showEn");
-  visToggle("showButtons", "showButtons"); visToggle("showPlay", "showPlay"); visToggle("showHeader", "showHeader"); visToggle("showArrows", "showArrows");
+  visToggle("showButtons", "showButtons"); visToggle("showPlay", "showPlay"); visToggle("showArrows", "showArrows");
+  visToggle("showPack", "showPack"); visToggle("showGroup", "showGroup"); visToggle("showProgress", "showProgress");
   // Mobile sheet mirrors (2-suffixed):
   visToggle("showZh2", "showZh"); visToggle("showPos2", "showPos"); visToggle("showPhon2", "showPhon"); visToggle("showEn2", "showEn");
-  visToggle("showButtons2", "showButtons"); visToggle("showPlay2", "showPlay"); visToggle("showHeader2", "showHeader"); visToggle("showArrows2", "showArrows");
+  visToggle("showButtons2", "showButtons"); visToggle("showPlay2", "showPlay"); visToggle("showArrows2", "showArrows");
+  visToggle("showPack2", "showPack"); visToggle("showGroup2", "showGroup"); visToggle("showProgress2", "showProgress");
 
   document.querySelectorAll("#accentSeg .seg-btn").forEach((b) => b.addEventListener("click", () => { settings.accent = b.dataset.accent; saveSettings(); syncDrawer(); render(); playWord(); }));
   $("resetSettingsBtn").addEventListener("click", resetSettings);
@@ -820,9 +913,10 @@ function bindEvents() {
   $("editLayoutBtn").addEventListener("click", enterEdit);
   bindEditFloatDrag();
   $("editSave").addEventListener("click", () => { saveSettings(); exitEdit(); });
-  $("editCancel").addEventListener("click", () => { if (editBackup) { settings.moduleX = editBackup.x; settings.moduleY = editBackup.y; applyModuleOffsets(); } exitEdit(); });
-  $("editReset").addEventListener("click", () => { settings.moduleX = [0, 0, 0, 0, 0, 0]; settings.moduleY = [0, 0, 0, 0, 0, 0]; applyModuleOffsets(); });
+  $("editCancel").addEventListener("click", () => { if (editBackup) { settings.moduleX = editBackup.x; settings.moduleY = editBackup.y; settings.hdrX = editBackup.hx; settings.hdrY = editBackup.hy; applyModuleOffsets(); } exitEdit(); });
+  $("editReset").addEventListener("click", () => { settings.moduleX = [0, 0, 0, 0, 0, 0]; settings.moduleY = [0, 0, 0, 0, 0, 0]; settings.hdrX = [0, 0, 0]; settings.hdrY = [0, 0, 0]; applyModuleOffsets(); });
   bindEditDrag();
+  bindHdrDrag();
 
   // ---- Mobile bottom control bar ----
   const bindTap = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", (e) => { e.stopPropagation(); if (!editMode) fn(); }); };

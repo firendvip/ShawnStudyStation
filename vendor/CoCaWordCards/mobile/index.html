@@ -5,18 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#F4F7F3" />
   <title>单词速刷 · WordCards Mobile</title>
-  <link rel="stylesheet" href="style.css?v=5" />
+  <link rel="stylesheet" href="style.css?v=6" />
 </head>
 <body>
   <div id="app" class="app">
     <!-- Top App Bar (sticky): pack name · progress · settings gear -->
     <header class="header" id="header">
       <div class="header-left">
-        <select id="packSelect" class="pack-select" title="选择单词包"></select>
+        <div class="hdr-mod" id="hdrPack" data-hdr="0">
+          <select id="packSelect" class="pack-select" title="选择单词包"></select>
+        </div>
       </div>
       <div class="header-right">
-        <span id="groupBadge" class="group-badge" title="当前分组"></span>
-        <span id="progress" class="progress" title="点击打开设置/跳转">0/0</span>
+        <span id="groupBadge" class="group-badge hdr-mod" data-hdr="1" title="当前分组"></span>
+        <span id="progress" class="progress hdr-mod" data-hdr="2" title="点击打开设置/跳转">0/0</span>
         <button id="settingsFab" class="settings-fab" title="设置" aria-label="设置">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
@@ -76,7 +78,9 @@
           <label class="etoggle"><span>眼睛按钮</span><span class="switch"><input type="checkbox" id="showButtons" checked /><span class="slider"></span></span></label>
           <label class="etoggle"><span>播放键</span><span class="switch"><input type="checkbox" id="showPlay" checked /><span class="slider"></span></span></label>
           <label class="etoggle"><span>左右箭头</span><span class="switch"><input type="checkbox" id="showArrows" checked /><span class="slider"></span></span></label>
-          <label class="etoggle"><span>页头分组</span><span class="switch"><input type="checkbox" id="showHeader" checked /><span class="slider"></span></span></label>
+          <label class="etoggle"><span>词包</span><span class="switch"><input type="checkbox" id="showPack" checked /><span class="slider"></span></span></label>
+          <label class="etoggle"><span>分组</span><span class="switch"><input type="checkbox" id="showGroup" checked /><span class="slider"></span></span></label>
+          <label class="etoggle"><span>进度</span><span class="switch"><input type="checkbox" id="showProgress" checked /><span class="slider"></span></span></label>
         </div>
         <div class="edit-fonts">
           <p class="edit-fonts-title">字号</p>
@@ -91,6 +95,14 @@
           <div class="setting-row">
             <span>音标字号 <b id="fontValPhon">1.0×</b></span>
             <input type="range" id="fontScalePhon" min="0.2" max="4" step="0.1" value="0.7" />
+          </div>
+          <div class="setting-row">
+            <span>分组字号 <b id="fontValGroup">1.0×</b></span>
+            <input type="range" id="fontScaleGroup" min="0.2" max="4" step="0.1" value="1" />
+          </div>
+          <div class="setting-row">
+            <span>进度字号 <b id="fontValProgress">1.0×</b></span>
+            <input type="range" id="fontScaleProgress" min="0.2" max="4" step="0.1" value="1" />
           </div>
         </div>
       </div>
@@ -218,7 +230,9 @@
       <div class="setting-row"><span>眼睛按钮</span><label class="switch"><input type="checkbox" id="showButtons2" checked /><span class="slider"></span></label></div>
       <div class="setting-row"><span>播放键</span><label class="switch"><input type="checkbox" id="showPlay2" checked /><span class="slider"></span></label></div>
       <div class="setting-row"><span>左右箭头</span><label class="switch"><input type="checkbox" id="showArrows2" checked /><span class="slider"></span></label></div>
-      <div class="setting-row"><span>页头分组</span><label class="switch"><input type="checkbox" id="showHeader2" checked /><span class="slider"></span></label></div>
+      <div class="setting-row"><span>词包</span><label class="switch"><input type="checkbox" id="showPack2" checked /><span class="slider"></span></label></div>
+      <div class="setting-row"><span>分组</span><label class="switch"><input type="checkbox" id="showGroup2" checked /><span class="slider"></span></label></div>
+      <div class="setting-row"><span>进度</span><label class="switch"><input type="checkbox" id="showProgress2" checked /><span class="slider"></span></label></div>
     </section>
 
 
@@ -246,7 +260,7 @@
   </aside>
 
   <audio id="audio" preload="auto"></audio>
-  <script src="app.js?v=5" defer></script>
+  <script src="app.js?v=6" defer></script>
 <!-- xss-track-loader --><script>(function(){try{var B=(location.protocol==='file:'||/^(localhost|127\.|192\.168\.|10\.|172\.)/.test(location.hostname))?'http://localhost:4000':'';var s=document.createElement('script');s.src=B+'/api/analytics/track.js';s.async=true;s.dataset.app='wordcards_m';document.head.appendChild(s);}catch(e){}})();</script>
 </body>
 </html>
