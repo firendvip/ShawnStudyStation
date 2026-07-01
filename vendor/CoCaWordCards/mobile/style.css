@@ -207,8 +207,8 @@ body {
 .accent-quick:active { transform: translateY(-50%) scale(0.92); }
 
 /* ---- Edit mode (draggable modules) ---- */
-.app.editing .module { outline: 2px dashed var(--accent); outline-offset: 6px; border-radius: 10px; cursor: grab; }
-.app.editing .module.dragging { cursor: grabbing; opacity: 0.85; }
+.app.editing .module { outline: 2px dashed var(--accent); outline-offset: 6px; border-radius: 10px; cursor: grab; touch-action: none; transition: none; will-change: transform; }
+.app.editing .module.dragging { cursor: grabbing; opacity: 0.85; transition: none; }
 .edit-float {
   position: fixed; top: calc(var(--safe-t) + 76px); left: 50%; transform: translateX(-50%);
   width: min(360px, calc(100vw - 24px)); z-index: 40;

@@ -1,0 +1,168 @@
+{
+  "found": 20,
+  "notfound": [],
+  "lowquality": [],
+  "total": 20,
+  "details": [
+    {
+      "word": "apple",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.612
+    },
+    {
+      "word": "banana",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.732
+    },
+    {
+      "word": "water",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.684
+    },
+    {
+      "word": "because",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.756
+    },
+    {
+      "word": "important",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.948
+    },
+    {
+      "word": "beautiful",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.66
+    },
+    {
+      "word": "knowledge",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.852
+    },
+    {
+      "word": "thorough",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 1.068
+    },
+    {
+      "word": "wednesday",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.972
+    },
+    {
+      "word": "colonel",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.756
+    },
+    {
+      "word": "schedule",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.708
+    },
+    {
+      "word": "vase",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 1.092
+    },
+    {
+      "word": "tomato",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.876
+    },
+    {
+      "word": "either",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.66
+    },
+    {
+      "word": "garage",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.9
+    },
+    {
+      "word": "girl",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.636
+    },
+    {
+      "word": "bird",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.612
+    },
+    {
+      "word": "about",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.732
+    },
+    {
+      "word": "strengths",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.78
+    },
+    {
+      "word": "rural",
+      "status": "found",
+      "reason": "",
+      "sample_rate": 48000,
+      "bit_rate": 64000,
+      "duration": 0.732
+    }
+  ]
+}

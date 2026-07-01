@@ -39,7 +39,7 @@ function gsize() { const n = parseInt(settings.groupSize, 10); return (!n || n <
 const OFFSET_LIMIT = 200;
 
 const DEFAULTS = {
-  accent: "UK", speed: 1.0, repeat: 1, interval: 0.3, flipInterval: 0.5, autoAdvance: false,
+  accent: "US", speed: 1.0, repeat: 1, interval: 0.3, flipInterval: 0.3, autoAdvance: true,
   showZh: true, showPos: true, showPhon: true, showEn: true, showButtons: true, showPlay: true, showHeader: true, showArrows: true,
   fontScaleEn: 1.0, fontScaleZh: 1.0,
   moduleX: [0, 0, 0, 0, 0, 0], moduleY: [0, 0, 0, 0, 0, 0],
@@ -57,8 +57,13 @@ if (_loaded.fontScale != null && _loaded.fontScaleEn == null) settings.fontScale
 if (_loaded.fontScale != null && _loaded.fontScaleZh == null) settings.fontScaleZh = _loaded.fontScale;
 if (!Array.isArray(settings.moduleX) || settings.moduleX.length !== 6) settings.moduleX = [0, 0, 0, 0, 0, 0];
 if (!Array.isArray(settings.moduleY) || settings.moduleY.length !== 6) settings.moduleY = [0, 0, 0, 0, 0, 0];
-// One-time: adopt UK (英音) as the default accent; runs once, then respects later user choice.
-if (!_loaded.accentDefaultUK) { settings.accent = "UK"; settings.accentDefaultUK = true; }
+// One-time: adopt the 美音-based default pronunciation preset (accent + speed/repeat/interval/auto-flip);
+// runs once for everyone, then respects the user's later choices.
+if (!_loaded.pronDefaults202607) {
+  settings.accent = "US"; settings.speed = 1.0; settings.repeat = 1;
+  settings.interval = 0.3; settings.autoAdvance = true; settings.flipInterval = 0.3;
+  settings.pronDefaults202607 = true;
+}
 let customPacks = loadJSON(LS_CUSTOM, {});
 let positions = loadJSON(LS_POS, {});
 
@@ -166,59 +171,19 @@ function youdaoUrl(en, accent) {
 }
 function setPlaying(on) { els.playBtn.classList.toggle("playing", on); }
 
-// ---- Web Audio engine: pre-decoded buffers -> truly gapless playback (local packs).
-let actx = null;
-let curSrc = null;               // current AudioBufferSourceNode (null when idle)
-const bufferCache = new Map();   // url -> AudioBuffer | Promise<AudioBuffer|null> | "failed"
-function ensureCtx() {
-  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
-  if (actx.state === "suspended") actx.resume();
-  return actx;
+// ---- Pitch-preserving playback ----
+// All audio (local packs + online fallback) plays through the shared <audio> element.
+// HTMLAudioElement supports pitch-preserving time-stretch, so any playbackRate keeps
+// the voice natural (no chipmunk effect). AudioBufferSourceNode cannot do this, so the
+// Web Audio path was removed entirely.
+function applyPreservesPitch() {
+  // Some browsers reset these flags per media load, so re-assert them before every play.
+  try { audio.preservesPitch = true; } catch (_) {}
+  try { audio.mozPreservesPitch = true; } catch (_) {}
+  try { audio.webkitPreservesPitch = true; } catch (_) {}
 }
-function loadBuffer(url) {
-  const c = bufferCache.get(url);
-  if (c instanceof AudioBuffer) return Promise.resolve(c);
-  if (c && c.then) return c;
-  if (c === "failed") return Promise.resolve(null);
-  const p = fetch(url)
-    .then((r) => { if (!r.ok) throw new Error("http " + r.status); return r.arrayBuffer(); })
-    .then((a) => ensureCtx().decodeAudioData(a))
-    .then((b) => { bufferCache.set(url, b); return b; })
-    .catch(() => { bufferCache.set(url, "failed"); return null; });
-  bufferCache.set(url, p);
-  return p;
-}
-function stopSource() {
-  if (curSrc) { try { curSrc.onended = null; curSrc.stop(); } catch (e) {} curSrc = null; }
-}
-function playBuffer(buf) {
-  stopSource();
-  const ctx = ensureCtx();
-  const src = ctx.createBufferSource();
-  src.buffer = buf;
-  src.playbackRate.value = settings.speed;
-  src.connect(ctx.destination);
-  src.onended = onBufferEnded;
-  curSrc = src;
-  src.start();
-  setPlaying(true);
-}
-function onBufferEnded() {              // fires only on natural end (manual stop nulls onended)
-  curSrc = null;
-  repeatCounter++;
-  if (settings.repeat === -1 || repeatCounter < settings.repeat) {
-    repeatTimer = setTimeout(() => {
-      const w = pack && pack.words[index];
-      if (!w) return;
-      const b = bufferCache.get(audioUrl(w, settings.accent));
-      if (b instanceof AudioBuffer) playBuffer(b);
-    }, settings.interval * 1000);
-  } else if (settings.autoAdvance && !userPaused) {
-    scheduleAdvance();
-  } else {
-    setPlaying(false);
-  }
-}
+applyPreservesPitch();
+
 // Wait the user-set "翻页时间间隔" before flipping to the next word during auto-advance.
 function scheduleAdvance() {
   clearTimeout(advanceTimer);
@@ -226,39 +191,31 @@ function scheduleAdvance() {
   if (d <= 0) { if (!userPaused) goNext(); return; }
   advanceTimer = setTimeout(() => { if (!userPaused) goNext(); }, d);  // play icon stays "on" through the pause
 }
-// Fallback <audio> element for online/custom packs (Youdao; avoids Web Audio CORS).
-function playFallback(word) {
+// Play the given word through the <audio> element with pitch-preserving speed.
+function playViaAudio(word) {
   audio.dataset.fallback = "0";
   audio.src = audioUrl(word, settings.accent);
+  applyPreservesPitch();
   audio.playbackRate = settings.speed;
   audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
 }
-function isPlaying() { return curSrc !== null || !audio.paused; }
-function stopAudio() { clearTimeout(repeatTimer); clearTimeout(advanceTimer); stopSource(); audio.pause(); setPlaying(false); }
-async function playWord() {
+function isPlaying() { return !audio.paused; }
+function stopAudio() { clearTimeout(repeatTimer); clearTimeout(advanceTimer); audio.pause(); setPlaying(false); }
+function playWord() {
   if (!pack) return;
   const word = pack.words[index];
   if (!word) return;
   clearTimeout(repeatTimer);
   clearTimeout(advanceTimer);
-  stopSource();
   audio.pause();
   repeatCounter = 0;
   userPaused = false;
-  // online/custom pack -> <audio>; file:// 下本地音频也走 <audio>（fetch 被协议阻止）
-  if (!pack.audioBase || IS_FILE) { playFallback(word); return; }
-  ensureCtx();                                            // create/resume within the user gesture
-  const url = audioUrl(word, settings.accent);
-  const myIndex = index, myAccent = settings.accent;
-  const buf = await loadBuffer(url);
-  if (userPaused || index !== myIndex || settings.accent !== myAccent) return;  // user moved on
-  if (buf) playBuffer(buf);
-  else playFallback(word);                                // local decode failed -> Youdao
+  playViaAudio(word);            // local packs and online fallback both go through <audio>
 }
 audio.addEventListener("ended", () => {
   repeatCounter++;
   if (settings.repeat === -1 || repeatCounter < settings.repeat) {
-    repeatTimer = setTimeout(() => { audio.currentTime = 0; audio.playbackRate = settings.speed; audio.play().catch(() => {}); }, settings.interval * 1000);
+    repeatTimer = setTimeout(() => { audio.currentTime = 0; applyPreservesPitch(); audio.playbackRate = settings.speed; audio.play().catch(() => {}); }, settings.interval * 1000);
   } else if (settings.autoAdvance && !userPaused) {
     scheduleAdvance();  // keep the "playing" icon steady; goNext -> playWord keeps it on
   } else {
@@ -277,6 +234,7 @@ audio.addEventListener("error", () => {
   if (!word) return;
   audio.dataset.fallback = "1";
   audio.src = youdaoUrl(word.en, settings.accent);
+  applyPreservesPitch();
   audio.playbackRate = settings.speed;
   audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
 });
@@ -366,21 +324,20 @@ function render() {
   // No per-render animation: content swaps instantly so auto-play doesn't flash.
 }
 
-// ---- Preload: pre-decode the next N words into AudioBuffers for gapless playback.
+// ---- Preload: warm the browser HTTP cache for the next N words so auto-advance
+// has minimal gap. Lightweight fetch prewarm only (no Web Audio decode).
 const PRELOAD_AHEAD = 20;
+const prefetched = new Set();   // urls already prewarmed this session
 function preloadAhead() {
   if (!pack || !pack.audioBase) return;  // only local-audio packs (avoid hammering Youdao)
-  if (IS_FILE) return;                    // file:// 走 <audio> 元素，无需 Web Audio 预解码（fetch 会被阻止）
-  const wanted = new Set();
-  for (let k = 0; k <= PRELOAD_AHEAD; k++) {       // include current (k=0) for instant first play
+  if (IS_FILE) return;                    // file:// 无法 fetch，浏览器自行缓存 <audio> 请求
+  for (let k = 0; k <= PRELOAD_AHEAD; k++) {       // include current (k=0)
     const j = index + k;
     if (j >= pack.words.length) break;
     const url = audioUrl(pack.words[j], settings.accent);
-    wanted.add(url);
-    if (!bufferCache.has(url)) loadBuffer(url);     // kick off fetch + decode
-  }
-  for (const url of [...bufferCache.keys()]) {      // bound memory: drop buffers outside window
-    if (!wanted.has(url)) bufferCache.delete(url);
+    if (prefetched.has(url)) continue;
+    prefetched.add(url);
+    fetch(url, { cache: "force-cache" }).catch(() => prefetched.delete(url));
   }
 }
 
@@ -413,11 +370,11 @@ function updateGroupUI() {
 // ---- Pack management ----
 function builtInPacks() {
   return [
-    { id: "primary", name: "小学英语", url: "packs/primary.json?d=4" },
-    { id: "junior", name: "初中英语", url: "packs/junior.json?d=4" },
-    { id: "senior", name: "高中英语", url: "packs/senior.json?d=4" },
-    { id: "coca5000", name: "COCA 5000 核心词", url: "packs/coca5000.json?d=4" },
-    { id: "coca17k", name: "COCA 高频 17000 词", url: "packs/coca17k.json?d=4" },
+    { id: "primary", name: "小学英语", url: "packs/primary.json?d=6" },
+    { id: "junior", name: "初中英语", url: "packs/junior.json?d=6" },
+    { id: "senior", name: "高中英语", url: "packs/senior.json?d=6" },
+    { id: "coca5000", name: "COCA 5000 核心词", url: "packs/coca5000.json?d=6" },
+    { id: "coca17k", name: "COCA 高频 17000 词", url: "packs/coca17k.json?d=6" },
   ];
 }
 function allPackMetas() { return [...builtInPacks(), ...Object.values(customPacks).map((p) => ({ id: p.id, name: p.name }))]; }
@@ -708,6 +665,7 @@ async function resetSettings() {
   saveSettings();
   applyPalette();
   applyModuleOffsets();
+  applyPreservesPitch();
   audio.playbackRate = settings.speed;
   loadPack(settings.packId);
   syncDrawer();
@@ -727,7 +685,7 @@ function bindEvents() {
   $("drawerClose").addEventListener("click", closeDrawer);
   $("drawerMask").addEventListener("click", closeDrawer);
 
-  $("speed").addEventListener("input", (e) => { settings.speed = parseFloat(e.target.value); $("speedVal").textContent = settings.speed.toFixed(1) + "×"; audio.playbackRate = settings.speed; if (curSrc) curSrc.playbackRate.value = settings.speed; saveSettings(); });
+  $("speed").addEventListener("input", (e) => { settings.speed = parseFloat(e.target.value); $("speedVal").textContent = settings.speed.toFixed(1) + "×"; applyPreservesPitch(); audio.playbackRate = settings.speed; saveSettings(); });
   $("interval").addEventListener("input", (e) => { settings.interval = parseFloat(e.target.value); $("intervalVal").textContent = settings.interval.toFixed(1) + "s"; saveSettings(); });
   $("flipInterval").addEventListener("input", (e) => { settings.flipInterval = parseFloat(e.target.value); $("flipIntervalVal").textContent = settings.flipInterval.toFixed(1) + "s"; saveSettings(); });
   $("fontScaleEn").addEventListener("input", (e) => { settings.fontScaleEn = parseFloat(e.target.value); $("fontValEn").textContent = settings.fontScaleEn.toFixed(1) + "×"; applyPalette(); render(); saveSettings(); });
