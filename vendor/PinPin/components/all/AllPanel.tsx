@@ -7,6 +7,7 @@ import { todayLocalDate, formatCN } from '@/lib/date'
 import type { EntryItem, PracticeDay } from '@/lib/types'
 import { PracticeBoard } from '@/components/practice/PracticeBoard'
 import { PasswordModal } from '@/components/common/PasswordModal'
+import { ChineseDatePicker } from '@/components/common/ChineseDatePicker'
 import { useDialog } from '@/components/common/DialogProvider'
 import styles from './AllPanel.module.css'
 
@@ -125,11 +126,10 @@ export function AllPanel({ pinyinFontSize, answerFontSize, revealed = false }: P
         <div className={styles.addBox}>
           <label className={styles.dateRow}>
             <span className={styles.dateLabel}>录入日期</span>
-            <input
-              type="date"
-              className={styles.dateInput}
+            <ChineseDatePicker
               value={recordDate}
-              onChange={(e) => e.target.value && setRecordDate(e.target.value)}
+              onChange={(next) => next && setRecordDate(next)}
+              aria-label="录入日期"
             />
           </label>
           <div className={styles.addRow}>

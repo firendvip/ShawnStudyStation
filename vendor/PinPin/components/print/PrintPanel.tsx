@@ -7,6 +7,7 @@ import { evenlyDistribute, sequentialByRecordDay } from '@/lib/distribute'
 import { FitText } from '@/components/common/FitText'
 import { PasswordModal } from '@/components/common/PasswordModal'
 import { useDialog } from '@/components/common/DialogProvider'
+import { ChineseDatePicker } from '@/components/common/ChineseDatePicker'
 import type { AppSettings, EntryItem, PdfReportItem } from '@/lib/types'
 import styles from './PrintPanel.module.css'
 
@@ -146,40 +147,44 @@ export function PrintPanel({ settings }: Props) {
         <div className={styles.row}>
           <label className={styles.field}>
             <span className={styles.label}>录入开始时间</span>
-            <input
-              type="date"
-              className={styles.input}
+            <ChineseDatePicker
               value={recFrom}
-              onChange={(e) => e.target.value && setRecFrom(e.target.value)}
+              onChange={(next) => next && setRecFrom(next)}
+              max={recTo}
+              compact
+              aria-label="录入开始时间"
             />
           </label>
           <label className={styles.field}>
             <span className={styles.label}>录入结束时间</span>
-            <input
-              type="date"
-              className={styles.input}
+            <ChineseDatePicker
               value={recTo}
-              onChange={(e) => e.target.value && setRecTo(e.target.value)}
+              onChange={(next) => next && setRecTo(next)}
+              min={recFrom}
+              compact
+              aria-label="录入结束时间"
             />
           </label>
         </div>
         <div className={styles.row}>
           <label className={styles.field}>
             <span className={styles.label}>书写开始时间</span>
-            <input
-              type="date"
-              className={styles.input}
+            <ChineseDatePicker
               value={writeFrom}
-              onChange={(e) => e.target.value && setWriteFrom(e.target.value)}
+              onChange={(next) => next && setWriteFrom(next)}
+              max={writeTo}
+              compact
+              aria-label="书写开始时间"
             />
           </label>
           <label className={styles.field}>
             <span className={styles.label}>书写结束时间</span>
-            <input
-              type="date"
-              className={styles.input}
+            <ChineseDatePicker
               value={writeTo}
-              onChange={(e) => e.target.value && setWriteTo(e.target.value)}
+              onChange={(next) => next && setWriteTo(next)}
+              min={writeFrom}
+              compact
+              aria-label="书写结束时间"
             />
           </label>
           <button
