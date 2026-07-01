@@ -16,12 +16,12 @@
         body {
             background: #fcfaf4;
             color: #362c24;
-            /* 顶部对齐：不垂直居中，让整张卡片（含底部语速滑块）从 70px 顶距开始完整排布；
-               内容超出可视区时正常向下滚动，不再被 iframe 裁切。 */
+            /* 语速滑块已移入设置弹窗，卡片本身较矮：垂直居中呈现，
+               同时用 70px 顶距 + 可滚动兜底，确保卡片在 iframe 内完整不裁切。 */
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
+            justify-content: center;
             align-items: center;
             padding: 70px 12px 28px;
             zoom: 0.8;
@@ -251,6 +251,8 @@
             padding: 22px 22px;
             width: 90%;
             max-width: 440px;
+            max-height: 88vh;
+            overflow-y: auto;
             box-shadow: 0 20px 40px rgba(0,0,0,0.10);
             position: relative;
         }
@@ -382,14 +384,35 @@
             font-weight: 500;
         }
         
-        .version {
-            text-align: center;
-            margin-top: 20px;
-            color: #a09890;
-            font-size: 1.1rem;
-            font-weight: 500;
+        /* 设置弹窗：齿轮图标 + 分组排版 */
+        .settings-icon {
+            display: block;
         }
-        
+
+        .settings-section {
+            margin-top: 6px;
+        }
+
+        .settings-section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #359658;
+            margin-bottom: 12px;
+        }
+
+        .settings-section-title i {
+            font-size: 1.1rem;
+        }
+
+        .settings-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e5e1da 20%, #e5e1da 80%, transparent);
+            margin: 20px 0;
+        }
+
         /* 装饰元素 */
         .decoration {
             position: absolute;
@@ -462,12 +485,10 @@
             }
         }
         
-        /* 语速调节 */
+        /* 语速调节（设置弹窗内） */
         .speed-control {
             width: 100%;
-            max-width: 360px;
-            margin-top: 34px;
-            padding: 16px 20px;
+            padding: 16px 18px 14px;
             background: #fcfaf4;
             border: 1px solid #e5e1da;
             border-radius: .875rem;
@@ -482,15 +503,19 @@
         }
 
         .speed-label {
-            font-size: 1.05rem;
+            font-size: 1.02rem;
             color: #71675d;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .speed-label i {
-            color: #359658;
+        .speed-scale {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #a09890;
         }
 
         .speed-value {
@@ -572,8 +597,13 @@
                 <span class="title-char">心</span>
                 <span class="title-char">算</span>
             </div>
-            <div class="help-btn" id="help-btn">
-                <i class="fas fa-question"></i>
+            <div class="help-btn" id="help-btn" title="设置" aria-label="设置">
+                <svg class="settings-icon" viewBox="0 0 24 24" width="20" height="20"
+                    fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
             </div>
             <!-- 已删除提示语 -->
         </header>
@@ -596,34 +626,44 @@
                     <i class="fas fa-stop"></i>
                 </button>
             </div>
-
-            <!-- 语速调节 -->
-            <div class="speed-control">
-                <div class="speed-control-head">
-                    <span class="speed-label"><i class="fas fa-gauge-high"></i> 语速</span>
-                    <span class="speed-value" id="speed-value">1.5×</span>
-                </div>
-                <input type="range" id="speed-slider" class="speed-slider"
-                    min="1.0" max="4.0" step="0.1" value="1.5">
-            </div>
         </div>
     </div>
     
-    <!-- 使用说明弹窗 -->
+    <!-- 设置弹窗 -->
     <div class="modal" id="instruction-modal">
         <div class="modal-content">
             <span class="close-btn" id="close-modal">&times;</span>
-            <h2 class="modal-title">使用说明</h2>
-            <ul class="instructions-list">
-                <li><i class="fas fa-random"></i>20以内加减法随机播报</li>
-                <li><i class="fas fa-clock"></i>开始3分钟后自动结束</li>
-                <li><i class="fas fa-stop-circle"></i>点击红色按钮可提前结束</li>
-                <li><i class="fas fa-keyboard"></i>按回车或提交键提交答案</li>
-                <li><i class="fas fa-hourglass-half"></i>10秒内未输入视为超时</li>
-                <li><i class="fas fa-laptop"></i>仅支持电脑端使用</li>
-                <li><i class="fas fa-history"></i>点标题查看最近训练数据</li>
-            </ul>
-            <div class="version">v1.5.0</div>
+            <h2 class="modal-title">设置</h2>
+
+            <!-- 语速分组 -->
+            <div class="settings-section">
+                <div class="settings-section-title"><i class="fas fa-gauge-high"></i> 语速</div>
+                <div class="speed-control">
+                    <div class="speed-control-head">
+                        <span class="speed-label">播报速度</span>
+                        <span class="speed-value" id="speed-value">1.5×</span>
+                    </div>
+                    <input type="range" id="speed-slider" class="speed-slider"
+                        min="1.0" max="4.0" step="0.1" value="1.5">
+                    <div class="speed-scale"><span>慢</span><span>快</span></div>
+                </div>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <!-- 使用说明分组 -->
+            <div class="settings-section">
+                <div class="settings-section-title"><i class="fas fa-circle-info"></i> 使用说明</div>
+                <ul class="instructions-list">
+                    <li><i class="fas fa-random"></i>20以内加减法随机播报</li>
+                    <li><i class="fas fa-clock"></i>开始3分钟后自动结束</li>
+                    <li><i class="fas fa-stop-circle"></i>点击红色按钮可提前结束</li>
+                    <li><i class="fas fa-keyboard"></i>按回车或提交键提交答案</li>
+                    <li><i class="fas fa-hourglass-half"></i>10秒内未输入视为超时</li>
+                    <li><i class="fas fa-laptop"></i>仅支持电脑端使用</li>
+                    <li><i class="fas fa-history"></i>点标题查看最近训练数据</li>
+                </ul>
+            </div>
         </div>
     </div>
     
@@ -1116,6 +1156,14 @@
             closeResult.addEventListener('click', () => {
                 resultModal.style.display = 'none';
             });
+
+            // ESC 关闭任一弹窗
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    instructionModal.style.display = 'none';
+                    resultModal.style.display = 'none';
+                }
+            });
             
             // 点击标题显示最近一次训练结果
             titleContainer.addEventListener('click', () => {
@@ -1145,11 +1193,9 @@
                 // 点击事件用于激活音频
             });
             
-            // 检查是否有历史记录，显示提示
-            if (localStorage.getItem('lastResult')) {
-                lastResultHint.style.display = 'block';
-            } else {
-                lastResultHint.style.display = 'none';
+            // 检查是否有历史记录，显示提示（提示元素已移除，做空值保护避免报错）
+            if (lastResultHint) {
+                lastResultHint.style.display = localStorage.getItem('lastResult') ? 'block' : 'none';
             }
         };
     </script>
