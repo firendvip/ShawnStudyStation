@@ -227,6 +227,15 @@ body {
 .edit-float-grip { font-size: 0.78rem; color: var(--text-secondary); letter-spacing: 0.04em; }
 .edit-float-body { padding: 0.85rem 1rem 0.4rem; overflow-y: auto; }
 .edit-float-tip { margin: 0 0 0.7rem; font-size: 0.85rem; line-height: 1.5; color: var(--text-secondary); }
+.edit-fonts {
+  margin-top: 0.6rem; padding: 0.7rem 0.85rem 0.55rem;
+  border: 1px solid var(--border); border-radius: 12px; background: var(--bg-mid);
+}
+.edit-fonts-title { margin: 0 0 0.5rem; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); }
+.edit-fonts .setting-row { display: block; padding: 0.4rem 0; }
+.edit-fonts .setting-row span { display: block; margin-bottom: 0.3rem; font-size: 0.9rem; }
+.edit-fonts .setting-row b { color: var(--accent); font-variant-numeric: tabular-nums; }
+.edit-fonts .setting-row input[type=range] { display: block; width: 100%; max-width: none; accent-color: var(--accent); height: 1.6rem; }
 .edit-foot {
   display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem;
   padding: 0.7rem 1rem; border-top: 1px solid var(--border); background: var(--surface);

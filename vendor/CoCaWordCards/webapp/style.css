@@ -175,6 +175,14 @@ body {
 .etoggle .switch { width: 40px; height: 23px; }
 .etoggle .slider::before { height: 17px; width: 17px; }
 .etoggle .switch input:checked + .slider::before { transform: translateX(17px); }
+.edit-fonts {
+  margin-top: 0.85rem; padding: 0.7rem 0.85rem 0.5rem;
+  border: 1px solid var(--border); border-radius: 12px; background: var(--bg-mid);
+}
+.edit-fonts-title { margin: 0 0 0.35rem; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); }
+.edit-fonts .setting-row { padding: 0.35rem 0; gap: 0.8rem; }
+.edit-fonts .setting-row span { font-size: 0.9rem; }
+.edit-fonts .setting-row input[type=range] { flex: 1; max-width: 55%; accent-color: var(--accent); }
 .edit-foot {
   display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem;
   padding: 0.7rem 1rem; border-top: 1px solid var(--border); background: var(--surface);

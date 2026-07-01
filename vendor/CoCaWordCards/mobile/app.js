@@ -567,6 +567,9 @@ function enterEdit() {
   win.style.left = ""; win.style.top = ""; win.style.transform = "";  // reset float to default position
   win.hidden = false;
   syncVisToggles();
+  $("fontScaleEn").value = settings.fontScaleEn; $("fontValEn").textContent = settings.fontScaleEn.toFixed(1) + "×";
+  $("fontScaleZh").value = settings.fontScaleZh; $("fontValZh").textContent = settings.fontScaleZh.toFixed(1) + "×";
+  $("fontScalePhon").value = settings.fontScalePhon; $("fontValPhon").textContent = settings.fontScalePhon.toFixed(1) + "×";
   closeDrawer();
 }
 // Make the edit window draggable by its header.
