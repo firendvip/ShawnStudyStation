@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#F4F7F3" />
+  <title>单词速刷 · WordCards Mobile</title>
+  <link rel="stylesheet" href="style.css?v=1" />
+</head>
+<body>
+  <div id="app" class="app">
+    <!-- Top App Bar (sticky): pack name · progress · settings gear -->
+    <header class="header" id="header">
+      <div class="header-left">
+        <select id="packSelect" class="pack-select" title="选择单词包"></select>
+      </div>
+      <div class="header-right">
+        <span id="groupBadge" class="group-badge" title="当前分组"></span>
+        <span id="progress" class="progress" title="点击打开设置/跳转">0/0</span>
+        <button id="settingsFab" class="settings-fab" title="设置" aria-label="设置">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="stage" id="stage">
+      <!-- Side arrows kept (id-required); on mobile they're subtle edge hints -->
+      <button class="nav-arrow nav-left" id="prevBtn" aria-label="上一个">‹</button>
+      <button class="nav-arrow nav-right" id="nextBtn" aria-label="下一个">›</button>
+
+      <!-- Six independently-referenced modules (ids unchanged) -->
+      <div class="card" id="card">
+        <div class="module" id="mod0" data-mod="0"><div class="word-en" id="wordEn" title="单击按意群高亮">—</div></div>
+        <div class="module" id="mod1" data-mod="1"><div class="word-zh" id="wordZh"></div></div>
+        <div class="module" id="mod2" data-mod="2"><div class="word-pos" id="wordPos"></div></div>
+        <div class="module" id="mod3" data-mod="3">
+          <button class="eye-btn" id="eyeBtn" title="显示/隐藏中文" aria-label="显示/隐藏中文">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 5C6.5 5 2.2 8.6 1 12c1.2 3.4 5.5 7 11 7s9.8-3.6 11-7c-1.2-3.4-5.5-7-11-7zm0 11.5A4.5 4.5 0 1 1 12 7a4.5 4.5 0 0 1 0 9.5zm0-7A2.5 2.5 0 1 0 12 14a2.5 2.5 0 0 0 0-5z"/></svg>
+          </button>
+        </div>
+        <div class="module" id="mod4" data-mod="4"><div class="word-phon" id="wordPhon"></div></div>
+        <!-- Play module (id-required) lives here but is visually hosted in the bottom bar via CSS on desktop-parity; on mobile the real play button sits in the fixed bar below. -->
+        <div class="module module-play-src" id="mod5" data-mod="5"></div>
+      </div>
+    </main>
+
+    <!-- Fixed bottom control bar (safe-area aware): prev · play · next -->
+    <nav class="control-bar" id="controlBar" aria-label="播放控制">
+      <button class="ctrl-btn ctrl-prev" id="prevBtn2" aria-label="上一词">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="16,4 16,20 5,12"/></svg>
+      </button>
+      <button class="play-btn" id="playBtn" title="播放 (空格)" aria-label="播放">
+        <svg class="ic ic-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="7,4 7,20 22,12"/></svg>
+        <svg class="ic ic-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6.5" y="5" width="3.6" height="14" rx="1.2"/><rect x="13.9" y="5" width="3.6" height="14" rx="1.2"/></svg>
+      </button>
+      <button class="ctrl-btn ctrl-next" id="nextBtn2" aria-label="下一词">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="8,4 8,20 19,12"/></svg>
+      </button>
+      <button class="accent-quick" id="accentQuick" aria-label="切换口音">英</button>
+    </nav>
+
+    <!-- Edit-layout floating window (kept for id parity; entered only from settings). -->
+    <div class="edit-float" id="editBar" hidden>
+      <div class="edit-float-head" id="editDragHandle">
+        <span class="edit-float-title">编辑布局</span>
+        <span class="edit-float-grip" aria-hidden="true">⠿ 可拖动</span>
+      </div>
+      <div class="edit-float-body">
+        <p class="edit-float-tip">拖动页面上的模块调整位置。</p>
+        <!-- Visibility toggles are hosted in the settings sheet; these mirrors keep ids present. -->
+        <div class="edit-toggles" hidden>
+          <label class="etoggle"><span>英文</span><span class="switch"><input type="checkbox" id="showEn" checked /><span class="slider"></span></span></label>
+          <label class="etoggle"><span>中文释义</span><span class="switch"><input type="checkbox" id="showZh" checked /><span class="slider"></span></span></label>
+          <label class="etoggle"><span>词性</span><span class="switch"><input type="checkbox" id="showPos" checked /><span class="slider"></span></span></label>
+          <label class="etoggle"><span>音标</span><span class="switch"><input type="checkbox" id="showPhon" checked /><span class="slider"></span></span></label>
+          <label class="etoggle"><span>眼睛按钮</span><span class="switch"><input type="checkbox" id="showButtons" checked /><span class="slider"></span></span></label>
+          <label class="etoggle"><span>播放键</span><span class="switch"><input type="checkbox" id="showPlay" checked /><span class="slider"></span></span></label>
+          <label class="etoggle"><span>左右箭头</span><span class="switch"><input type="checkbox" id="showArrows" checked /><span class="slider"></span></span></label>
+          <label class="etoggle"><span>页头分组</span><span class="switch"><input type="checkbox" id="showHeader" checked /><span class="slider"></span></span></label>
+        </div>
+      </div>
+      <div class="edit-foot">
+        <button class="btn ghost" id="editReset">还原</button>
+        <button class="btn ghost" id="editCancel">取消</button>
+        <button class="btn" id="editSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings: bottom sheet (drawer) -->
+  <div class="drawer-mask" id="drawerMask" hidden></div>
+  <aside class="drawer" id="drawer" hidden aria-label="设置">
+    <div class="drawer-grip" aria-hidden="true"></div>
+    <div class="drawer-head">
+      <h2>设置</h2>
+      <button class="icon-btn" id="drawerClose" aria-label="关闭">✕</button>
+    </div>
+
+    <!-- 1. 单词包 -->
+    <section class="setting-group">
+      <h3>单词包</h3>
+      <div class="setting-row">
+        <span>当前词包</span>
+        <select id="packSelect2" class="pack-select2"></select>
+      </div>
+      <div class="setting-row">
+        <span>每组单词数</span>
+        <input type="number" id="groupSizeInput" class="num-input" min="1" value="10" />
+      </div>
+      <label class="upload-row">
+        <span>上传自定义词包</span>
+        <input type="file" id="uploadInput" accept=".json,.csv,.txt" hidden />
+        <button class="btn" id="uploadBtn">选择文件…</button>
+      </label>
+      <div class="setting-row">
+        <span>下载导入样本</span>
+        <button class="btn ghost" id="downloadSampleBtn">下载样本 CSV</button>
+      </div>
+      <div id="customPackList" class="custom-list"></div>
+    </section>
+
+    <!-- 2. 展示内容 -->
+    <section class="setting-group">
+      <h3>展示内容</h3>
+      <div class="setting-row">
+        <span id="groupLabel">第 1 组 / 共 1 组</span>
+        <select id="groupSelect" class="pack-select2"></select>
+      </div>
+      <div class="setting-row">
+        <span>跳到第 N 个</span>
+        <div class="jump-row">
+          <input type="number" id="jumpInput" min="1" value="1" />
+          <button class="btn" id="jumpBtn">跳转</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span>限定方式</span>
+        <div class="seg" id="limitModeSeg">
+          <button data-mode="range" class="seg-btn">按区间</button>
+          <button data-mode="group" class="seg-btn">按分组</button>
+        </div>
+      </div>
+      <div class="setting-row" id="rangeModeRow">
+        <span>仅限展示</span>
+        <div class="range-row">
+          第 <input type="number" id="rangeStart" min="1" value="1" /> ~
+          <input type="number" id="rangeEnd" min="1" /> 个
+          <button class="btn" id="rangeApply">应用</button>
+        </div>
+      </div>
+      <div class="setting-row" id="groupModeRow">
+        <span>分组选择</span>
+        <div class="jump-row">
+          <select id="limitGroupSelect" class="pack-select2"></select>
+          <button class="btn" id="limitGroupApply">应用</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span id="rangeInfo" class="range-info">当前展示全部</span>
+        <button class="btn ghost" id="rangeClear">显示全部</button>
+      </div>
+    </section>
+
+    <!-- 3. 发音 -->
+    <section class="setting-group">
+      <h3>发音</h3>
+      <div class="setting-row">
+        <span>口音</span>
+        <div class="seg" id="accentSeg">
+          <button data-accent="US" class="seg-btn">美音</button>
+          <button data-accent="UK" class="seg-btn">英音</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span>语速 <b id="speedVal">1.0×</b></span>
+        <input type="range" id="speed" min="0.2" max="4.0" step="0.1" value="1.0" />
+      </div>
+      <div class="setting-row">
+        <span>重复</span>
+        <button class="btn" id="repeatBtn">1 次</button>
+      </div>
+      <div class="setting-row">
+        <span>重复间隔 <b id="intervalVal">0.3s</b></span>
+        <input type="range" id="interval" min="0" max="3" step="0.1" value="0.3" />
+      </div>
+      <div class="setting-row">
+        <span>自动翻页</span>
+        <label class="switch"><input type="checkbox" id="autoAdvance" /><span class="slider"></span></label>
+      </div>
+      <div class="setting-row" id="flipIntervalRow">
+        <span>翻页时间间隔 <b id="flipIntervalVal">0.5s</b></span>
+        <input type="range" id="flipInterval" min="0" max="5" step="0.1" value="0.5" />
+      </div>
+    </section>
+
+    <!-- 4. 显示内容开关（桌面版位于编辑栏，手机版并入设置） -->
+    <section class="setting-group">
+      <h3>显示内容开关</h3>
+      <div class="setting-row"><span>英文</span><label class="switch"><input type="checkbox" id="showEn2" checked /><span class="slider"></span></label></div>
+      <div class="setting-row"><span>中文释义</span><label class="switch"><input type="checkbox" id="showZh2" checked /><span class="slider"></span></label></div>
+      <div class="setting-row"><span>词性</span><label class="switch"><input type="checkbox" id="showPos2" checked /><span class="slider"></span></label></div>
+      <div class="setting-row"><span>音标</span><label class="switch"><input type="checkbox" id="showPhon2" checked /><span class="slider"></span></label></div>
+      <div class="setting-row"><span>眼睛按钮</span><label class="switch"><input type="checkbox" id="showButtons2" checked /><span class="slider"></span></label></div>
+      <div class="setting-row"><span>播放键</span><label class="switch"><input type="checkbox" id="showPlay2" checked /><span class="slider"></span></label></div>
+      <div class="setting-row"><span>左右箭头</span><label class="switch"><input type="checkbox" id="showArrows2" checked /><span class="slider"></span></label></div>
+      <div class="setting-row"><span>页头分组</span><label class="switch"><input type="checkbox" id="showHeader2" checked /><span class="slider"></span></label></div>
+    </section>
+
+    <!-- 5. 外观 -->
+    <section class="setting-group">
+      <h3>外观</h3>
+      <div class="setting-row">
+        <span>英文字号 <b id="fontValEn">1.0×</b></span>
+        <input type="range" id="fontScaleEn" min="0.6" max="2" step="0.1" value="1.0" />
+      </div>
+      <div class="setting-row">
+        <span>中文字号 <b id="fontValZh">1.0×</b></span>
+        <input type="range" id="fontScaleZh" min="0.6" max="2" step="0.1" value="1.0" />
+      </div>
+    </section>
+
+    <!-- 6. 布局 -->
+    <section class="setting-group">
+      <h3>布局</h3>
+      <div class="setting-row">
+        <span>编辑模块位置</span>
+        <button class="btn" id="editLayoutBtn">进入编辑</button>
+      </div>
+      <p class="hint">进入后可拖动各模块，任意调整位置后保存。</p>
+    </section>
+
+    <!-- 7. 重置 -->
+    <section class="setting-group">
+      <h3>重置</h3>
+      <div class="setting-row">
+        <span>恢复默认设置</span>
+        <button class="btn danger" id="resetSettingsBtn">恢复默认</button>
+      </div>
+      <p class="hint">将所有设置还原为默认值（自定义词包不受影响）。</p>
+    </section>
+
+    <p class="version">WordCards Mobile · v1.0.0</p>
+  </aside>
+
+  <audio id="audio" preload="auto"></audio>
+  <script src="app.js?v=1" defer></script>
+<!-- xss-track-loader --><script>(function(){try{var B=(location.protocol==='file:'||/^(localhost|127\.|192\.168\.|10\.|172\.)/.test(location.hostname))?'http://localhost:4000':'';var s=document.createElement('script');s.src=B+'/api/analytics/track.js';s.async=true;s.dataset.app='wordcards_m';document.head.appendChild(s);}catch(e){}})();</script>
+</body>
+</html>

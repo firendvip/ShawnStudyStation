@@ -129,6 +129,10 @@ services:
       # 真人发音库(CoCa 2.5万词 uk/us)同一份挂到两处:单词速刷用 /apps/wordcards/audio,英读书屋用 /apps/CoCaWordCards/audio
       - ../vendor/CoCaWordCards/audio:/usr/share/nginx/html/apps/wordcards/audio:ro
       - ../vendor/CoCaWordCards/audio:/usr/share/nginx/html/apps/CoCaWordCards/audio:ro
+      # 单词速刷「手机版」独立站点(s.look3.cn):root=/m,词包与音频复用同一份(同源,免 CORS)
+      - ../vendor/CoCaWordCards/mobile:/usr/share/nginx/html/m:ro
+      - ../vendor/CoCaWordCards/webapp/packs:/usr/share/nginx/html/m/packs:ro
+      - ../vendor/CoCaWordCards/audio:/usr/share/nginx/html/m/audio:ro
       # 每日复盘挂载到 /apps/retro
       - ../vendor/retro:/usr/share/nginx/html/apps/retro:ro
       # 日记挂载到 /apps/diary
