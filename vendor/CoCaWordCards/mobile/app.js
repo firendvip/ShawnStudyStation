@@ -45,7 +45,7 @@ const OFFSET_LIMIT = 200;
 const DEFAULTS = {
   accent: "US", speed: 1.0, repeat: 1, interval: 0.3, flipInterval: 0.3, autoAdvance: true,
   showZh: true, showPos: true, showPhon: true, showEn: true, showButtons: true, showPlay: true, showHeader: true, showArrows: true,
-  fontScaleEn: 1.0, fontScaleZh: 1.0,
+  fontScaleEn: 1.0, fontScaleZh: 1.0, fontScalePhon: 1.0,
   moduleX: [0, 0, 0, 0, 0, 0], moduleY: [0, 0, 0, 0, 0, 0],
   rangeStart: 1, rangeEnd: 0, // rangeEnd 0 = to the end (show all)
   packId: "coca17k", groupSize: 10, limitMode: "range",
@@ -114,6 +114,7 @@ function applyPalette() {
   r.setProperty("--accent", p.accent);
   r.setProperty("--fs-en", String(settings.fontScaleEn));
   r.setProperty("--fs-zh", String(settings.fontScaleZh));
+  r.setProperty("--fs-phon", String(settings.fontScalePhon));
 }
 
 // ---- Chunking for the highlight view: single word -> syllables; phrase -> words.
@@ -639,6 +640,7 @@ function syncDrawer() {
   $("flipInterval").value = settings.flipInterval; $("flipIntervalVal").textContent = (parseFloat(settings.flipInterval) || 0).toFixed(1) + "s";
   $("fontScaleEn").value = settings.fontScaleEn; $("fontValEn").textContent = settings.fontScaleEn.toFixed(1) + "×";
   $("fontScaleZh").value = settings.fontScaleZh; $("fontValZh").textContent = settings.fontScaleZh.toFixed(1) + "×";
+  $("fontScalePhon").value = settings.fontScalePhon; $("fontValPhon").textContent = settings.fontScalePhon.toFixed(1) + "×";
   $("autoAdvance").checked = settings.autoAdvance;
   updateFlipRow();
   updateLimitMode();
@@ -734,6 +736,7 @@ function bindEvents() {
   $("flipInterval").addEventListener("input", (e) => { settings.flipInterval = parseFloat(e.target.value); $("flipIntervalVal").textContent = settings.flipInterval.toFixed(1) + "s"; saveSettings(); });
   $("fontScaleEn").addEventListener("input", (e) => { settings.fontScaleEn = parseFloat(e.target.value); $("fontValEn").textContent = settings.fontScaleEn.toFixed(1) + "×"; applyPalette(); render(); saveSettings(); });
   $("fontScaleZh").addEventListener("input", (e) => { settings.fontScaleZh = parseFloat(e.target.value); $("fontValZh").textContent = settings.fontScaleZh.toFixed(1) + "×"; applyPalette(); render(); saveSettings(); });
+  $("fontScalePhon").addEventListener("input", (e) => { settings.fontScalePhon = parseFloat(e.target.value); $("fontValPhon").textContent = settings.fontScalePhon.toFixed(1) + "×"; applyPalette(); render(); saveSettings(); });
   $("repeatBtn").addEventListener("click", () => { settings.repeat = REPEAT_CYCLE[(REPEAT_CYCLE.indexOf(settings.repeat) + 1) % REPEAT_CYCLE.length]; saveSettings(); syncDrawer(); });
   $("autoAdvance").addEventListener("change", (e) => { settings.autoAdvance = e.target.checked; saveSettings(); updateFlipRow(); });
 
