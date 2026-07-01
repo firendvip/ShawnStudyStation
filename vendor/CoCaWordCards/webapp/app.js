@@ -178,7 +178,7 @@ function renderEnglish(en) {
 // ---- Audio ----
 // Bump when the local audio files change (e.g. re-normalised) so browsers refetch
 // instead of serving stale cached audio.
-const AUDIO_VER = "9";
+const AUDIO_VER = "10";
 // file:// 下浏览器禁止 fetch 本地资源，且路径不能带 ?query，需用 <audio> 元素并去掉查询串。
 const IS_FILE = location.protocol === "file:";
 function audioUrl(word, accent) {
