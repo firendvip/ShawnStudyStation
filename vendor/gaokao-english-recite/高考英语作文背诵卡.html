@@ -509,6 +509,9 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
   let collectionCollected=false;       // 内置范文合集是否已收藏到我的书屋to 我的书屋
   const BOOK_LEVELS=['桥梁','初章','中章','高章'];
   const LAST_VIEW_KEY='composition_last_view';
+  const LAST_STUDY_KEY='xss_er_last_study'; // 整篇当前学习内容的强持久化（不依赖异步列表）
+  const LAST_STUDY_MAX=1500000;             // 序列化超过约1.5MB则只存key（避免撑爆localStorage）
+  let restoredFromFull=false;               // 本次启动是否已用整篇缓存直接渲染当前学习
   // collapsed group state, separate per panel
   const collapsedPub={}, collapsedMine={};
 
@@ -773,9 +776,41 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
     if(!it){ selectedKey=null; return; }
     selectedKey=key;
     try{ localStorage.setItem(LAST_VIEW_KEY, key); }catch(_){}
-    if(doRender!==false) render(it.essay||{}, it.prompt||'', it.contentType||'composition');
+    if(doRender!==false){
+      render(it.essay||{}, it.prompt||'', it.contentType||'composition');
+      saveFullStudy(it);
+    }
     updateArtDelete();
     markSelected();
+  }
+  // 把足以直接渲染的整篇内容存进localStorage（新键），普通作文全量、过大内容仅存key
+  function saveFullStudy(it){
+    try{
+      const payload={
+        key:it.key, title:it.title||'',
+        prompt:it.prompt||'', contentType:it.contentType||'composition',
+        essay:it.essay||{}
+      };
+      const str=JSON.stringify(payload);
+      if(str.length>LAST_STUDY_MAX){ localStorage.removeItem(LAST_STUDY_KEY); return; }
+      localStorage.setItem(LAST_STUDY_KEY, str);
+    }catch(_){ /* 配额异常不得影响页面 */ }
+  }
+  // 启动/重载时优先据整篇缓存直接渲染当前学习，不依赖 loadPublic/loadMine
+  function restoreFullStudy(){
+    let raw=null;
+    try{ raw=localStorage.getItem(LAST_STUDY_KEY); }catch(_){ return false; }
+    if(!raw) return false;
+    try{
+      const p=JSON.parse(raw);
+      if(!p||!p.essay) return false;
+      selectedKey=p.key||null;
+      render(p.essay, p.prompt||'', p.contentType||'composition');
+      restoredFromFull=true;
+      updateArtDelete();
+      markSelected();
+      return true;
+    }catch(_){ return false; }
   }
   // study item + switch to 当前学习 tab (used by 「学习」 buttons)
   function studyItem(key){ selectItem(key); switchTab('study'); }
@@ -1281,7 +1316,8 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
     if(!loggedIn){
       publicItems=[]; myItems=[];
       buildItems();
-      if(!getItem(selectedKey)) selectLastOrFirst();
+      // 有整篇缓存恢复的当前学习时，不因登出/未登录把它覆盖回第一条
+      if(!restoredFromFull && !getItem(selectedKey)) selectLastOrFirst();
     }
     renderPublicList(); renderMineList();
     updateArtDelete();
@@ -1340,6 +1376,8 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
     let lastKey=null;
     try{ lastKey=localStorage.getItem(LAST_VIEW_KEY); }catch(_){}
     if(lastKey && getItem(lastKey) && selectedKey!==lastKey){ selectItem(lastKey,true); }
+    // 已用整篇缓存恢复了当前学习：列表加载完只校正高亮，绝不因查不到key而覆盖回第一条
+    else if(restoredFromFull){ updateArtDelete(); markSelected(); return; }
     else if(!getItem(selectedKey)){ selectLastOrFirst(); }
     updateArtDelete(); markSelected();
   }
@@ -1629,7 +1667,8 @@ const TIMINGS = {"e1_s3_us":[{"w":"First","t":0.104,"d":0.571},{"w":"we","t":0.8
 
   buildItems();
   applyAuthState();
-  if(!getItem(selectedKey)) selectLastOrFirst();
+  // 先据整篇缓存直接渲染上次学习那篇（不依赖公共/我的异步加载）；无缓存才回退
+  if(!restoreFullStudy() && !getItem(selectedKey)) selectLastOrFirst();
   switchTab('study');
   try{ window.parent.postMessage({type:'composition-ready'},'*'); }catch(_){}
 })();
